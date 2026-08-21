@@ -1,6 +1,6 @@
 site_name: APS — Advanced Perception System
 site_description: >-
-  A 10-sense probabilistic AI perception engine for Unreal Engine 5.
+  An 8-sense belief-based AI perception engine for Unreal Engine 5.
   Blueprint-first, zero C++ required.
 site_author: AuraGame
 copyright: © 2026 AuraGame. All rights reserved.

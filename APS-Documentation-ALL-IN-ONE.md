@@ -1,6 +1,6 @@
 # APS — Advanced Perception System
 
-**A 10-sense probabilistic AI perception engine for Unreal Engine 5. Blueprint-first, zero C++ required.**
+**An 8-sense belief-based AI perception engine for Unreal Engine 5. Blueprint-first, zero C++ required.**
 
 > **▶ Video walkthrough** — *What APS does (2 min).* Coming soon.
 > When it is live, delete this block and uncomment the embed below.

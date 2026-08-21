@@ -2,7 +2,7 @@
 
 <div class="aps-hero" markdown>
 
-<p class="aps-hero__tagline">A 10-sense probabilistic AI perception engine for Unreal Engine 5.</p>
+<p class="aps-hero__tagline">An 8-sense belief-based AI perception engine for Unreal Engine 5.</p>
 <p class="aps-hero__sub">Blueprint-first. Zero C++ required. Belief, not booleans.</p>
 
 [Get started :material-arrow-right:](getting-started.md){ .md-button .md-button--primary }

@@ -1,7 +1,7 @@
 <h1 align="center">APS — Advanced Perception System</h1>
 
 <p align="center">
-  <strong>A 10-sense probabilistic AI perception engine for Unreal Engine 5.</strong><br>
+  <strong>An 8-sense belief-based AI perception engine for Unreal Engine 5.</strong><br>
   Blueprint-first. Zero C++ required.
 </p>
 
