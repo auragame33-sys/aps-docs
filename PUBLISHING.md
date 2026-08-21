@@ -388,7 +388,56 @@ Including the trailing slash. Fix, commit, push.
 
 ### My changes aren't showing up
 
-You committed but didn't **Push**. Check GitHub Desktop for a **Push origin** button with a number on it.
+First: you committed but didn't **Push**. Check GitHub Desktop for a **Push origin** button with a number on it.
+
+If you *did* push and the Actions run is green, it's your browser cache. Press **Ctrl+Shift+R** (hard refresh).
+
+**This bites hardest when you edit `extra.css`.** GitHub Pages caches assets for 10 minutes and the stylesheet filename never changes, so the browser happily keeps the old one. Symptoms: your text edits appear but styling changes don't. Either hard-refresh, or wait 10 minutes.
+
+### I edited the colours and nothing changed
+
+Same cause as above — hard refresh with **Ctrl+Shift+R**. If you're iterating on the design a lot, use `mkdocs serve` locally instead; it reloads instantly with no caching.
+
+## Changing the look
+
+Everything visual is driven from the top of `docs/assets/extra.css`:
+
+```css
+:root {
+  --aps-accent:      #ffb300;   /* your brand colour */
+  --aps-accent-soft: rgba(255, 179, 0, 0.12);
+  --aps-radius: 10px;           /* corner rounding */
+  --aps-border: rgba(128, 138, 152, 0.22);
+}
+```
+
+Change `--aps-accent` and the buttons, card hovers, active sidebar item, table hovers, callout bars and footer links all follow.
+
+The header colour is separate — it's Material's palette in `mkdocs.yml`:
+
+```yaml
+      primary: black      # header / sidebar
+      accent: amber       # links, focus states
+```
+
+Valid values are listed at [squidfunk.github.io/mkdocs-material/setup/changing-the-colors](https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/).
+
+### Swapping in your logo
+
+Replace these two files, keeping the same names:
+
+```
+docs/assets/logo.svg      ← header logo (shown at 24×24 on a dark bar)
+docs/assets/favicon.svg   ← browser tab icon
+```
+
+If your logo is a PNG, drop it in and update `mkdocs.yml`:
+
+```yaml
+  logo: assets/logo.png
+```
+
+**Make it a simplified single-colour mark, not your full wordmark** — at 24 pixels on a dark header, fine detail turns to mud.
 
 ### The Actions tab is empty — nothing ever ran
 

@@ -157,8 +157,11 @@
 
 /* ── Blockquote callouts (the ⚠ notes) ───────────────────────────────────── */
 
-.md-typeset blockquote {
+.md-content .md-typeset blockquote {
   border-left: 3px solid var(--aps-accent);
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
   background: var(--aps-accent-soft);
   border-radius: 0 var(--aps-radius) var(--aps-radius) 0;
   padding: 0.7rem 1rem;
