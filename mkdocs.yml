@@ -18,8 +18,9 @@ edit_uri: ""
 theme:
   name: material
   language: en
+  logo: assets/logo.svg          # ← drop your logo here (SVG or PNG)
+  favicon: assets/favicon.svg    # ← and your favicon here
   icon:
-    logo: material/eye-outline
     repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme)"
@@ -28,14 +29,14 @@ theme:
         name: Switch to light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: deep purple
+      primary: black
       accent: amber
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: deep purple
+      primary: black
       accent: amber
       toggle:
         icon: material/brightness-4
@@ -55,6 +56,8 @@ theme:
     - search.share
     - content.code.copy
     - content.tooltips
+    - content.tabs.link
+    - announce.dismiss
 
 markdown_extensions:
   - abbr
@@ -69,6 +72,9 @@ markdown_extensions:
       permalink_title: Link to this section
       toc_depth: 3
   - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span

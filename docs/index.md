@@ -1,6 +1,14 @@
 # APS — Advanced Perception System
 
-**A 10-sense probabilistic AI perception engine for Unreal Engine 5. Blueprint-first, zero C++ required.**
+<div class="aps-hero" markdown>
+
+<p class="aps-hero__tagline">A 10-sense probabilistic AI perception engine for Unreal Engine 5.</p>
+<p class="aps-hero__sub">Blueprint-first. Zero C++ required. Belief, not booleans.</p>
+
+[Get started :material-arrow-right:](getting-started.md){ .md-button .md-button--primary }
+[Build a complete guard](tutorial-complete-guard.md){ .md-button }
+
+</div>
 
 > **▶ Video walkthrough** — *What APS does (2 min).* Coming soon.
 > When it is live, delete this block and uncomment the embed below.
@@ -15,9 +23,45 @@ APS is a drop-in replacement for Unreal's built-in `AIPerception` component. Ins
 
 Every sense the AI owns produces a confidence value each tick. Those values are fused into one number per target. That number drives a lifecycle — **Undetected → Suspected → Detected → Tracked → Lost → Remembered → Expired** — and every transition fires a Blueprint event you can hook.
 
-When the AI loses you, it does not simply forget. It records *why* it lost you (you broke line of sight / walked out of earshot / your scent faded), where you were, which direction you were heading, what cover object you ducked behind, and how long the chase lasted. All of that is readable from Blueprint and is exactly what a Behavior Tree needs to search intelligently instead of running a generic sweep.
+When the AI loses you, it does not simply forget. It records *why* it lost you (you broke line of sight / walked out of earshot / your scent faded), where you were, which direction you were heading, and what cover object you ducked behind. All of that is readable from Blueprint, and is exactly what a Behavior Tree needs to search intelligently instead of running a generic sweep.
 
-Everything in this documentation is done in the Blueprint editor. C++ is optional and only mentioned where it adds something.
+---
+
+<div class="grid cards" markdown>
+
+-   :material-rocket-launch:{ .lg .middle } **Install & Your First AI**
+
+    ---
+
+    Install the plugin and get a working detection — cone drawn, confidence climbing, events firing.
+
+    [:octicons-arrow-right-24: 15 minutes](getting-started.md)
+
+-   :material-school:{ .lg .middle } **Tutorial: A Complete Guard**
+
+    ---
+
+    Patrol → hear → investigate → chase → search the right cover → give up. The full loop, with a Behavior Tree.
+
+    [:octicons-arrow-right-24: 45 minutes](tutorial-complete-guard.md)
+
+-   :material-lightning-bolt:{ .lg .middle } **Cheat Sheet**
+
+    ---
+
+    Every node, event, threshold and fast fix worth knowing, on one page. Bookmark this one.
+
+    [:octicons-arrow-right-24: Open](cheat-sheet.md)
+
+-   :material-book-open-variant:{ .lg .middle } **How-To Guides**
+
+    ---
+
+    25 task recipes — stop AI seeing through doors, track by scent, add a detection meter, blind a guard.
+
+    [:octicons-arrow-right-24: Browse recipes](how-to-guides.md)
+
+</div>
 
 ---
 
@@ -30,8 +74,6 @@ Everything in this documentation is done in the Blueprint editor. C++ is optiona
 5. Press Play. The AI sees you, builds confidence, and fires the event.
 
 That is a working AI. Everything else in these docs is tuning and depth.
-
-**→ [Full setup walkthrough](getting-started.md)**
 
 ---
 
@@ -152,29 +194,21 @@ Being clear about scope saves you time:
 
 ---
 
-## 🚀 Get started
-
-| Page | What it covers | Time |
-|---|---|---|
-| **[Install & Your First AI](getting-started.md)** | Install, a working detection, setup checklist | 15 min |
-| **[Tutorial: A Complete Guard](tutorial-complete-guard.md)** | Patrol → hear → investigate → chase → search → give up, with a Behavior Tree | 45 min |
-| **[Cheat Sheet](cheat-sheet.md)** | Every node, event, threshold and fast fix on one page | — |
-
-## 🔧 How-to
+## How-to
 
 | Page | What it covers |
 |---|---|
 | **[How-To Guides](how-to-guides.md)** | 25 task recipes — hearing, occlusion, search, squads, HUD meters, creatures, difficulty |
 | **[Migrating from AIPerception](migrating-from-aiperception.md)** | Concept mapping, step-by-step port, an Epic-parity profile |
 
-## 💡 Understand
+## Understand
 
 | Page | What it covers |
 |---|---|
 | **[Core Concepts](core-concepts.md)** | Confidence, fusion, the lifecycle, awareness, attention, loss reasons, memory |
 | **[How It Works](how-it-works.md)** | Architecture, the tick pipeline, LOD, where state lives, extension points |
 
-## 👁 Senses & configuration
+## Senses & configuration
 
 | Page | What it covers |
 |---|---|
@@ -183,7 +217,7 @@ Being clear about scope saves you time:
 | **[Sound System](sound-system.md)** | Sound data assets, filters, the per-agent pipeline |
 | **[Pain & Damage](pain-and-damage.md)** | Damage reactions, pain types, sense degradation |
 
-## 🧠 Systems
+## Systems
 
 | Page | What it covers |
 |---|---|
@@ -192,7 +226,7 @@ Being clear about scope saves you time:
 | **[Environment & Fairness](environment-and-fairness.md)** | Light, weather, wind, safe rooms, reaction time, telegraphing |
 | **[Multiplayer](multiplayer.md)** | Server authority, replicated detection meters, the relay component |
 
-## ⌨ Scripting
+## Scripting
 
 | Page | What it covers |
 |---|---|
@@ -200,7 +234,7 @@ Being clear about scope saves you time:
 | **[Events Reference](events.md)** | Every event, its parameters, exactly when it fires |
 | **[Behavior Trees](behavior-trees.md)** | Blackboard wiring, search behaviour driven by loss reason |
 
-## 📦 Build & ship
+## Build & ship
 
 | Page | What it covers |
 |---|---|
