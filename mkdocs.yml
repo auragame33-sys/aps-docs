@@ -105,6 +105,9 @@ extra:
   #     link: https://youtube.com/@YOUR-CHANNEL
   #     name: Video tutorials
 
+extra_javascript:
+  - assets/extra.js
+
 extra_css:
   - assets/extra.css
 
