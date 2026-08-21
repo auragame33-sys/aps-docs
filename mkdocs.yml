@@ -1,0 +1,146 @@
+site_name: APS — Advanced Perception System
+site_description: >-
+  A 10-sense probabilistic AI perception engine for Unreal Engine 5.
+  Blueprint-first, zero C++ required.
+site_author: AuraGame
+copyright: © 2026 AuraGame. All rights reserved.
+
+# ── CHANGE THESE TWO ─────────────────────────────────────────────────────────
+# site_url must match where GitHub Pages publishes you:
+#   https://<your-github-username>.github.io/<your-repo-name>/
+site_url: https://auragame33-sys.github.io/aps-docs/
+repo_url: https://github.com/auragame33-sys/aps-docs
+# ─────────────────────────────────────────────────────────────────────────────
+
+repo_name: aps-docs
+edit_uri: ""
+
+theme:
+  name: material
+  language: en
+  icon:
+    logo: material/eye-outline
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.instant          # SPA-style page loads
+    - navigation.instant.progress
+    - navigation.tracking         # URL updates as you scroll
+    - navigation.sections         # section headers in the sidebar
+    - navigation.top              # back-to-top button
+    - navigation.footer           # prev / next buttons
+    - navigation.indexes
+    - toc.follow                  # right-hand TOC tracks scroll
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.tooltips
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      permalink_title: Link to this section
+      toc_depth: 3
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.smartsymbols
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+
+extra:
+  generator: false
+  # Uncomment and fill in once your channel exists:
+  # social:
+  #   - icon: fontawesome/brands/youtube
+  #     link: https://youtube.com/@YOUR-CHANNEL
+  #     name: Video tutorials
+
+extra_css:
+  - assets/extra.css
+
+nav:
+  - Home: index.md
+
+  - Get started:
+      - Install & Your First AI: getting-started.md
+      - "Tutorial: A Complete Guard": tutorial-complete-guard.md
+      - Cheat Sheet: cheat-sheet.md
+
+  - How-to:
+      - How-To Guides: how-to-guides.md
+      - Migrating from AIPerception: migrating-from-aiperception.md
+
+  - Understand:
+      - Core Concepts: core-concepts.md
+      - How It Works: how-it-works.md
+
+  - Senses & configuration:
+      - The Senses: senses.md
+      - Perception Profile: perception-profile.md
+      - Sound System: sound-system.md
+      - Pain & Damage: pain-and-damage.md
+
+  - Systems:
+      - Squad & Relationships: squad-and-relationships.md
+      - Player Behavior Model: player-behavior-model.md
+      - Environment & Fairness: environment-and-fairness.md
+      - Multiplayer: multiplayer.md
+
+  - Scripting:
+      - Blueprint API: blueprint-api.md
+      - Events Reference: events.md
+      - Behavior Trees: behavior-trees.md
+
+  - Build & ship:
+      - Archetype Cookbook: archetype-cookbook.md
+      - Custom Senses: custom-senses.md
+      - Debugging: debugging.md
+      - Performance: performance.md
+      - Troubleshooting & FAQ: troubleshooting.md
+      - Enum & Type Reference: enum-reference.md
