@@ -44,8 +44,6 @@ theme:
     text: Inter
     code: JetBrains Mono
   features:
-    - navigation.instant          # SPA-style page loads
-    - navigation.instant.progress
     - navigation.tracking         # URL updates as you scroll
     - navigation.sections         # section headers in the sidebar
     - navigation.top              # back-to-top button
