@@ -18,8 +18,8 @@ edit_uri: ""
 theme:
   name: material
   language: en
-  logo: assets/logo.svg          # ← drop your logo here (SVG or PNG)
-  favicon: assets/favicon.svg    # ← and your favicon here
+  logo: assets/logo.png          # same mark as the plugin's Resources/Icon128.png
+  favicon: assets/favicon.png
   icon:
     repo: fontawesome/brands/github
   palette:

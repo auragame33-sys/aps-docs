@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.png" alt="APS" width="112" height="112">
+</p>
+
 <h1 align="center">APS — Advanced Perception System</h1>
 
 <p align="center">
