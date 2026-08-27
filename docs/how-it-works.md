@@ -11,7 +11,7 @@
 flowchart TD
     W["World<br/>Pawns · sounds · damage · light"] --> G
 
-    subgraph CORE["Perception Core — one per AI"]
+    subgraph CORE["APS Core — one per AI"]
         G["Gather targets<br/>(5 Hz)"] --> S
         S["Senses<br/>Vision · Hearing · Smell · Touch<br/>Vibration · Damage · Pain · Echo"] --> F
         F["Fusion<br/>best sense + corroboration"] --> M

@@ -8,7 +8,7 @@
 
 **Check these five things first. One of them is almost always the answer.**
 
-1. **Is `Profile` assigned on the Perception Core component?** With no profile, `Begin Play` skips sense creation entirely and the AI perceives nothing, silently.
+1. **Is `Profile` assigned on the APS Core component?** With no profile, `Begin Play` skips sense creation entirely and the AI perceives nothing, silently.
 2. **Is `Sense Classes` non-empty on the profile?** An empty array means no senses. A brand-new profile ships with Vision and Hearing, so this only happens if you cleared it.
 3. **Are you testing in Play mode?** Perception does not run in the editor viewport (only the debug cone preview does).
 4. **Are you on a client?** Perception is server-only. In PIE with multiple clients, test on the server window.
@@ -112,7 +112,9 @@ Two requirements, both easy to miss:
 
 ### The AI reacts to every footstep instantly
 
-Raise `Hearing Base Threshold`, lower `Sound Accumulation Rate`, or give the archetype a filter with a higher `Min Alert Level`.
+Lower `Sound Accumulation Rate`, raise `Suspect Threshold`, or give the archetype a Sound Filter Profile with a higher `Min Alert Level`. Reducing the sound asset's own `Base Loudness` or `Max Range` works too.
+
+(`Hearing Base Threshold` looks like the setting for this and is **not read by any code path** — see [Settings that appear to do nothing](#settings-that-appear-to-do-nothing).)
 
 ---
 
@@ -168,16 +170,18 @@ Two more behave differently than their names suggest:
 ### My event never fires
 
 1. Debug Mode → **Delegates**. Did the event fire at all?
-2. **It fired** → your binding is wrong, or you bound to a different component instance. If you are using the Listener component, confirm it is on the **same actor** as the Perception Core.
+2. **It fired** → your binding is wrong, or you bound to a different component instance. If you are using the Listener component, confirm it is on the **same actor** as the APS Core.
 3. **It did not fire** → the transition never happened. Go to **Sense** mode and check confidence.
 
 ### `On AI Lost` fires immediately after `On AI Detect`
 
-Confidence is hovering right at a threshold. Raise the gap between `Detect Threshold` and `Suspect Threshold`, raise `Vision Loss → Grace Time`, or raise `Confidence Reduce Delay`.
+Confidence is hovering right at a threshold. Raise the gap between `Detect Threshold` and `Suspect Threshold`, raise `Vision Loss → Grace Time`, or lower `Vision Loss → Confidence Decay Multiplier` so belief falls more slowly once sight breaks.
+
+(`Confidence Reduce Delay` sounds like the fix and is **inert in v2.0** — the per-sense `Grace Time` is the real control.)
 
 ### `On AI Detect` fires repeatedly for the same target
 
-It should not — lifecycle events fire once per transition. If you see repeats, the target is oscillating across a threshold. Widen the gap between thresholds and raise `Confidence Reduce Delay`.
+It should not — lifecycle events fire once per transition. If you see repeats, the target is oscillating across a threshold. Widen the gap between thresholds, raise the relevant sense's `Grace Time`, and lower its `Confidence Decay Multiplier`. A 0.04 hysteresis margin already guards each step-down, so persistent repeats mean confidence is swinging much wider than that.
 
 ### I can't find `On AI Lost` when binding
 

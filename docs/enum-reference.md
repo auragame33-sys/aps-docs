@@ -217,7 +217,7 @@ All movement ratios are **speed-band classifications**, not posture readings. `S
 
 | Class | Blueprint name | Purpose |
 |---|---|---|
-| `UPerceptionCore` | **Perception Core** | The main perception component. One per AI. |
+| `UPerceptionCore` | **APS Core** | The main perception component. One per AI. |
 | `UAPPerceptionListener` | **APS Perception Listener** | No-binding overridable events |
 | `UAPSTargetComponent` | **APS Target Component** | Makes an actor properly perceivable |
 | `URelationshipComponent` | **APS Relationship** | Team and class relationship rules |

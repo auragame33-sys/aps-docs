@@ -8,7 +8,7 @@
 
 ```
 1.  Data Asset → PerceptionProfile        →  DA_Profile_MyAI
-2.  AI Character → Add Component          →  Perception Core     (assign the profile)
+2.  AI Character → Add Component          →  APS Core     (assign the profile)
 3.  AI Character → Add Component          →  APS Perception Listener
 4.  Player       → Add Component          →  APS Target Component
 5.  Footstep notify → Emit Sound (Self, DA_Sound_Footstep)
@@ -123,14 +123,16 @@ Leave cone angles and occlusion **identical** across difficulties — the player
 ## Debug in 4 keys
 
 ```
-Perception Core → Debug Settings → b Enabled  ✅
-                                 → b Nearest AI Only  ✅ (once you have 3+ AI)
+APS Core → Debug Settings → b Enabled  ✅
+                          → Agent Scope = Focus + Outlines   (the default; keeps a squad readable)
 
 F1 → Debug Cycle Display Mode     F3 → Debug Toggle Pause
 F2 → Debug Toggle Freeze Snapshot F4 → Debug Print Belief State
 ```
 
-**Sense** mode answers 90% of "why isn't it detecting me" questions.
+**Sense** mode answers 90% of "why isn't it detecting me" questions — and the **sense beams** answer it without reading anything: each active sense draws a beam to where *it* thinks you are.
+
+A sense volume only appears when that sense is in the profile's `Sense Classes`. If you see no scent ring, the AI has no Smell sense — that is the visualisation being honest, not broken.
 
 ---
 

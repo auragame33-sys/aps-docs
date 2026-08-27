@@ -208,7 +208,7 @@ Profile → **Memory → `Min Time In Lost`** = `8.0` (or `25.0` for a horror st
 **Single player:**
 ```
 Widget Tick (or a 0.1s timer)
-  └─► Perception Core → Smoothed Confidence  →  Progress Bar Percent
+  └─► APS Core → Smoothed Confidence  →  Progress Bar Percent
 ```
 
 Or for a specific target: `Get Belief Data (Player)` → break → `Smoothed Confidence`.
@@ -354,7 +354,7 @@ Event On AI Forget
 2. On the grenade:
    ```
    Sphere Overlap Actors (radius 800)
-     └─► ForEach → Get Component By Class (Perception Core)
+     └─► ForEach → Get Component By Class (APS Core)
            └─► Branch: Line Trace clear to grenade?
                  True → Report Pain From Definition (DA_Pain_Flashbang, 1.0)
    ```

@@ -66,10 +66,10 @@ Open it and set these. Everything not listed stays at its default.
 Open your AI character Blueprint (`BP_Guard`).
 
 **Add Component ×2:**
-- **Perception Core** → Details → `Profile` = `DA_Profile_Guard`
+- **APS Core** → Details → `Profile` = `DA_Profile_Guard`
 - **APS Perception Listener**
 
-On the Perception Core, also set:
+On the APS Core, also set:
 - `Debug Settings → b Enabled` ✅
 - `Debug Settings → b Nearest AI Only` ✅
 
@@ -178,11 +178,11 @@ Event On AI Lost (Target, Last Known, Predicted, Last Cover Actor)
         ├─ BB → Set Value as Vector ("LastKnownPosition", Last Known)
         ├─ BB → Set Value as Object ("LastCoverActor",    Last Cover Actor)
         ├─ BB → Set Value as Float  ("SearchRadius",
-        │                             Perception Core → Get Uncertainty Radius (Target))
+        │                             APS Core → Get Uncertainty Radius (Target))
         ├─ BB → Set Value as Enum   ("LossReason",
-        │                             Perception Core → Get Loss Reason (Target))
+        │                             APS Core → Get Loss Reason (Target))
         └─ BB → Set Value as Vector ("LossDirection",
-                                      Perception Core → Get Loss Direction (Target))
+                                      APS Core → Get Loss Direction (Target))
 ```
 
 ### Gave up → clear everything
@@ -334,9 +334,9 @@ Event On Possess
 Bind these to keys in your player controller for live inspection:
 
 ```
-Key 1 → Perception Core → Debug Cycle Display Mode
-Key 2 → Perception Core → Debug Toggle Freeze Snapshot
-Key 3 → Perception Core → Debug Toggle Pause
+Key 1 → APS Core → Debug Cycle Display Mode
+Key 2 → APS Core → Debug Toggle Freeze Snapshot
+Key 3 → APS Core → Debug Toggle Pause
 ```
 
 Then cycle through the modes while playing:

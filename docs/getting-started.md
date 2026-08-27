@@ -51,7 +51,7 @@ Open it. It already has **Vision** and **Hearing** in the `Sense Classes` array,
 
 Open your AI character Blueprint (a `Character` or `Pawn` — for example `BP_Guard`).
 
-**Add Component → Perception Core.**
+**Add Component → APS Core.**
 
 Select it, and in the Details panel set:
 
@@ -145,7 +145,7 @@ For a location-based sound with no source actor (explosion, trap, falling crate)
 Copy this into your project notes.
 
 **On the AI:**
-- [ ] `Perception Core` component added
+- [ ] `APS Core` component added
 - [ ] `Profile` assigned (not None)
 - [ ] `APS Perception Listener` added (only if you want no-binding events)
 - [ ] `APS Relationship` added (only if you use teams — [Squad & Relationships](squad-and-relationships.md))
@@ -164,12 +164,14 @@ Copy this into your project notes.
 
 ## Where things live in the editor
 
+**Every component is prefixed `APS`, so typing `aps` into Add Component lists all four at once.**
+
 | Thing | Where to find it |
 |---|---|
-| Perception Core | Add Component → search `Perception Core` |
-| APS Perception Listener | Add Component → search `APS Perception Listener` |
-| APS Target Component | Add Component → search `APS Target` |
-| APS Relationship | Add Component → search `APS Relationship` |
+| APS Core | Add Component → search `aps` |
+| APS Perception Listener | Add Component → search `aps` |
+| APS Target Component | Add Component → search `aps` |
+| APS Relationship | Add Component → search `aps` |
 | Perception Profile | Content Browser → Data Asset → `PerceptionProfile` |
 | Sound Type / Filter | Content Browser → Data Asset → `SoundTypeDefinition` / `SoundFilterProfile` |
 | Pain Type | Content Browser → Data Asset → `PainTypeDefinition` |
