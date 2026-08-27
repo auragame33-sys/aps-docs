@@ -2,7 +2,7 @@
 
 Every node APS adds, grouped the way it appears in the right-click menu. Nodes marked **⚡** are pure (no execution pin — just drag the return value).
 
-Unless stated otherwise, these are called **on the Perception Core component**. Get a reference with `Get Component By Class → Perception Core`, or drag from the component in the My Blueprint panel.
+Unless stated otherwise, these are called **on the APS Core component**. Get a reference with `Get Component By Class → APS Core`, or drag from the component in the My Blueprint panel.
 
 ---
 
@@ -295,7 +295,7 @@ Get it with **Get APS Subsystem** (static, world context), then drag off the ret
 - **Set Wind Direction** (`Direction`)
 
 **Touch Sense** (if you hold a reference to the sense itself)
-- **Report Contact**, **Report Contact With Impulse**, **End Touch Contact** — the Perception Core wrappers are usually easier
+- **Report Contact**, **Report Contact With Impulse**, **End Touch Contact** — the APS Core wrappers are usually easier
 
 **Pain Sense**
 - **Set Health Ratio** / **Get Health Ratio** / **Get Pain State** — legacy health-based degradation

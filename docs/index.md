@@ -68,7 +68,7 @@ When the AI loses you, it does not simply forget. It records *why* it lost you (
 ## The 60-second version
 
 1. Create a **Perception Profile** data asset. It ships with Vision and Hearing already enabled.
-2. Add the **Perception Core** component to your AI character. Assign the profile.
+2. Add the **APS Core** component to your AI character. Assign the profile.
 3. Add the **APS Perception Listener** component to the same character.
 4. In the character's Event Graph, right-click → search **`OnAIDetect`** → override it.
 5. Press Play. The AI sees you, builds confidence, and fires the event.

@@ -129,7 +129,7 @@ Tear gas / smoke grenade. Hearing untouched, so sound-based stealth still matter
 ```
 Grenade explodes
   └─► Sphere Overlap Actors (radius 800)
-        └─► ForEach → Get Component By Class (Perception Core)
+        └─► ForEach → Get Component By Class (APS Core)
               └─► Branch: Line Trace clear to grenade?
                     True → Report Pain From Definition (DA_Pain_Flashbang, 1.0)
 ```

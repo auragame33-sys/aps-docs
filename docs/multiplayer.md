@@ -44,11 +44,11 @@ A `UActorComponent` only reaches clients if its **owning actor replicates**. AIC
 
 APS handles this for you: when the profile enables replication and the component cannot replicate on its own, it automatically spawns an **APS Perception Relay** component on the possessed Pawn and pushes the summary through that. `Get Replicated Perception State` reads from wherever the data actually lives, so **placement stops mattering**.
 
-You never have to add the relay by hand. Add it to your Pawn's Blueprint only if you want it visible in the component list.
+You never have to add the relay by hand, and as of v2.0 you cannot: it is deliberately not offered in **Add Component**. It carries no settings, there is no case where placing it does anything the runtime does not already do, and listing plumbing beside the components you actually configure made the menu harder to read. Its properties stay `BlueprintReadOnly`, so client UI can still bind to them on the instance the runtime spawns.
 
 ### Simplest advice
 
-**Put the Perception Core on the Pawn**, not the AIController. Everything replicates directly, the relay is never needed, and there is one less moving part.
+**Put the APS Core on the Pawn**, not the AIController. Everything replicates directly, the relay is never needed, and there is one less moving part.
 
 Put it on the AIController when your AI possesses multiple pawn types and you want perception state to survive re-possession. The relay makes that work correctly.
 
@@ -56,7 +56,7 @@ Put it on the AIController when your AI possesses multiple pawn types and you wa
 
 ## Checklist
 
-- [ ] Perception Core on the **Pawn** (unless you have a reason to use the controller)
+- [ ] APS Core on the **Pawn** (unless you have a reason to use the controller)
 - [ ] `b Replicate Perception State` on, if clients need detection UI
 - [ ] `Max Replicated Targets` set to the smallest number your UI actually needs
 - [ ] Client UI reads **Get Replicated Perception State**, driven by **On AI Replicated State Changed**

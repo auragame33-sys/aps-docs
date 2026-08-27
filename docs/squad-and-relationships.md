@@ -15,7 +15,7 @@ Squad membership is just a matching `Name`. Call **Set Squad ID** from Begin Pla
 
 ```
 Event Begin Play
-  └─► Get Component By Class (Perception Core)
+  └─► Get Component By Class (APS Core)
         └─► Set Squad ID  (New Squad ID = "Patrol_A")
 ```
 
@@ -104,7 +104,7 @@ Four guards spotting you now naturally produce one flanker, one suppressor and t
 
 ## The component
 
-Add **APS Relationship** to the AI alongside the Perception Core. It is entirely optional — without it every relationship resolves to `Unknown`.
+Add **APS Relationship** to the AI alongside the APS Core. It is entirely optional — without it every relationship resolves to `Unknown`.
 
 | Setting | Meaning |
 |---|---|

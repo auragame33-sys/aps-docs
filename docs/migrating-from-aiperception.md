@@ -22,7 +22,7 @@ APS does not disable, replace or interfere with `AIPerception`. Both components 
 
 | Epic `AIPerception` | APS equivalent |
 |---|---|
-| `AIPerception` component | **Perception Core** component |
+| `AIPerception` component | **APS Core** component |
 | `AISenseConfig_Sight` | `Vision Sense` in the profile's `Sense Classes` + the Detection sections |
 | `AISenseConfig_Hearing` | `Hearing Sense` + **Sound Type Definition** assets |
 | `AISenseConfig_Damage` | `Damage Sense` (auto-wires all UE damage events) |
@@ -67,7 +67,7 @@ Everything else already has a working default.
 
 On the AI actor:
 
-- **Perception Core** → assign the profile
+- **APS Core** → assign the profile
 - **APS Perception Listener** (optional but easiest for events)
 
 Leave `AIPerception` in place for now.
@@ -179,7 +179,7 @@ Start there, confirm parity, then turn features on one at a time. That way any b
 ## Migration checklist
 
 - [ ] Profile created, `Vision Max Range` and `Vision Half Angle Deg` copied over
-- [ ] **Perception Core** added and profile assigned
+- [ ] **APS Core** added and profile assigned
 - [ ] **APS Perception Listener** added
 - [ ] Sight events moved to `On AI Detect` / `On AI Lost` / `On AI Forget`
 - [ ] `Report Noise Event` calls replaced with `Emit Sound`

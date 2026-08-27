@@ -6,7 +6,7 @@ APS is event-driven. You almost never need to poll — bind or override the even
 
 ### Option A — the Listener component (recommended)
 
-**Add Component → APS Perception Listener** on the same actor as the Perception Core.
+**Add Component → APS Perception Listener** on the same actor as the APS Core.
 
 Then in the Event Graph, right-click and search the event name — e.g. `OnAIDetect` — and add **Event On AI Detect**. Done. No binding, no `Add Dynamic`, no Begin Play wiring. Exactly like the old `OnSeePawn` from `PawnSensing`.
 
@@ -19,11 +19,11 @@ Event On AI Detect (Target, Threat Level, Stimulus)
 
 ### Option B — binding the delegate
 
-Bind on the Perception Core component itself. Useful when the receiver is a different object — an AIController, a HUD, a manager actor.
+Bind on the APS Core component itself. Useful when the receiver is a different object — an AIController, a HUD, a manager actor.
 
 ```
 Event Begin Play
-  └─► Get Component By Class (Perception Core)
+  └─► Get Component By Class (APS Core)
         └─► Bind Event to On AIDetect
               └─► Custom Event: HandleDetect
 ```
@@ -121,9 +121,13 @@ These fire **once per transition** — the workhorses of AI behaviour.
 
 ## Print-everything debug nodes
 
-Every event has a matching one-node print function in `APS | Debug`. Bind the event, drop in the matching node, wire the pins straight through — instant colour-coded screen and log output.
+Most events have a matching one-node print function in `APS | Debug`. Bind the event, drop in the matching node, wire the pins straight through — instant colour-coded screen and log output.
+
+> ⚠ **Three events have no print node in v2.0:** `On AI Telegraph`, `On Attention Changed` and `On Replicated State Changed`. Use a `Print String` for those, or read them from the Delegates debug mode.
 
 `Print_OnAISee`, `Print_OnAIHear`, `Print_OnAISmell`, `Print_OnAIFeel`, `Print_OnAISenseVibration`, `Print_OnAISuspect`, `Print_OnAIDetect`, `Print_OnAITrack`, `Print_OnAILost`, `Print_OnAIRemember`, `Print_OnAIForget`, `Print_OnAIThinkThreat`, `Print_OnThreatIdentified`, `Print_OnAIAllClear`, `Print_OnAIAwarenessChanged`, `Print_OnAIPainReported`, `Print_OnAIDamaged`, `Print_OnAISquadAlert`, `Print_OnTargetStateChanged`, `Print_OnEmotionalStateChanged`, `Print_OnCombatRoleAssigned`.
+
+One extra, squad-specific: **`Print_OnAISquadAlert_Tagged`** (`Receiver`, `Target`, `Location`, `Threat`) — same output as `Print_OnAISquadAlert` but prefixed with the receiving agent's name, so a squad-wide alert reads as one line per recipient instead of five identical lines.
 
 Colour coding: **cyan** senses · **green** lifecycle · **yellow** brain/threat · **orange** pain/emotion · **purple** squad · **white** state changes.
 
