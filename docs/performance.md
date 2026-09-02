@@ -193,3 +193,9 @@ An AI with 8 senses and 16 target slots is a few kilobytes. Agent count is a CPU
 
 ---
 
+
+## Beyond one agent
+
+Everything above is per-agent cost. For level-wide scaling — significance, frame budgets, the statistical crowd tier, environment volumes and async tracing — see **[Scale & Crowds](scale-and-crowds.md)**.
+
+To see what a profile is asking for before you fill a level with it, press **Show Budget** on the asset — see **[Profile Composition](profile-composition.md)**.

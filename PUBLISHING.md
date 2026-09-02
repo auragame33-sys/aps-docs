@@ -527,6 +527,30 @@ Sizing is handled automatically on every screen — nothing else to do.
 
 # The all-in-one file
 
-`APS-Documentation-ALL-IN-ONE.md` sits outside `docs/`, so it is **not** published as a page. It's every page in one file with links flattened to plain text. Useful for an offline copy inside the plugin, sending to a reviewer, or feeding to an AI assistant.
+`APS-Documentation-ALL-IN-ONE.md` sits outside `docs/`, so it is **not** published as a page. It's every page in one file, in nav order, with cross-page links flattened to in-document anchors. Useful for an offline copy inside the plugin, sending to a reviewer, or feeding to an AI assistant.
 
-Regenerate it after a docs update — ask and I'll rebuild it.
+**It is generated. Do not edit it by hand.** After changing anything in `docs/`, run:
+
+```bash
+python tools/build_all_in_one.py
+```
+
+and commit the result alongside your changes.
+
+The script reads the page order straight from `mkdocs.yml`'s `nav:`, so a new page is picked up automatically once you add it there. It also converts mkdocs-material syntax — admonitions, content tabs, icon shortcodes — into plain markdown, because the single-file version is read on GitHub and in ordinary editors where that syntax renders as literal text.
+
+CI runs `python tools/build_all_in_one.py --check` before building the site and **fails the build** if the committed file does not match what `docs/` would produce. That is deliberate: the file used to be maintained by hand, it drifted, and a stale offline copy is the one somebody reads.
+
+---
+
+# Checking the docs against the plugin
+
+The site claims every default value and node name was read out of the source rather than inferred from property names. This makes that claim checkable:
+
+```bash
+python tools/check_against_source.py --source "C:/path/to/Advanced Perception System/Source"
+```
+
+It compares every value in a table with a **Default** column against the initialiser in the header, and every node named in an API table against the UFUNCTIONs that actually exist. Recipe tables in the tutorials are skipped — a recommended value is not a claim about a default.
+
+It cannot run in CI, because the plugin source lives in a different repository. Run it locally before opening a sync PR. On the v3.0 pass it caught a replication default documented as `false` when the source says `true`.

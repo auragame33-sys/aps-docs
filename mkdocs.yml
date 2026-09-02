@@ -135,6 +135,9 @@ nav:
 
   - Systems:
       - Squad & Relationships: squad-and-relationships.md
+      - Memory & Recall: memory-and-recall.md
+      - Evidence & Search: evidence-and-search.md
+      - Knowledge & Comms: knowledge-and-comms.md
       - Player Behavior Model: player-behavior-model.md
       - Environment & Fairness: environment-and-fairness.md
       - Multiplayer: multiplayer.md
@@ -143,11 +146,16 @@ nav:
       - Blueprint API: blueprint-api.md
       - Events Reference: events.md
       - Behavior Trees: behavior-trees.md
+      - Policies: policies.md
+      - Adapters: adapters.md
 
   - Build & ship:
+      - Profile Composition: profile-composition.md
       - Archetype Cookbook: archetype-cookbook.md
       - Custom Senses: custom-senses.md
       - Debugging: debugging.md
+      - Explaining & Recording: explaining-and-recording.md
+      - Scale & Crowds: scale-and-crowds.md
       - Performance: performance.md
       - Troubleshooting & FAQ: troubleshooting.md
       - Enum & Type Reference: enum-reference.md

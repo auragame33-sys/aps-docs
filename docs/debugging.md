@@ -286,3 +286,7 @@ Everything is stripped from Shipping builds automatically, but leaving it on in 
 
 ---
 
+
+## Going further
+
+The overlay tells you what the AI believes **now**. When you need to ask *why* it believes it, or read back a moment that has already gone, see **[Explaining & Recording](explaining-and-recording.md)**.
