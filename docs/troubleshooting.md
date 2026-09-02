@@ -106,6 +106,10 @@ Two requirements, both easy to miss:
 1. The sound asset's **`Sound Name` must be exactly `Explosion`** — the stimulus tag is built as `Stimulus.Sound.<Sound Name>`, and Vibration subscribes to `Stimulus.Sound.Explosion`.
 2. You must use **`Emit Sound`** with a source actor. `Emit Sound At Location` does not emit a stimulus at all.
 
+### A thrown rock or explosion never fires `On AI Hear`
+
+Correct. `Emit Sound At Location` has no source actor, so it becomes a belief about the place rather than about a target. Bind **On Location Belief Changed**, or read **Get Strongest Location Belief**. See [Sound System](sound-system.md).
+
 ### Smell ignores my wind direction
 
 `Set Wind State` on the subsystem controls wind *speed* (which dampens scent globally) but not the direction used for the upwind/downwind bonus. That comes from the `Wind Direction` property on the sense itself — set it as a class default on a Blueprint subclass of `SenseUnit_Smell`. See [The Senses](senses.md).
@@ -158,6 +162,8 @@ Five profile properties are not read by any code path in v3.0. They are visible 
 | `Confidence Decay Smoothing` | The per-sense `Confidence Decay Multiplier` in the **Loss** section |
 | `Confidence Reduce Delay` | Per-sense `Grace Time` in the **Loss** section |
 
+One debug setting on the component is in the same category: `Debug Settings → b Show Emotion Bars` is not read.
+
 Two more behave differently than their names suggest:
 
 - **`Vision Sample Count`** only limits the built-in fallback sample set. Targets with an APS Target Component always use that component's samples — five by default. See [Performance](performance.md).
@@ -195,7 +201,7 @@ The component delegate is exposed as **On AILost Event** to avoid a name clash. 
 
 Run **Debug Trace Squad Share Path** (`Sender`, `Target`). It checks every gate in order and prints the exact failure point.
 
-Common causes: `Set Squad ID` never called · IDs do not match exactly (they are case-sensitive `Name`s) · squadmates beyond `Squad Share Range` · threat below `Min Threat To Share` · both auto-share flags off.
+Common causes: `Set Squad ID` never called · IDs do not match (a `Name` comparison ignores case, not spelling) · squadmates beyond `Squad Share Range` · threat below `Min Threat To Share` · both auto-share flags off.
 
 ### The whole squad detects me the instant one does
 
@@ -231,6 +237,10 @@ In order: raise `Base Update Interval` · lower `Vision Sample Count` to 3 · lo
 
 Set `Debug Settings → b Pause Perception` on every AI. If the frame rate does not improve, the bottleneck is elsewhere.
 
+### My idle AI never tick at full rate
+
+By design. LOD tiers come from a significance score, and the distance term alone tops out at tier 1. An agent reaches tier 0 only once it is Suspicious or more alert, and then it stays there out to roughly 260 m. See [How It Works](how-it-works.md#significance-and-lod).
+
 ---
 
 ## Editor / build problems
@@ -251,13 +261,13 @@ Correct and by design. All debug rendering is compiled out of Shipping builds. U
 
 ---
 
-# FAQ
+## FAQ
 
 **Can I use APS alongside Epic's AIPerception?**
 Yes. APS does not touch or disable it. Run both while you migrate.
 
 **Do I need C++?**
-No. Everything in this documentation is Blueprint. C++ is only needed for advanced custom senses that must override loss behaviour, sensing range, or the stimulus bus.
+No. Everything in this documentation is Blueprint. A Blueprint sense can even declare its own loss behaviour, range and stimulus tags in its class defaults. C++ is only needed for a custom sense that must react to a stimulus, fire a built-in sense event, run event-driven or owner-internal, or report beliefs about places.
 
 **Does it work on a Blueprint-only project?**
 Yes — the plugin ships its own compiled module.

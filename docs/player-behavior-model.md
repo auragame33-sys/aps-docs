@@ -42,9 +42,9 @@ The model updates automatically. There is nothing to call.
 
 | Field | What it actually measures |
 |---|---|
-| `Crouch Ratio` | Fraction of observed ticks the target moved **slower than `Player Crouch Speed Threshold`**. Classification is purely speed-based — a player standing still counts here too. Read it as "moves slowly / holds still", not literally "is crouching". |
+| `Crouch Ratio` | Fraction of observed ticks the target was **crouched or prone**, as reported by its posture. Only when nothing reports a posture does speed decide, and then anything slower than `Player Crouch Speed Threshold`, including standing still, lands here. |
 | `Sprint Ratio` | Fraction of ticks above `Player Sprint Speed Threshold` |
-| `Walk Ratio` | Fraction of ticks between the two thresholds |
+| `Walk Ratio` | Everything else: upright and below the sprint threshold |
 | `Stealth Ratio` | Fraction of engagements that ended with the target **behind the AI** (more than ~107° off its facing) when contact was lost |
 | `Aggression Ratio` | The complement of the above — engagements that ended with the target in front. **`Stealth Ratio + Aggression Ratio` always equals 1.** They are two readings of one measurement, not independent signals. |
 | `Recent Hide Locations` | Up to 5 **distinct** positions where contact was lost. A new entry is only stored if it is more than 200 cm from every existing one, so this is a list of separate hiding spots, not the last five losses. |
@@ -129,5 +129,6 @@ Whatever you drive from this model, give the player a way to perceive it. A line
 of dialogue — *"not this time"* — or a visibly changed patrol route makes it
 land. Silent adaptation is indistinguishable from the game getting harder for no
 reason.
+
 ---
 

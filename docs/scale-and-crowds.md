@@ -20,7 +20,17 @@ The subsystem scores every agent each pass and gives the important ones more att
 
 That score picks the agent's LOD tier, which drives tick throttling. A guard in a firefight ten metres away stays at full rate; one asleep on the far side of the map drops back.
 
-**Viewers** are all local players, so split-screen works without configuration.
+| Score | Tier | Perception interval |
+|---|---|---|
+| ≥ 0.75 | 0 | ×1 |
+| ≥ 0.50 | 1 | ×2 |
+| ≥ 0.30 | 2 | ×5 |
+| ≥ 0.15 | 3 | ×20 |
+| below | 4 | suspended |
+
+The distance term alone caps at 0.6, so an agent with nothing to do never reaches tier 0: idle is tier 1 within 50 m and tier 4 beyond 225 m. Engagement adds 0.55 on its own, which is why a chase stays at full rate almost anywhere on the map. The worked-out bands are in [How It Works](how-it-works.md#significance-and-lod).
+
+**Viewers** are all local players, so split-screen works without configuration. A dedicated server has no viewer and scores every agent as if it were at zero distance.
 
 ### Writing your own
 
@@ -54,7 +64,7 @@ At high agent counts the expensive part is line traces. The statistical tier rem
 | `Statistical Detection Rate` | 1.0 | Rolls per second, scaled by the factors below |
 | `Statistical Detection Confidence` | 0.5 | Confidence granted on a hit |
 
-A statistical agent still respects distance falloff, which way it is facing, light level and target motion — it simply resolves them as a probability per second rather than by tracing geometry. A crowd member behind you is still much less likely to notice you than one looking straight at you.
+A statistical agent still respects distance falloff, which way it is facing, light level and target motion — it simply resolves them as a probability per second rather than by tracing geometry. A crowd member behind you is still much less likely to notice you than one looking straight at you. The check runs before the tier-4 cut-off, so a suspended agent with the crowd tier on still perceives statistically, at `max(4 × Base Update Interval, 0.25 s)`.
 
 !!! note "It is a floor, not a ceiling"
     Going statistical does not *reduce* an existing belief. An agent that already
@@ -87,11 +97,12 @@ An **APS Environment Component** on any actor declares local conditions in a rad
 
 Each override is separate, so a volume can darken a room without claiming anything about the weather.
 
-!!! info "Range scales are sampled at the target, not the observer"
-    A guard standing in daylight looking into a darkened room gets the *room's*
-    reduced vision range, which is the behaviour people expect. Sampling at the
-    observer would have let guards see into fog perfectly well as long as they
-    were standing outside it.
+!!! info "Vision samples the target's volume; hearing and smell sample the observer's"
+    A guard standing in daylight looking into a smoke-filled room gets the *room's*
+    reduced vision range, because smoke around what you are looking at is what
+    hides it. Hearing and smell read the volume the agent is standing in, so a
+    guard inside a noisy market hears less whatever the target's surroundings.
+    Light, rain, wind and the indoors flag are all resolved at the observer.
 
 ---
 
@@ -99,7 +110,7 @@ Each override is separate, so a volume can darken a room without claiming anythi
 
 `b Async Vision Traces` on the profile moves visibility tracing off the critical path — results arrive on a completion callback rather than blocking the tick.
 
-Off by default. Turn it on when trace cost is the measured bottleneck; the answer is the same, it simply arrives a frame later.
+Off by default. Turn it on when trace cost is the measured bottleneck. The exposure it reports describes where the target was one vision evaluation ago, about 0.15 s at default settings, so a target crossing cover quickly is judged a fraction late.
 
 !!! warning "Falls back to synchronous in two cases"
     Multi-channel setups and configured surface transmission both need results
@@ -133,9 +144,10 @@ See [Multiplayer](multiplayer.md) for the full picture. The scale-relevant setti
 ## Ordering your effort
 
 1. **Measure first.** Use **Show Budget** on the profile ([Profile Composition](profile-composition.md)) to see what the asset is asking for.
-2. `Vision Sample Count` multiplies directly into trace count. It is usually the first number to look at.
-3. Turn on distance tick throttling before anything more exotic.
-4. Reach for the crowd tier when the agent count, not the per-agent cost, is the problem.
+2. Sample points multiply directly into trace count. Trim the Target Component's samples, or cap them with a quality profile's `Max Vision Samples`.
+3. Hand distant agents a cheaper **quality profile** rather than a cheaper perception profile; nothing they believe is reset.
+4. Set `Max Perception Updates Per Frame` if spawn waves or level transitions spike the frame.
+5. Reach for the crowd tier when the agent count, not the per-agent cost, is the problem.
 
 ---
 

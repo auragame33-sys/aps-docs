@@ -117,7 +117,7 @@ Priority when several land in one tick: **Explosion > Grab > Collision > Bump**
 
 ### EAPSBeliefSubject — what a belief is about
 
-A belief no longer has to be about an actor. See [Policies](policies.md).
+A belief no longer has to be about an actor. See [Core Concepts](core-concepts.md#11-beliefs-about-places).
 
 | Value | Meaning |
 |---|---|
@@ -244,11 +244,11 @@ Passed to every sense's `Evaluate`.
 
 | Field | Range | Effect |
 |---|---|---|
-| `Light Level` | 0–1 | Vision ×0.35 → ×1.0 |
-| `Rain Intensity` | 0–1 | Hearing ×1.0 → ×0.55 |
-| `Wind Speed` | 0–2000 | Smell ×1.0 → ×0.25 at 800+ |
-| `Wind Direction` | vector | Smell downwind bonus |
-| `b Is Indoors` | bool | Smell ×1.2 |
+| `Light Level` | 0–1 | Vision: `Lerp(Darkness Min Detection, 1, level)`, unless per-target light overrides it |
+| `Rain Intensity` | 0–1 | Vision, Hearing and Smell all multiplied by `1 − rain` |
+| `Wind Speed` | 0–2000 | Smell ×1.0 → ×0.25 at 800 and above, outdoors only |
+| `Wind Direction` | vector | Stored only. The Smell sense reads its own `Wind Direction` property for the downwind bonus |
+| `b Is Indoors` | bool | Smell ×1.2, and wind is ignored |
 | `Time Of Day` | 0–24 | Informational |
 
 ### Emotional State
@@ -259,7 +259,7 @@ Passed to every sense's `Evaluate`.
 
 `Crouch Ratio` · `Sprint Ratio` · `Walk Ratio` · `Stealth Ratio` · `Aggression Ratio` · `Recent Hide Locations` · `Custom Behavior Ratios` · `Engagement Count` · `b Has Enough Data`
 
-All movement ratios are **speed-band classifications**, not posture readings. `Stealth Ratio` and `Aggression Ratio` are complements of one measurement and always sum to 1. `Recent Hide Locations` holds up to 5 positions at least 200 cm apart. See [Player Behavior Model](player-behavior-model.md).
+Movement ratios use the target's **observed posture** when anything reports one, and fall back to speed bands only when nothing does. `Stealth Ratio` and `Aggression Ratio` are complements of one measurement and always sum to 1. `Recent Hide Locations` holds up to 5 positions at least 200 cm apart. See [Player Behavior Model](player-behavior-model.md).
 
 ### Sense Loss Config
 
@@ -279,7 +279,11 @@ All movement ratios are **speed-band classifications**, not posture readings. `S
 
 ### Perception Debug Settings
 
-`b Enabled` · `b Editor Preview` · `b Show Target Text` · `b Show AI Text` · `Debug Mode` · `b Vision Cone` · `b Hearing Rings` · `b Awareness Arc` · `b Last Known And Uncertainty` · `b Predicted Position` · `b Sound Event Lines` · `Sound Linger Seconds` · `b Freeze Snapshot` · `b Pause Perception` · `b Nearest AI Only`
+**Master:** `b Enabled` · `b Editor Preview`
+**Text:** `b Screen Panel` · `b Show Sparkline` · `b Show Target Text` · `b Show AI Text` · `Debug Mode` · `Text Scale` · `b Scale Text With Distance` · `b Show Emotion Bars` *(not read)* · `b Show Legend`
+**World geometry:** `b Vision Cone` · `b Hearing Rings` · `b Smell Range` · `b Awareness Arc` · `b Last Known And Uncertainty` · `b Predicted Position` · `b Sound Event Lines` · `b Sense Beams` · `b Sense Fields` · `b Environment Visuals` · `Sound Linger Seconds`
+**Style:** `Palette` · `b Animated Visuals` · `b Cone Volume` · `b Secondary Cones` · `b Draw Through Walls` · `Line Thickness` · `b Ground Anchor`
+**Controls:** `b Freeze Snapshot` · `b Pause Perception` · `Agent Scope` · `b Nearest AI Only` *(legacy alias)*
 
 ---
 
@@ -294,6 +298,11 @@ All movement ratios are **speed-band classifications**, not posture readings. `S
 | `UAPSTargetComponent` | **APS Target Component** | Makes an actor properly perceivable |
 | `URelationshipComponent` | **APS Relationship** | Team and class relationship rules |
 | `UAPSPerceptionRelay` | **APS Perception Relay** | Carries replicated state when the owner cannot replicate. Auto-managed. |
+| `UAPSEnvironmentComponent` | **APS Environment** | Local light, weather, wind and sense range inside a radius |
+| `UAPSObserverComponent` | **APS Observer** | Publishes one AI's perception into faction knowledge. Knowledge module |
+| `UAPSSignatureComponent` | **APS Signature** | Describable traits on an actor. Knowledge module |
+| `UAPSEvidenceComponent` | **APS Evidence** | A trace left in the world that an AI can discover. Knowledge module |
+| `UAPSSearchComponent` | **APS Search** | Where to look next, as a probability field. Knowledge module |
 
 ### Data assets
 
@@ -303,6 +312,18 @@ All movement ratios are **speed-band classifications**, not posture readings. `S
 | `USoundTypeDefinition` | One kind of sound |
 | `USoundFilterProfile` | Which sounds an archetype hears |
 | `UPainTypeDefinition` | One kind of pain and what it impairs |
+| `UAPSQualityProfile` | Cost controls layered on a profile without resetting belief |
+
+### Policies and adapters
+
+| Class | Blueprint name | Purpose |
+|---|---|---|
+| `UAPSFusionPolicy` | APS Fusion Policy | How several senses become one confidence |
+| `UAPSThreatPolicy` | APS Threat Policy | How dangerous a target is |
+| `UAPSAttentionPolicy` | APS Attention Policy | Which target the AI commits to |
+| `UAPSSignificancePolicy` | APS Significance Policy | Which agents deserve CPU. Lives on the subsystem |
+| `IAPSHealthProvider` | APS Health Provider | Interface: how hurt an actor is |
+| `IAPSStanceProvider` | APS Stance Provider | Interface: what posture an actor is in |
 
 ### Senses
 
@@ -324,7 +345,8 @@ All movement ratios are **speed-band classifications**, not posture readings. `S
 |---|---|
 | `UPerceptionSoundSystem` | `Emit Sound` / `Emit Sound At Location` |
 | `UAPSDebugHelper` | Print nodes and squad debug utilities |
-| `UAPSSubsystem` | World state, registry, never-search zones, stimulus bus |
+| `UAPSSubsystem` | World state, registry, spatial index, significance, never-search zones, stimulus bus |
+| `UAPSKnowledgeSubsystem` | Faction knowledge, comms channels and alert level. Knowledge module |
 
 ---
 
@@ -335,7 +357,11 @@ All movement ratios are **speed-band classifications**, not posture readings. `S
 | Max sense slots | **8** | Senses per AI. Extra entries in `Sense Classes` are ignored. |
 | Max episodes | **5** | Stored engagements per target |
 | Max tracked targets | **1–32** | Configurable, default 16 |
-| LOD tiers | **0–4** | 0 = nearest, 4 = suspended |
+| LOD tiers | **0–4** | 0 = full rate, 4 = suspended. Derived from significance, not raw distance |
+| Significance bands | **0.75 / 0.50 / 0.30 / 0.15** | Score thresholds for tiers 0 to 3 |
+| Spatial grid cell | **1500 cm** | Candidate broadphase, rebuilt every 0.2 s |
+| Place-belief merge cell | **400 cm** | Reports with the same tag inside one cell merge into one belief |
+| Meaningful confidence floor | **0.02** | A sense reporting below this counts as silent |
 | Recent hide locations | **5** | Distinct spots, min 200 cm apart |
 | Lifecycle hysteresis | **0.04** | Confidence must fall this far below a threshold to step down |
 | Focal cone tolerance | **×1.1** | Applied when `b Use Separate Vertical FOV` is off |

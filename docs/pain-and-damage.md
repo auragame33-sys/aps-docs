@@ -9,9 +9,9 @@ Neither manages health. Your health system stays yours.
 
 ---
 
-# Damage
+## Damage
 
-## Setup
+### Setup
 
 Add **Damage Sense** to your profile's `Sense Classes`. That is the entire setup.
 
@@ -23,11 +23,11 @@ Every UE5 damage path is wired automatically on Begin Play:
 
 Events are de-duplicated per frame, so the engine's habit of firing both `OnTakeAnyDamage` and `OnTakePointDamage` for one hit does not double-count.
 
-## Two modes
+### Two modes
 
 **Profile → Ranges → `b Auto Confidence From Damage`**
 
-### True (default) — automatic
+#### True (default) — automatic
 
 Confidence toward the instigator is set to:
 
@@ -39,7 +39,7 @@ Confidence = clamp(DamageAmount / 100, 0, 1)
 
 The instigator is added to the target list **regardless of range**, so a sniper far outside vision and hearing range still becomes a tracked target the moment they connect. The hit is reported with a `Location Accuracy` of 0.95.
 
-### False — you decide
+#### False — you decide
 
 Damage fires **On AI Damaged** and nothing else. This is the mode you want for hardcore stealth, where a silenced hit should not reveal the shooter.
 
@@ -52,25 +52,25 @@ Event On AI Damaged (Instigator, Amount, Damage Type Tag, Hit Location)
 
 `Damage Type Tag` is derived from the `UDamageType` class name — create `DamageType_Fire`, `DamageType_Silenced`, `DamageType_Explosive` subclasses and you get free routing.
 
-## Threat weighting
+### Threat weighting
 
 Damage received from a target feeds the threat score at `Threat Weight Damage Received` (default 0.30 — the second-largest term). The record also tracks `Damage Received From Target`, `Damage Dealt To Target`, `b Is Known Threat` and `Encounter Count`.
 
 `Threat Damage Decay Rate` controls how fast that contribution fades while the target is unsensed. Set it to `0` and the AI never forgets who shot it.
 
-## Loss behaviour
+### Loss behaviour
 
 Grace **8 s**, no direct cut, decay ×0.5. An AI stays aware of a damage source for a long time — because a real one would.
 
 ---
 
-# Pain
+## Pain
 
 **Pain is perception impairment, not health.** Flashbang a guard and it should be temporarily near-blind. Set it on fire and it should be too distracted to hear well. Deafen it and it should still see fine.
 
 The Pain sense is **owner-internal** — it evaluates the AI itself, once per tick, and never participates in the target loop.
 
-## Setup
+### Setup
 
 1. Add **Sense: Pain / Health** to `Sense Classes`.
 2. Create one **Pain Type Definition** data asset per kind of pain.
@@ -78,7 +78,7 @@ The Pain sense is **owner-internal** — it evaluates the AI itself, once per ti
 
 There is no array to register pain types in — you pass the asset directly to the node.
 
-## Pain Type Definition
+### Pain Type Definition
 
 Content Browser → **Data Asset → PainTypeDefinition**.
 
@@ -91,7 +91,7 @@ Content Browser → **Data Asset → PainTypeDefinition**.
 | `Max Level` | Cap for this type. `0.5` caps at 50% no matter how many reports land. |
 | `Amount Override` | If > 0, every report adds this fixed amount instead of the caller's value. Useful for binary pain types like `Stunned`. |
 
-### A useful set
+#### A useful set
 
 **`DA_Pain_Flashbang`** — Decay `0.8` · Max `1.0` · Amount Override `1.0`
 Sense Effects: `Vision Sense → 1.0`, `Hearing Sense → 0.7`
@@ -113,7 +113,7 @@ Stood next to an explosion. Sees fine, hears nothing.
 Sense Effects: `Vision Sense → 0.9`, `Smell Sense → 0.6`
 Tear gas / smoke grenade. Hearing untouched, so sound-based stealth still matters.
 
-## Using it
+### Using it
 
 | Node | Purpose |
 |---|---|
@@ -124,7 +124,7 @@ Tear gas / smoke grenade. Hearing untouched, so sound-based stealth still matter
 | **Clear All Pain** | Full reset |
 | **Set Pain Type Enabled From Definition** (`Pain Def`, `b Enabled`) | Immunities — a fire elemental with `DA_Pain_Burning` disabled |
 
-### Wiring a flashbang
+#### Wiring a flashbang
 
 ```
 Grenade explodes
@@ -136,7 +136,7 @@ Grenade explodes
 
 Guards behind cover are unaffected. Guards looking at it are blind for a second. No special-case code in the AI — the perception system simply stops feeding it vision.
 
-### Reacting to pain
+#### Reacting to pain
 
 ```
 Event On AI Pain Reported (Pain Def, Pain Level)
@@ -146,7 +146,7 @@ Event On AI Pain Reported (Pain Def, Pain Level)
 
 Or poll it in a BT decorator: `Get Total Pain Level > 0.5` → run the "recover" branch.
 
-## How degradation is calculated
+### How degradation is calculated
 
 ```
 start:          Deg = Lerp(SenseFloor, 1.0, HealthRatio)
@@ -163,25 +163,26 @@ Pain types stack **multiplicatively**, so burning at 0.5×effect 0.4 combined wi
 
 When pain suppresses a sense to effectively zero, APS clears that sense's active flag, so the memory system correctly starts its loss timer. A blinded AI actually *loses* you rather than freezing on a stale detection.
 
-## Health-based degradation — and the automatic hook
+### Health-based degradation — and the automatic hook
 
 The same function applies **health** degradation to *every* sense, not just vision. Because non-vision senses have a floor of 0, an AI at 50% health perceives at roughly half strength across the board.
 
-That matters because **health is read automatically**. Every tick, the Pain sense scans the owner's components for a health accessor:
+That matters because **health is read automatically**. Every tick, the Pain sense asks the owner how hurt it is, in this order:
 
-1. `GetHealthPercent()` returning a float
-2. `GetHealth()` **and** `GetMaxHealth()`
-3. `GetCurrentHealth()` **and** `GetMaxHealth()`
+1. an **APS Health Provider** interface on the actor, then on any component ([Adapters](adapters.md)),
+2. a function named `GetHealthPercent` returning a number,
+3. `GetHealth` **and** `GetMaxHealth`,
+4. `GetCurrentHealth` **and** `GetMaxHealth`.
 
-If your health component Blueprint exposes any of these — and most do — health-based sense degradation is **already running with zero setup**, and `Set Health Ratio` will be overwritten each tick.
+If your health component exposes any of these, and most do, health-based sense degradation is **already running with zero setup**, and `Set Health Ratio` is overwritten each tick.
 
 | Node | Purpose |
 |---|---|
-| **Set Health Ratio** (`Ratio`) | Feed a value manually. Only takes effect if no component on the AI exposes one of the function names above. |
+| **Set Health Ratio** (`Ratio`) | Feed a value manually. Only takes effect if nothing on the AI answers the health lookup above. |
 | **Get Health Ratio** | Read the current value |
 | **Get Pain State** | `Healthy` (>0.75) · `Wounded` (>0.40) · `Critical` (>0.15) · `Near Death` |
 
-**If you do not want health affecting perception**, either rename your accessor functions, or accept and tune the effect — it is often exactly what you want (a badly wounded guard genuinely should be worse at spotting you). Use `Get Pain State` as a cheap BT condition for "retreat when Critical".
+**If you do not want health affecting perception**, implement the interface and return 1, rename your accessor functions, or accept and tune the effect — it is often exactly what you want (a badly wounded guard genuinely should be worse at spotting you). Use `Get Pain State` as a cheap BT condition for "retreat when Critical".
 
 ---
 

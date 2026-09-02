@@ -32,7 +32,7 @@ All text lives in a screen-space panel rather than floating in the world. World 
 | `b Show Sparkline` | Rolling confidence graph in the panel, with the three thresholds drawn behind it. Sampled at 20 Hz for a fixed ~5 s window regardless of framerate. |
 | `b Show Target Text` | Compact state chip pinned over each tracked target. Chips push each other down rather than overlapping. |
 | `b Show AI Text` | The AI's own posture and squad rows in the panel |
-| `b Show Emotion Bars` | Top two emotion channels in the panel |
+| ⚠ `b Show Emotion Bars` | **Not read in v3.0.** The panel shows the dominant emotion on its posture row instead |
 | `Debug Mode` | Which of the 7 information modes fills the panel body |
 | `Text Scale` | Font size multiplier for world labels |
 | `b Scale Text With Distance` | Shrink distant labels so the nearest agent reads first |

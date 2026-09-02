@@ -56,7 +56,7 @@ When the AI loses you, it does not simply forget. It records *why* it lost you (
 
     ---
 
-    25 task recipes — stop AI seeing through doors, track by scent, add a detection meter, blind a guard.
+    Over 30 task recipes — stop AI seeing through doors, track by scent, disguise the player, blind a guard.
 
     [ Browse recipes](#how-to-guides)
 
@@ -116,6 +116,16 @@ That is a working AI. Everything else in these docs is tuning and depth.
 
 **Replication** — an opt-in compact per-target summary replicated to clients, so detection meters and spectator HUDs work without hand-rolled plumbing.
 
+**Scripted evidence** — a disguise, an alibi or a cutscene can floor, cap, lower or zero what the AI believes about a target, with its own lifetime and a provenance tag.
+
+**Beliefs about places** — a gunshot with no known shooter, a body, a forced lock. The AI can believe something happened *over there* without pinning it on whoever happened to be nearby.
+
+**Policies** — take over sense fusion, threat scoring or target attention with a Blueprint class of your own. Leave the slot empty and the built-in rule runs.
+
+**Profile composition** — inherit from a parent profile, override one number on one agent, stamp on a built-in archetype, or tune every running agent from the console.
+
+**Explain and record** — ask an AI, in words, why it cannot see you. Read back what it believed ten seconds ago.
+
 **7-mode debug suite** — on-screen overlays for Sense, Memory, Brain, Squad, Delegates, Player Model and Environment, plus a one-node print function for every single event.
 
 ---
@@ -125,7 +135,7 @@ That is a working AI. Everything else in these docs is tuning and depth.
 | | Epic `AIPerception` | APS |
 |---|---|---|
 | Detection result | Boolean — seen / not seen | Continuous 0–1 confidence per target |
-| Line of sight | One trace to capsule centre | Up to 5 weighted sample points → % exposed |
+| Line of sight | One trace to capsule centre | Weighted socket sample points → % exposed |
 | Cover behaviour | Head fully exposed above a crate still reports "not seen" | Partial exposure produces partial confidence |
 | Stance | Ignored | Crouched / prone can require more visible points |
 | Vision cone | One symmetric 3D cone | Focal + peripheral + rear-motion + keyhole, separate vertical FOV |
@@ -140,9 +150,11 @@ That is a working AI. Everything else in these docs is tuning and depth.
 | Threat / emotion | None | Weighted threat scoring, 5 emotion channels |
 | Squad | None | Intel sharing, alerts, exclusive combat roles |
 | Fairness tooling | None | Reaction delay, telegraph, off-screen penalty, safe rooms |
-| Debug | Gameplay Debugger category | 7-mode overlay + per-event print nodes |
+| Debug | Gameplay Debugger category | 7-mode overlay, per-event print nodes, an explain trace and a belief recorder |
 
-> **You can run both.** APS does not disable or interfere with `AIPerception`. If you already have systems bound to Epic's perception, they keep working while you migrate.
+> **You can run both**
+>
+> APS does not disable or interfere with `AIPerception`. If you already have systems bound to Epic's perception, they keep working while you migrate.
 
 ---
 
@@ -175,9 +187,9 @@ Being clear about scope saves you time:
 
 ---
 
-## Documentation
+### Documentation map
 
-### I want to…
+#### I want to…
 
 | | Go to |
 |---|---|
@@ -185,7 +197,7 @@ Being clear about scope saves you time:
 | …get something working right now | [Install & Your First AI](#getting-started) |
 | …build a real guard end to end | [Tutorial: A Complete Guard](#tutorial-complete-guard) |
 | …look up a node or a number, fast | [Cheat Sheet](#cheat-sheet) |
-| …do one specific thing | [How-To Guides](#how-to-guides) — 25 recipes |
+| …do one specific thing | [How-To Guides](#how-to-guides) — over 30 recipes |
 | …move off Epic's `AIPerception` | [Migrating from AIPerception](#migrating-from-aiperception) |
 | …understand why it behaves like that | [Core Concepts](#core-concepts) · [How It Works](#how-it-works) |
 | …fix something that's wrong | [Troubleshooting & FAQ](#troubleshooting) |
@@ -194,21 +206,21 @@ Being clear about scope saves you time:
 
 ---
 
-### How-to
+#### How-to
 
 | Page | What it covers |
 |---|---|
-| **[How-To Guides](#how-to-guides)** | 25 task recipes — hearing, occlusion, search, squads, HUD meters, creatures, difficulty |
+| **[How-To Guides](#how-to-guides)** | Over 30 task recipes — hearing, occlusion, search, squads, HUD meters, creatures, disguises, difficulty |
 | **[Migrating from AIPerception](#migrating-from-aiperception)** | Concept mapping, step-by-step port, an Epic-parity profile |
 
-### Understand
+#### Understand
 
 | Page | What it covers |
 |---|---|
 | **[Core Concepts](#core-concepts)** | Confidence, fusion, the lifecycle, awareness, attention, loss reasons, memory |
 | **[How It Works](#how-it-works)** | Architecture, the tick pipeline, LOD, where state lives, extension points |
 
-### Senses & configuration
+#### Senses & configuration
 
 | Page | What it covers |
 |---|---|
@@ -217,7 +229,7 @@ Being clear about scope saves you time:
 | **[Sound System](#sound-system)** | Sound data assets, filters, the per-agent pipeline |
 | **[Pain & Damage](#pain-and-damage)** | Damage reactions, pain types, sense degradation |
 
-### Systems
+#### Systems
 
 | Page | What it covers |
 |---|---|
@@ -229,7 +241,7 @@ Being clear about scope saves you time:
 | **[Environment & Fairness](#environment-and-fairness)** | Light, weather, wind, safe rooms, reaction time, telegraphing |
 | **[Multiplayer](#multiplayer)** | Server authority, replicated detection meters, the relay component |
 
-### Scripting
+#### Scripting
 
 | Page | What it covers |
 |---|---|
@@ -239,7 +251,7 @@ Being clear about scope saves you time:
 | **[Policies](#policies)** | Take over fusion, threat scoring or attention with your own rule |
 | **[Adapters](#adapters)** | Tell APS how your project stores health and posture |
 
-### Build & ship
+#### Build & ship
 
 | Page | What it covers |
 |---|---|
@@ -272,7 +284,7 @@ Every formula, default value and firing condition in these pages was read out of
 <a id="getting-started"></a>
 
 ## Install & Your First AI
-**For:** first-time users · **Time:** ~15 minutes · **Outcome:** an AI that detects you and fires Blueprint events.
+**For:** first-time users · **Time:** about 15 minutes · **Outcome:** an AI that detects you and fires Blueprint events
 
 > **▶ Video walkthrough** — *Install and first detection (6 min).* Coming soon.
 > When it is live, delete this block and uncomment the embed below.
@@ -315,7 +327,9 @@ Content Browser → right-click → **Miscellaneous → Data Asset** → choose 
 
 Open it. It already has **Vision** and **Hearing** in the `Sense Classes` array, and every other setting has a working default. **You do not have to change anything yet.**
 
-> A brand-new profile is deliberately functional out of the box. An empty sense list would make the AI silently perceive nothing, which is the single most common first-run failure — so the two senses almost every game wants are already there.
+> **Why it works before you touch anything**
+>
+> A brand-new profile is deliberately functional. An empty sense list would make the AI silently perceive nothing, which is the single most common first-run failure, so the two senses almost every game wants are already there.
 
 #### Step 2 — Add the component to your AI
 
@@ -328,7 +342,9 @@ Select it, and in the Details panel set:
 - **Profile** → `DA_Profile_Guard`
 - **Debug Settings → b Enabled** → ✅ (turn this off before shipping; it is compiled out of Shipping builds anyway)
 
-> **Put it on the Pawn, not the AIController.** It works on either, but AIControllers never replicate, so putting it on the Pawn keeps multiplayer simple. See [Multiplayer](#multiplayer).
+> **Put it on the Pawn, not the AIController**
+>
+> It works on either, but AIControllers never replicate, so putting it on the Pawn keeps multiplayer simple. See [Multiplayer](#multiplayer).
 
 #### Step 3 — Add the Listener component
 
@@ -363,8 +379,9 @@ Drop `BP_Guard` in the level, possess your player, walk into its vision cone.
 
 You should see:
 
-- a **vision cone** drawn on the ground,
-- a **text block** above the guard showing per-sense confidence and lifecycle state,
+- a **vision cone** drawn from the guard's eyes,
+- a **status panel** in the top-left corner: lifecycle state, a confidence graph, and one row per sense,
+- a **state chip** floating above your own character,
 - your **Print String** firing when confidence crosses the Detect threshold.
 
 Walk behind a wall. Watch the state go `Detected → Lost`, then decay to `Remembered` and finally `Expired`.
@@ -406,7 +423,9 @@ That is it. Every AI within `Max Range` that passes its own sound filter now hea
 
 For a location-based sound with no source actor (explosion, trap, falling crate) use **Emit Sound At Location** instead.
 
-> Play your actual audio however you normally would — `Emit Sound` only feeds the perception system.
+> **Note**
+>
+> Play your actual audio however you normally would. `Emit Sound` only feeds the perception system.
 
 ---
 
@@ -434,19 +453,19 @@ Copy this into your project notes.
 
 ### Where things live in the editor
 
-**Every component is prefixed `APS`, so typing `aps` into Add Component lists all four at once.**
+**Every component is prefixed `APS`, so typing `aps` into Add Component lists all of them at once.**
 
 | Thing | Where to find it |
 |---|---|
-| APS Core | Add Component → search `aps` |
-| APS Perception Listener | Add Component → search `aps` |
-| APS Target Component | Add Component → search `aps` |
-| APS Relationship | Add Component → search `aps` |
+| APS Core · APS Perception Listener · APS Target Component · APS Relationship · APS Environment | Add Component → search `aps` |
+| APS Observer · APS Signature · APS Evidence · APS Search *(Knowledge module)* | Add Component → search `aps` |
 | Perception Profile | Content Browser → Data Asset → `PerceptionProfile` |
+| Quality Profile | Content Browser → Data Asset → `APSQualityProfile` |
 | Sound Type / Filter | Content Browser → Data Asset → `SoundTypeDefinition` / `SoundFilterProfile` |
 | Pain Type | Content Browser → Data Asset → `PainTypeDefinition` |
 | Blueprint nodes | Right-click in any graph → type `APS` |
 | World settings (light, wind, zones) | `Get APS Subsystem` → drag off it |
+| Faction knowledge | `Get APS Knowledge` → drag off it |
 
 ---
 
@@ -456,9 +475,7 @@ Copy this into your project notes.
 <a id="tutorial-complete-guard"></a>
 
 ## Tutorial: A Complete Guard
-**Time:** ~45 minutes
-**You'll need:** [Install & Your First AI](#getting-started) done, a level with some cover, and a player character you can walk around with.
-**No C++.**
+**Time:** about 45 minutes · **You'll need:** [Install & Your First AI](#getting-started) done, a level with some cover, and a player character you can walk around with · **No C++**
 
 > **▶ Video walkthrough** — *Build a complete guard (20 min).* Coming soon.
 > When it is live, delete this block and uncomment the embed below.
@@ -490,7 +507,7 @@ The interesting part is `SEARCH`. A guard that always runs the same search looks
 
 ---
 
-## Part 1 — The profile (5 min)
+### Part 1 — The profile (5 min)
 
 Content Browser → right-click → **Miscellaneous → Data Asset** → **PerceptionProfile** → name it `DA_Profile_Guard`.
 
@@ -515,7 +532,7 @@ Open it and set these. Everything not listed stays at its default.
 
 ---
 
-## Part 2 — The guard actor (5 min)
+### Part 2 — The guard actor (5 min)
 
 Open your AI character Blueprint (`BP_Guard`).
 
@@ -523,18 +540,17 @@ Open your AI character Blueprint (`BP_Guard`).
 - **APS Core** → Details → `Profile` = `DA_Profile_Guard`
 - **APS Perception Listener**
 
-On the APS Core, also set:
-- `Debug Settings → b Enabled` ✅
-- `Debug Settings → b Nearest AI Only` ✅
+On the APS Core, also tick `Debug Settings → b Enabled`. Leave `Agent Scope` on its default; the overlay stays readable once you add a second guard.
 
 **On your player character:** Add Component → **APS Target Component**. Leave everything default.
 
-> ### ✅ Checkpoint 1
-> Press Play and walk into the guard's view. You should see a vision cone drawn on the ground and a text block above the guard reading something like `[DETECTED] 62% 1.4s` with a per-sense breakdown. If you don't, the profile isn't assigned — that's the cause 90% of the time.
+> **Checkpoint 1**
+>
+> Press Play and walk into the guard's view. You should see a vision cone drawn from the guard's eyes and a status panel in the top-left corner reading something like `DETECTED 62%`, with a bar per sense underneath. If you see nothing, the profile is not assigned. That is the cause nine times out of ten.
 
 ---
 
-## Part 3 — Make your footsteps audible (5 min)
+### Part 3 — Make your footsteps audible (5 min)
 
 Hearing does nothing until you emit sound. This is deliberate: the guard hears exactly what you decide is audible.
 
@@ -561,16 +577,17 @@ Event AnimNotify_Footstep
         Sound Type    : DA_Sound_Footstep
 ```
 
-> ### ✅ Checkpoint 2
-> Stand behind a wall, out of sight, and walk on the spot. The guard's debug text should show `Hearing` climbing above 0%, and the state should reach `SUSPECTED`. Stop moving and watch it decay. If Hearing stays at 0%, your notify isn't firing — test it with a Print String first.
+> **Checkpoint 2**
+>
+> Stand behind a wall, out of sight, and walk on the spot. The `HEARING` row in the panel should climb above 0% and the state chip should reach `SUSPECTED`. Stop moving and watch it decay. If Hearing stays at 0%, your notify is not firing. Test it with a Print String first.
 
 ---
 
-## Part 4 — Push perception into the Blackboard (10 min)
+### Part 4 — Push perception into the Blackboard (10 min)
 
 The pattern: **events write to the Blackboard, the Behavior Tree reads it.** Never poll APS from a BT service every tick when an event already tells you.
 
-### 4a. Create the Blackboard
+#### 4a. Create the Blackboard
 
 New **Blackboard** asset → `BB_Guard`. Add these keys:
 
@@ -586,7 +603,7 @@ New **Blackboard** asset → `BB_Guard`. Add these keys:
 | `InvestigateLocation` | Vector |
 | `PatrolPoint` | Vector |
 
-### 4b. Wire the events
+#### 4b. Wire the events
 
 In `BP_Guard`'s Event Graph. Get the Blackboard once and promote it to a variable to keep the graph readable:
 
@@ -596,7 +613,7 @@ Event Begin Play
         └─► Promote to variable "BB"
 ```
 
-#### Attention changed → set the target
+##### Attention changed → set the target
 
 ```
 Event On Attention Changed (Old Target, New Target)
@@ -606,7 +623,7 @@ Event On Attention Changed (Old Target, New Target)
 
 **Use this, not `On AI Detect`, for the target key.** Attention is sticky — it won't thrash between two equally-scored targets and force the tree to re-plan every tick.
 
-#### Telegraph → the "huh?" moment
+##### Telegraph → the "huh?" moment
 
 ```
 Event On AI Telegraph (Target, Confidence)
@@ -614,7 +631,7 @@ Event On AI Telegraph (Target, Confidence)
   └─► Get Controller → Cast to AIController → Set Focus (Target)
 ```
 
-#### Heard something → investigate, but don't interrupt a chase
+##### Heard something → investigate, but don't interrupt a chase
 
 ```
 Event On AI Hear (Location, Loudness, Sound Type Name)
@@ -622,7 +639,7 @@ Event On AI Hear (Location, Loudness, Sound Type Name)
         True → BB → Set Value as Vector ("InvestigateLocation", Location)
 ```
 
-#### Lost the target → set up the search
+##### Lost the target → set up the search
 
 This is the important one.
 
@@ -639,7 +656,7 @@ Event On AI Lost (Target, Last Known, Predicted, Last Cover Actor)
                                       APS Core → Get Loss Direction (Target))
 ```
 
-#### Gave up → clear everything
+##### Gave up → clear everything
 
 ```
 Event On AI Forget (Target)
@@ -649,19 +666,20 @@ Event On AI Forget (Target)
   └─► Get Controller → Cast to AIController → Clear Focus (Gameplay)
 ```
 
-> ### ✅ Checkpoint 3
-> Add a temporary `Print String` to each of the five events. Play, get spotted, then break line of sight and hide. You should see the sequence:
+> **Checkpoint 3**
+>
+> Add a temporary `Print String` to each of the five events. Play, get spotted, then break line of sight and hide. You should see the sequence
 > `Telegraph → Detect → Track → Lost → (8+ seconds) → Remember → Forget`.
 >
-> If `Lost` fires the instant you step behind cover, your `Vision Loss → Grace Time` didn't save. If `Forget` fires immediately after `Lost`, check `Min Time In Lost`.
+> If `Lost` fires the instant you step behind cover, your `Vision Loss → Grace Time` did not save. If `Forget` fires immediately after `Lost`, check `Min Time In Lost`.
 
 ---
 
-## Part 5 — The Behavior Tree (15 min)
+### Part 5 — The Behavior Tree (15 min)
 
 New **Behavior Tree** → `BT_Guard`, set its Blackboard to `BB_Guard`.
 
-### The shape
+#### The shape
 
 ```
 Root
@@ -674,7 +692,7 @@ Root
 
 A Selector runs its children left to right and stops at the first that succeeds. Because the decorators get progressively less specific, the guard naturally prioritises: chase beats search, search beats investigate, investigate beats patrol.
 
-### CHASE branch
+#### CHASE branch
 
 ```
 Sequence
@@ -684,7 +702,7 @@ Sequence
 
 Add a **Blackboard** decorator on the Sequence: Key `bHasTarget`, Key Query `Is Set`, and set **Observer Aborts → Both**. That last part matters — it lets the tree bail out of a chase the moment the target is lost.
 
-### SEARCH branch — the part that makes it look smart
+#### SEARCH branch — the part that makes it look smart
 
 ```
 Selector  [decorator: LastKnownPosition Is Set, Observer Aborts: Lower Priority]
@@ -712,7 +730,7 @@ Selector  [decorator: LastKnownPosition Is Set, Observer Aborts: Lower Priority]
 
 For the `LossReason` decorators use **Blackboard → Key: LossReason, Key Query: Is Equal To**, and pick the enum value.
 
-#### Task: Search Step
+##### Task: Search Step
 
 New **BTTask Blueprint** → `BTT_SearchStep`:
 
@@ -728,7 +746,7 @@ Event Receive Execute AI
 
 `SearchRadius` grows the longer you stay hidden, so repeating this task naturally spirals the search outward. No timer logic of your own.
 
-#### Task: Move Along Loss Direction
+##### Task: Move Along Loss Direction
 
 ```
 Event Receive Execute AI
@@ -738,7 +756,7 @@ Event Receive Execute AI
                   → Finish Execute (Success)
 ```
 
-#### Task: Give Up
+##### Task: Give Up
 
 ```
 Event Receive Execute AI
@@ -747,7 +765,7 @@ Event Receive Execute AI
   └─► Finish Execute (Success)
 ```
 
-### INVESTIGATE branch
+#### INVESTIGATE branch
 
 ```
 Sequence  [decorator: InvestigateLocation Is Set, Observer Aborts: Lower Priority]
@@ -756,7 +774,7 @@ Sequence  [decorator: InvestigateLocation Is Set, Observer Aborts: Lower Priorit
 └── Task: Give Up
 ```
 
-### PATROL branch
+#### PATROL branch
 
 Whatever you already have. If you have nothing:
 
@@ -767,7 +785,7 @@ Sequence
 └── Wait (2.0)
 ```
 
-### Run the tree
+#### Run the tree
 
 In `BP_Guard`'s AI Controller:
 
@@ -776,14 +794,15 @@ Event On Possess
   └─► Run Behavior Tree (BT_Guard)
 ```
 
-> ### ✅ Checkpoint 4
-> Play. The guard should patrol. Walk into view — it turns and says "huh?", then commits and chases. Break line of sight behind a crate. It should go to the crate, look around, then spiral outward. After about 8 seconds it gives up and returns to patrol.
+> **Checkpoint 4**
 >
-> Now hide *and stay still* somewhere it never had sight of you, and just make a noise. It should walk to the noise, look around for 3 seconds, and go back to patrol **without** chasing. That difference — chasing when it saw you, investigating when it only heard you — is the whole point.
+> Play. The guard should patrol. Walk into view: it turns and says "huh?", then commits and chases. Break line of sight behind a crate. It should go to the crate, look around, then spiral outward. After about 8 seconds it gives up and returns to patrol.
+>
+> Now hide *and stay still* somewhere it never had sight of you, and just make a noise. It should walk to the noise, look around for 3 seconds, and go back to patrol **without** chasing. That difference, chasing when it saw you and investigating when it only heard you, is the whole point.
 
 ---
 
-## Part 6 — Watch what it's thinking (5 min)
+### Part 6 — Watch what it's thinking (5 min)
 
 Bind these to keys in your player controller for live inspection:
 
@@ -803,6 +822,8 @@ Then cycle through the modes while playing:
 | **Delegates** | Which event fired last and when — settles "is my BP not bound, or did it never fire?" |
 
 Freezing the snapshot mid-chase and reading the Sense panel is the fastest way to understand why the guard did what it did.
+
+For a written answer instead of a panel, print **Explain Perception** (Player). It lists every sense and says why each one is or is not contributing. See [Explaining & Recording](#explaining-and-recording).
 
 ---
 
@@ -945,7 +966,9 @@ Leave cone angles and occlusion **identical** across difficulties — the player
 | Trim APS Target Component samples 5 → 3 | −40% vision traces |
 | `Max Tracked Targets` 16 → 4 | Less memory, faster sorting |
 | One occlusion channel instead of three | −66% trace count |
-| LOD tier 4 (>300 m) | Suspended automatically |
+| Assign an `APS Quality Profile` | Scales tick rate and trims vision samples without resetting what the AI believes |
+| `b Enable Statistical Tier` | Distant agents stop tracing entirely |
+| LOD tier 4 | Suspended automatically. Roughly beyond 225 m for an idle agent |
 
 ---
 
@@ -981,6 +1004,8 @@ A sense volume only appears when that sense is in the profile's `Sense Classes`.
 | Client sees nothing | Use `Get Replicated Perception State` |
 | Cone points at the sky | `Eye Socket Alignment` → **Automatic** |
 | Crouch-walk is not hiding me | Set `Min Visible Points Crouched` to 2 |
+| "Why can't it see me?" | Print `Explain Perception` (Target) |
+| A thrown-rock sound is ignored | Sourceless sounds arrive on `On Location Belief Changed`, not `On AI Hear` |
 | A setting seems to do nothing | Check the ⚠ list in [Troubleshooting](#troubleshooting) — five are inert in v3.0 |
 
 ---
@@ -990,7 +1015,9 @@ A sense volume only appears when that sense is in the profile's `Sense Classes`.
 - **Confidence never falls while a sense is active.** It rises or holds. Decay starts only when every sense goes silent.
 - **`Vision Sample Count` is ignored** for any target carrying an APS Target Component — that component brings its own 5 samples.
 - **Never-search zones are advisory.** You must call `Is Location In Never Search Zone` in your BT; nothing is blocked automatically.
-- **The Pain sense reads your health component automatically** (`GetHealthPercent` / `GetHealth`+`GetMaxHealth`) and degrades *all* senses.
+- **The Pain sense reads your health automatically.** It asks for an `APS Health Provider` interface first, then falls back to a function named `GetHealthPercent`, or `GetHealth` with `GetMaxHealth`, and degrades *all* senses.
+- **Sourceless sounds never fire `On AI Hear`.** `Emit Sound At Location` creates a belief about a place. Read it with `On Location Belief Changed`.
+- **Idle AI tick at half rate.** An agent that is not at least Suspicious can never reach LOD tier 0, whatever the distance.
 - **A sound asset's `Sound Name` becomes a stimulus tag** — an explosion only shakes the ground for vibration senses if that field reads exactly `Explosion`.
 - **100 damage in one hit = full confidence.** Scale to your damage numbers.
 - **`Set Target Confidence` only raises.** It cannot clear a detection.
@@ -1006,8 +1033,7 @@ A sense volume only appears when that sense is in the profile's `Sense Classes`.
 <a id="how-to-guides"></a>
 
 ## How-To Guides
-**For:** developers who know roughly what they want and need the specific steps.
-**Assumes:** you've done [Install & Your First AI](#getting-started).
+**For:** developers who know roughly what they want and need the specific steps · **Assumes:** you have done [Install & Your First AI](#getting-started)
 
 Each recipe is self-contained. Skim the headings, take what you need.
 
@@ -1103,7 +1129,9 @@ Profile → **Detection | Eyes**:
 
 **Why:** global ambient only models day and night. The per-target path traces from the target toward the sun and applies the shadow level when that trace is blocked.
 
-⚠ `Light Level Override` is only read when `b Use Per Target Light` is on.
+> **Warning**
+>
+> `Light Level Override` is only read while `b Use Per Target Light` is on.
 
 ---
 
@@ -1147,7 +1175,9 @@ Profile → **Fairness → `First Spot Reaction Time`** = `0.4`.
    ```
 3. Add the same check to any BT task that picks a search point.
 
-⚠ **Zones are advisory.** Registering one does not stop anything by itself — the plugin gives you the query, your BT does the honouring.
+> **Zones are advisory**
+>
+> Registering one does not stop anything by itself. The plugin gives you the query; your BT does the honouring.
 
 ---
 
@@ -1321,7 +1351,9 @@ Event On AI Forget
 
 **Wind:** create a Blueprint subclass of `SenseUnit_Smell`, set `Wind Direction` and `Downwind Bonus` 2.5 in its Class Defaults, and put *that* class in `Sense Classes`.
 
-⚠ `Set Wind State` on the subsystem controls wind *speed* only — the directional bonus reads the sense's own `Wind Direction` property.
+> **Warning**
+>
+> `Set Wind State` on the subsystem controls wind *speed* only. The directional bonus reads the sense's own `Wind Direction` property.
 
 **Why:** standing upwind drops the scent signal to **0.1×**, a 10× penalty. That asymmetry is what makes wind a real mechanic rather than a modifier.
 
@@ -1336,7 +1368,9 @@ Event On AI Forget
 
 **Why:** `Vibration Min Speed` at 150 *is* the stealth mechanic — walk and it feels you, crouch-walk and it does not. Vibration passes through walls and ignores light entirely.
 
-⚠ Vibration declares a fixed 800 cm gather range, so another sense on the profile must reach far enough to pull distant targets into evaluation.
+> **Warning**
+>
+> Vibration declares a fixed 800 cm gather range, so another sense on the profile must reach far enough to pull distant targets into evaluation.
 
 ---
 
@@ -1378,7 +1412,9 @@ Alarm triggered
 
 `DA_Profile_Guard_Alerted` = a copy with longer ranges, lower thresholds, wider cones.
 
-⚠ `Set Profile` rebuilds senses and **resets the ledger, emotions and attention**. Don't call it every tick, and avoid swapping mid-engagement — gate it on `Has Any Detection == false` if that matters.
+> **What a swap keeps**
+>
+> When the new profile runs the same senses in the same order and has the same `Max Tracked Targets`, the swap keeps everything the AI believes: ledger, emotions, attention. Only a structurally different profile rebuilds the senses and resets that state. Build alert-state variants as children of the base profile and they stay compatible by construction. See [Profile Composition](#profile-composition).
 
 ---
 
@@ -1432,15 +1468,46 @@ Or just add an **APS Target Component** with `b Auto Register As Perceivable` ti
 
 ---
 
+#### Let the player wear a disguise
+
+```
+Player puts the uniform on
+  └─► ForEach guard → APS Core → Add Target Evidence
+        Target        : Player
+        Evidence Tag  : "Disguise"
+        Operation     : Clamp
+        Value         : 0.15
+        Lifetime      : 0            // holds until removed
+
+Player is seen taking it off, or attacks
+  └─► ForEach guard → APS Core → Remove Target Evidence (Player, "Disguise")
+```
+
+**Why:** `Set Target Confidence` can only raise belief. Evidence is the two-way version. A `Clamp` holds belief at or below the value even while vision is actively reporting the player, so every guard stays at most `Suspected`. Re-adding the same tag refreshes it rather than stacking. `Invalidate` with a short `Lifetime` is the "you did not see anything" cutscene beat, and **Get Target Evidence** returns what is applied, with its `Source`, so you can see why belief is where it is.
+
+---
+
+#### Tune one enemy without a new asset
+
+```
+Event Begin Play
+  ├─► APS Core → Set Profile Number ("VisionMaxRange", 3200)
+  └─► APS Core → Set Profile Flag   ("bEnablePeripheralCone", true)
+```
+
+Or fill in `Profile Overrides` on the component in the Details panel.
+
+**Why:** the change lands on a private copy of the profile, so the shared asset and every other agent are untouched, and nothing the agent believes is reset. Use the property's C++ name: the Details panel name with the spaces removed, keeping any leading `b` and any underscore, as in `bEnablePeripheralCone` or `MinVisiblePoints_Crouched`. A name that does not resolve is refused and logged. For a level-wide experiment while playing, type `aps.Tune VisionMaxRange 3200` in the console.
+
+---
+
 ---
 
 
 <a id="migrating-from-aiperception"></a>
 
 ## Migrating from AIPerception
-**For:** anyone with a working `AIPerception` setup they want to move across.
-**Time:** 20–40 minutes for a typical guard.
-**Risk:** low — the two systems run side by side, so you can migrate one behaviour at a time and roll back at any point.
+**For:** anyone with a working `AIPerception` setup to move across · **Time:** 20 to 40 minutes for a typical guard · **Risk:** low, the two systems run side by side
 
 ---
 
@@ -1610,7 +1677,9 @@ If you want a strict baseline before tuning, this profile is close to `AIPercept
 
 Start there, confirm parity, then turn features on one at a time. That way any behaviour change is traceable to a single setting.
 
-⚠ With an APS Target Component on the target, `Vision Sample Count` is ignored — trim that component's `Visibility Samples` to one entry instead, or don't add the component while establishing parity.
+> **Warning**
+>
+> With an APS Target Component on the target, `Vision Sample Count` is ignored. Trim that component's `Visibility Samples` to one entry instead, or leave the component off while establishing parity.
 
 ---
 
@@ -1734,7 +1803,9 @@ with curve: Smoothed = Lerp(Smoothed, LastActiveConfidence × DecayCurve(TimeSin
 
 `SenseDecayMultiplier` is the `Confidence Decay Multiplier` from the **Loss** config of the sense that was last dominant.
 
-> ⚠ **Two profile settings in the Fusion section do nothing in v3.0:** `Confidence Decay Smoothing` and `Confidence Reduce Delay` are not read by any code path. Ignore them; use `Confidence Rise Rate` and the per-sense `Confidence Decay Multiplier` instead.
+> **Two Fusion settings do nothing in v3.0**
+>
+> `Confidence Decay Smoothing` and `Confidence Reduce Delay` are not read by any code path. Ignore them; use `Confidence Rise Rate` and the per-sense `Confidence Decay Multiplier` instead.
 
 ---
 
@@ -1982,14 +2053,14 @@ Set every emotion cap to 0 on a robot archetype and it becomes emotionless witho
 
 ### 10. The tick
 
-APS does **not** run every frame. The component ticks, but the perception pipeline only runs every `Base Update Interval` seconds (default 0.1 s), scaled by distance-based LOD.
+APS does **not** run every frame. The component ticks, but the perception pipeline only runs every `Base Update Interval` seconds (default 0.1 s), multiplied by the agent's LOD tier and by any quality profile. The tier comes from a significance score rather than raw distance; see [How It Works](#significance-and-lod).
 
 Order of operations per perception tick:
 
 1. Gather candidate targets (every Pawn in max sense range, plus registered non-Pawn actors) — refreshed on its own slower cadence
 2. `PreTick` every sense — accumulators, persistent contacts, health sampling
 3. Owner-internal senses fire their events (Pain)
-4. For each target: evaluate every sense → apply pain degradation → fuse → apply fairness rules
+4. For each target: evaluate every sense → apply pain degradation → fuse → apply fairness rules → apply scripted evidence
 5. Memory engine: smoothing, decay, lifecycle transitions
 6. Spatial belief update
 7. Threat assessment, relationship resolution
@@ -2002,14 +2073,26 @@ Perception runs **server-side only** and is skipped entirely on clients.
 
 ---
 
+### 11. Beliefs about places
+
+A belief does not have to be about an actor. A gunshot with no known shooter, a body, a forced lock: these are beliefs about a **place**, and they live in the same ledger with the same lifecycle and their own confidence.
+
+- `Emit Sound At Location` and discovered [evidence](#evidence-and-search) create them automatically.
+- **Report Location Belief** (`Location`, `Tag`, `Confidence`, `Accuracy`) creates one from your own logic. Reports close together with the same tag merge into one belief rather than piling up.
+- **On Location Belief Changed** fires on every lifecycle transition with the location, tag, new state and confidence.
+- **Get Strongest Location Belief** and **Get Location Beliefs** read them back.
+
+Place beliefs are deliberately kept out of attention, awareness and `On AI All Clear`, so a noise cannot steal focus from a person or stop the AI standing down. Before this existed, an anonymous sound was scored against whichever actor was under evaluation, and one explosion made every bystander in earshot a suspect.
+
+---
+
 ---
 
 
 <a id="how-it-works"></a>
 
 ## How It Works
-**For:** developers who want the mental model before they start tuning, and anyone extending the plugin.
-**Read this if:** you've hit behaviour you can't explain from the settings alone.
+**For:** developers who want the mental model before they start tuning, and anyone extending the plugin · **Read this if:** you have hit behaviour you cannot explain from the settings alone
 
 ---
 
@@ -2053,7 +2136,7 @@ The component ticks every frame, but the pipeline only *runs* every `Base Update
 ```mermaid
 flowchart TD
     T0{"Client?"} -->|yes| STOP1["Skip entirely<br/>perception is server-only"]
-    T0 -->|no| T1{"LOD tier 4?<br/>(>300 m)"}
+    T0 -->|no| T1{"LOD tier 4?"}
     T1 -->|yes| STOP2["Decay memory only<br/>no sense evaluation"]
     T1 -->|no| T2{"Interval<br/>elapsed?"}
     T2 -->|no| STOP3["Draw debug, return"]
@@ -2062,7 +2145,7 @@ flowchart TD
     P1["1 · Gather candidate targets<br/>max 5 Hz"] --> P2
     P2["2 · PreTick every sense<br/>accumulators, health, contacts"] --> P3
     P3["3 · Owner-internal senses fire<br/>Pain → OnAIPainReported"] --> P4
-    P4["4 · FOR EACH TARGET<br/>evaluate senses → pain degradation<br/>→ fuse → fairness rules"] --> P5
+    P4["4 · FOR EACH TARGET<br/>evaluate senses → pain degradation<br/>→ fuse → fairness rules → evidence"] --> P5
     P5["5 · Memory engine<br/>smoothing · decay · state transition"] --> P6
     P6["6 · Spatial belief update"] --> P7
     P7["7 · Threat + relationship"] --> P8
@@ -2079,19 +2162,34 @@ Two consequences worth internalising:
 
 ---
 
-### Distance LOD
+### Significance and LOD
 
-The subsystem assigns every agent a tier from its distance to the player camera, and the tier scales the tick interval. No setup.
+Every subsystem tick, each agent is scored for **significance**, 0 to 1, and the score picks its LOD tier. No setup. The built-in score is:
 
-| Tier | Distance | Interval | Behaviour |
+```
+Significance = 0.6 × (1 − distanceToNearestViewer / 30000 cm)
+             + 0.55 if the agent is Suspicious or more alert
+             + 0.25 × (awareness level / 4)
+```
+
+| Score | Tier | Perception interval | Behaviour |
 |---|---|---|---|
-| **0** | < 30 m | ×1 | Full rate |
-| **1** | 30–80 m | ×2 | |
-| **2** | 80–150 m | ×5 | |
-| **3** | 150–300 m | ×20 | Barely evaluating |
-| **4** | > 300 m | — | **Suspended.** Memory still decays. |
+| ≥ 0.75 | **0** | ×1 | Full rate |
+| ≥ 0.50 | **1** | ×2 | |
+| ≥ 0.30 | **2** | ×5 | |
+| ≥ 0.15 | **3** | ×20 | Barely evaluating. Component tick throttled to 0.1 s |
+| below | **4** | — | **Suspended** unless the crowd tier is on. Memory still decays. Component tick throttled to 0.25 s |
+
+Two things follow from the weights, and both surprise people:
+
+- **An idle agent never reaches tier 0.** With no engagement and no awareness the score tops out at 0.6, so an unaware guard runs at tier 1 out to 50 m, tier 2 to 150 m, tier 3 to 225 m, and is suspended beyond that. Half rate is the resting state.
+- **An engaged agent almost never drops below tier 0.** Once it is Suspicious or more alert, the engagement bonus keeps it at full rate out to roughly 260 m, and at tier 1 beyond that. A chase does not stutter because the camera is far away.
+
+*Viewer* means every local player camera, so split-screen and listen servers work. A dedicated server has no viewer and scores every agent as if it were at zero distance.
 
 Tiers also gate sounds and stimuli: a sound whose `Max LOD Tier` is 1 is never even considered by a tier-2 agent. Setting sensible LOD tiers on sound assets is a free, large saving.
+
+Replace the score with your own **APS Significance Policy** when your game has a different idea of what matters. Setting a tier directly does not stick; the subsystem rewrites it every pass. See [Scale & Crowds](#scale-and-crowds).
 
 ---
 
@@ -2107,6 +2205,9 @@ Tiers also gate sounds and stimuli: a sound whose `Max LOD Tier` is 1 is never e
 | Never-search zones | The world subsystem | World lifetime |
 | Player behaviour models | The component, keyed by target | Component lifetime |
 | Memory store | The component, keyed by subject | Component lifetime, bounded by `Memory Retention Seconds` |
+| Scripted evidence | The component, keyed by target | Until it expires or is removed. Deliberately kept when a target leaves the ledger, so a disguise applied at level start survives |
+| Place beliefs | `FBeliefRecord` in the ledger, like any target | Until `Expired` |
+| Recorded frames | The component | The recording window |
 
 **The ledger is pre-allocated** at `Max Tracked Targets` and slots are reused, so steady-state perception performs no heap allocation.
 
@@ -2127,6 +2228,7 @@ flowchart LR
     E --> F["Evaluated by every sense"]
 ```
 
+- **Candidates come from a broadphase grid** the subsystem rebuilds five times a second: every Pawn plus every registered actor, bucketed in 15 m cells. An agent asks for the cells around it instead of walking the world, so gather cost no longer scales with agents times pawns. `aps.UseSpatialIndex 0` restores the exhaustive scan for A/B testing.
 - **Pawns are automatic.** No registration needed.
 - **Non-Pawn actors** must call `Register Perceivable Actor`, or carry an APS Target Component with auto-register on.
 - **Gather range** is the largest of `Vision Max Range`, `Hearing Max Range`, and each sense's *declared* maximum. Vibration declares 800 cm and Echolocation 2000 cm regardless of their profile settings — so a long-range vibration build needs another sense reaching far enough to pull targets in.
@@ -2145,7 +2247,7 @@ Every sense — built-in or yours — implements the same four-stage contract. `
 | `GetSenseDelegatePayload` | If active | Which built-in event to fire |
 | `PostTickFlush` | After all targets | Clear per-tick caches |
 
-A sense also declares its loss behaviour (grace time, direct-cut, loss reason) and its maximum sensing range. Blueprint subclasses can override `Evaluate` and `Get Sense ID`; the rest is C++ only. See [Custom Senses](#custom-senses).
+A sense also declares its loss behaviour (grace time, direct cut, loss reason), its maximum sensing range and the stimulus tags it subscribes to. A Blueprint subclass of `Sense Unit` sets all of those in its class defaults and overrides `Evaluate` and `Get Sense ID`. Reacting to a stimulus, firing a built-in sense event, and event-driven or owner-internal senses are C++ only. See [Custom Senses](#custom-senses).
 
 ---
 
@@ -2162,10 +2264,12 @@ Two properties of the machinery are worth stating here because they explain surp
 
 ### Threading and cost
 
-- Everything runs on the **game thread**. There is no async trace path.
+- Everything runs on the **game thread** by default. `b Async Vision Traces` issues visibility traces asynchronously and reads them one evaluation later; it falls back to synchronous whenever surface transmission or more than one occlusion channel is configured.
 - The dominant cost is **line traces**: `sample points × occlusion channels`, per target, per evaluation.
 - Sound emission is O(agents) with a squared-distance cull first, so distant agents cost almost nothing.
+- Candidate gathering is a grid lookup, not a world walk.
 - Idle AI with no targets in range cost a distance check and an early out.
+- `Max Perception Updates Per Frame` on the subsystem caps how many agents run a full pass per frame. The rest defer to the next frame with their accumulated time intact.
 
 Full budget guidance is in [Performance](#performance).
 
@@ -2181,6 +2285,11 @@ Full budget guidance is in [Performance](#performance).
 | Change confidence directly | `Set Target Confidence` (raises only) |
 | Replace perception wholesale for a state | `Set Profile` at runtime |
 | Read everything about a target | `Get Belief Data` |
+| Change how senses fuse, how threat is scored, or which target gets attention | A [policy](#policies) class on the profile |
+| Tell APS where health or posture lives | An [adapter](#adapters) interface |
+| Lower, cap or clear belief from script | `Add Target Evidence` |
+| Scale cost without resetting belief | A quality profile via `Set Quality Profile` |
+| Decide which agents deserve CPU | An [APS Significance Policy](#scale-and-crowds) on the subsystem |
 
 ---
 
@@ -2230,7 +2339,7 @@ Slowing an expensive sense down is the cheapest performance win available. Visio
 
 ---
 
-### ⚠ Tuning a sense's own properties
+### Tuning a sense's own properties
 
 Most sense tuning lives on the **Perception Profile** (ranges, angles, thresholds, loss behaviour). But a few senses — **Smell** and **Touch** in particular — also carry their own `EditAnywhere` properties on the sense class itself.
 
@@ -2245,7 +2354,7 @@ This is also how you make two archetypes that share a profile shape but differ i
 
 ---
 
-## Vision
+### Vision
 
 **Fully automatic.** Nothing to call — if the target is in range, in the cone, lit, and not occluded, confidence rises.
 
@@ -2309,7 +2418,9 @@ Where the points come from, in priority order:
 2. The observing profile's `Default Visibility Samples`, if you filled that array in
 3. A built-in head / chest / pelvis / shoulders set, count-limited by `Vision Sample Count`
 
-> ⚠ **`Vision Sample Count` only limits option 3.** Any target carrying an APS Target Component is traced against all of that component's samples — five by default — no matter what `Vision Sample Count` says. To cut trace cost on targets that have the component, remove entries from **its** `Visibility Samples` array. See [Performance](#performance).
+> **`Vision Sample Count` only limits option 3**
+>
+> Any target carrying an APS Target Component is traced against all of that component's samples, five by default, no matter what `Vision Sample Count` says. To cut trace cost on targets that have the component, remove entries from **its** `Visibility Samples` array. A quality profile's `Max Vision Samples` caps every source at once. See [Performance](#performance).
 
 The component's defaults are `head` (weight 1.0), a chest offset (0.9), a pelvis offset (0.7), and `clavicle_l` / `clavicle_r` (0.6 each). Points are resolved from **mesh sockets** each evaluation, so they follow animation — leaning out of cover genuinely exposes your head. An entry whose socket does not exist on the skeleton falls back to its local-space offset rather than being dropped, so a mis-typed bone name degrades instead of silently disabling the sample.
 
@@ -2402,7 +2513,9 @@ Epic anchors the cone to the actor root plus a fixed height, facing the **contro
 | `Eye Socket Rotation Weight` | Blended mode only: 0 = pure actor rotation, 1 = pure socket |
 | `Eye Turn Rate Deg Per Sec` | Degrees/second the facing may turn. `0` = instant. **Set this near your mesh's real turn rate** so the AI cannot see you before it has physically turned to look. |
 
-> **Why `Automatic` matters.** A bone's local axes are arbitrary. On Epic's mannequin the head bone's X axis runs *up the neck*, so binding a cone straight to it aims the AI at the sky. `Automatic` reads the skeleton's reference pose, works out how the bone is oriented relative to the character, and cancels it. You can point `Eye Socket Name` at a raw bone name like `head` on any rig with zero other setup.
+> **Why `Automatic` matters**
+>
+> A bone's local axes are arbitrary. On Epic's mannequin the head bone's X axis runs *up the neck*, so binding a cone straight to it aims the AI at the sky. `Automatic` reads the skeleton's reference pose, works out how the bone is oriented relative to the character, and cancels it. You can point `Eye Socket Name` at a raw bone name like `head` on any rig with zero other setup.
 
 #### Occlusion
 
@@ -2430,7 +2543,9 @@ Resolution order, when `b Use Per Target Light` is **on**:
 2. The sun-shadow trace, if `b Trace Sun Shadow` is on **and** `Set Sun Direction` has been called — a blocked trace yields `min(ambient, ShadowLightLevel)`, so shadow can only darken, never brighten
 3. Global ambient light
 
-> ⚠ **`Light Level Override` does nothing while `b Use Per Target Light` is off.** The whole per-target light path is skipped and global ambient is used. If you drive lighting from your own light-gem system, you must still tick this box.
+> **`Light Level Override` does nothing while `b Use Per Target Light` is off**
+>
+> The whole per-target light path is skipped and global ambient is used. If you drive lighting from your own light-gem system, you must still tick this box.
 
 #### Loss behaviour
 
@@ -2438,7 +2553,7 @@ Grace 0.3 s, **direct cut**, decay multiplier ×3, loss reason `Occluded`. Visio
 
 ---
 
-## Hearing
+### Hearing
 
 **Event-driven. Sounds only exist if you emit them.** There is no passive velocity-based hearing.
 
@@ -2492,13 +2607,20 @@ Hearing builds. One footstep is a blip; a series of them in the same place is a 
 
 Accumulation is tracked **per source actor**. Sounds emitted with `Emit Sound At Location` have no source actor and therefore do not accumulate — they are evaluated as instant signals only.
 
-> ⚠ **Two settings in this section do nothing in v3.0:** `Hearing Base Threshold` and `b Sound Event Only Mode` are not read by any code path. Hearing is *always* event-only, and there is no noise floor — use `Suspect Threshold` and the sound filter's `Min Alert Level` to control sensitivity instead.
+> **Two settings in this section do nothing in v3.0**
+>
+> `Hearing Base Threshold` and `b Sound Event Only Mode` are not read by any code path. Hearing is *always* event-only, and there is no noise floor. Use `Suspect Threshold` and the sound filter's `Min Alert Level` to control sensitivity instead.
 
-#### A quirk worth knowing about location sounds
+#### Sourceless sounds become beliefs about places
 
-`Emit Sound At Location` produces no source actor, so the hearing sense does not match it against a specific target — **every** candidate target the AI evaluates that tick picks up the same location-sound confidence. In practice that means a nearby explosion can nudge the AI's belief about an unrelated pawn.
+`Emit Sound At Location` has no source actor, so it is not evidence about any particular target and the hearing sense never scores it against one. Instead it becomes a **place belief** with its own lifecycle:
 
-It is rarely a problem (the estimated location points at the blast, not the pawn), but if it matters to you, prefer `Emit Sound` with an explicit source actor.
+- confidence is the sound's loudness clamped to 1, with no distance or wall attenuation beyond the sound system's range cull,
+- the belief's tag is the asset's `Sound Name`,
+- `Location Accuracy Override` sets how tight the resulting uncertainty radius is, defaulting to 0.4,
+- repeated sounds in the same spot merge into one belief rather than stacking.
+
+Read it with **On Location Belief Changed** or **Get Strongest Location Belief**. `On AI Hear` does **not** fire for these sounds, because there is no target to fire it about. See [Core Concepts](#11-beliefs-about-places).
 
 #### Sound filter profile
 
@@ -2515,7 +2637,7 @@ Grace 3.0 s, no direct cut, decay ×1.0, loss reason `SoundFaded`. Sound lingers
 
 ---
 
-## Smell
+### Smell
 
 **Automatic while in range.** Also the reference example for writing your own sense — the source is heavily commented for that reason.
 
@@ -2555,7 +2677,9 @@ Range and accumulation come from the profile when set (`Smell Max Range` 400, `S
 | `Scent Threshold` | 0.4 | Divisor on intensity — **lower is more sensitive** |
 | `Wall Absorption Coeff` | 0.25 | Per-wall exponent. Lower than hearing, since scent seeps under doors. |
 
-> ⚠ **`Set Wind State` on the subsystem does not drive the directional wind bonus.** It sets wind *speed* (which dampens scent globally through the environment multiplier) but the direction used for the upwind/downwind calculation is the `Wind Direction` property on the **sense instance**. There is currently no Blueprint path to reach a live sense instance, so in practice you set it as a class default on a Blueprint subclass of `SenseUnit_Smell`. If you need runtime wind direction, that requires a small C++ addition.
+> **`Set Wind State` on the subsystem does not drive the directional wind bonus**
+>
+> It sets wind *speed*, which dampens scent globally through the environment multiplier. The direction used for the upwind and downwind calculation is the `Wind Direction` property on the **sense instance**. There is no Blueprint path to a live sense instance, so in practice you set it as a class default on a Blueprint subclass of `SenseUnit_Smell`. Runtime wind direction needs a small C++ addition.
 
 #### Scent tags
 
@@ -2567,7 +2691,7 @@ Grace **20 s**, no direct cut, decay ×0.3, loss reason `ScentLost`. Scent persi
 
 ---
 
-## Touch
+### Touch
 
 Physical contact. Instant, maximum-certainty detection at zero range.
 
@@ -2608,7 +2732,9 @@ These three profile values overwrite the equivalents on the sense class each tic
 
 Touch reports `Location Accuracy` of 1.0 — contact is the only sense that knows exactly where the target is.
 
-> ⚠ **`Touch Confidence` in the profile does nothing in v3.0.** It is not read anywhere. Strength comes from the report call and the per-type multiplier instead.
+> **`Touch Confidence` in the profile does nothing in v3.0**
+>
+> It is not read anywhere. Strength comes from the report call and the per-type multiplier instead.
 
 #### Loss behaviour
 
@@ -2616,7 +2742,7 @@ Grace 0.5 s, no direct cut, decay ×2.0, loss reason `SensorDropout`.
 
 ---
 
-## Vibration
+### Vibration
 
 Ground-transmitted movement detection. **Passes through walls. No line of sight needed.** The primary sense for zombies, burrowing creatures, blind bosses and anything that hunts by feel.
 
@@ -2631,7 +2757,9 @@ events:   Confidence = Strength × (1 − dist / VibrationDetectRange)
 
 The `speed / 600` term is the design lever: a target at 150 cm/s produces only a quarter of the signal of one at 600 cm/s, regardless of distance. **Walking versus sprinting matters more than proximity.**
 
-> ⚠ **Raising `Vibration Detect Range` above 800 needs a matching range elsewhere.** Candidate targets are gathered within the largest of `Vision Max Range`, `Hearing Max Range` and each sense's declared maximum — and Vibration declares a fixed 800 cm for that purpose regardless of the profile value. If you set `Vibration Detect Range` to 1500 on an AI whose vision and hearing are both shorter than that, targets beyond 800 cm never reach the sense. Raise `Hearing Max Range` to cover it.
+> **Raising `Vibration Detect Range` above 800 needs a matching range elsewhere**
+>
+> Candidate targets are gathered within the largest of `Vision Max Range`, `Hearing Max Range` and each sense's declared maximum, and Vibration declares a fixed 800 cm for that purpose regardless of the profile value. If you set `Vibration Detect Range` to 1500 on an AI whose vision and hearing are both shorter than that, targets beyond 800 cm never reach the sense. Raise `Hearing Max Range` to cover it.
 
 #### Surface detection
 
@@ -2651,7 +2779,7 @@ Grace **0.0 s**, no direct cut, decay ×5.0, loss reason `SensorDropout`. Stop m
 
 ---
 
-## Damage
+### Damage
 
 A passive broadcaster. Add it and **every** UE5 damage path — `ApplyDamage`, `ApplyPointDamage`, `ApplyRadialDamage` — is wired up automatically. No setup.
 
@@ -2682,7 +2810,7 @@ Grace **8.0 s**, no direct cut, decay ×0.5, loss reason `OutOfRange`. An AI rem
 
 ---
 
-## Pain / Health
+### Pain / Health
 
 **Pain is not health.** It is a perception *impairment* that you trigger. Flashbang a guard and it should be temporarily near-blind; set it on fire and it should be too distracted to hear well.
 
@@ -2737,21 +2865,24 @@ Only **one** `On AI Pain Reported` event fires per perception tick. If you repor
 
 #### Automatic health detection
 
-Every tick, the Pain sense scans the owning actor's components for a health accessor and reads the ratio automatically. It looks for, in order:
+Every tick, the Pain sense asks the owning actor how hurt it is and reads the ratio automatically. It looks, in order, for:
 
-1. `GetHealthPercent()` returning a float
-2. `GetHealth()` **and** `GetMaxHealth()`
-3. `GetCurrentHealth()` **and** `GetMaxHealth()`
+1. an **APS Health Provider** interface on the actor, then on any of its components ([Adapters](#adapters)),
+2. a function named `GetHealthPercent` returning a number,
+3. `GetHealth` **and** `GetMaxHealth`,
+4. `GetCurrentHealth` **and** `GetMaxHealth`.
 
-If your health component Blueprint has any of these — and most do — **health-based sense degradation works with zero setup**. You do not need to call `Set Health Ratio` at all.
+A percentage above 1 is treated as 0 to 100. If your health component exposes any of these, and most do, **health-based sense degradation works with zero setup**. You do not need to call `Set Health Ratio` at all.
 
-> This also means `Set Health Ratio` is overwritten each tick when a matching component exists. If you want manual control, make sure no component on the AI exposes one of those function names.
+> **Note**
+>
+> `Set Health Ratio` is overwritten each tick whenever something answers. For manual control, implement the interface and return the value you want, or make sure nothing on the AI exposes one of those function names.
 
 The legacy query API — **Get Health Ratio** and **Get Pain State** (`Healthy` >0.75 · `Wounded` >0.40 · `Critical` >0.15 · `Near Death`) — reads the same value, and works as a cheap Behavior Tree condition for "retreat when Critical".
 
 ---
 
-## Echolocation
+### Echolocation
 
 Pulse-based detection. **No line of sight required** — sonar bounces around geometry. For bats, aliens, blind bosses, cave creatures and sonar robots.
 
@@ -2768,7 +2899,9 @@ Quadratic falloff means echolocation is precise up close and drops off hard — 
 
 `Detection → b Echo Directional` restricts the pulse forward, but loosely: it rejects targets more than about **101°** off the AI's facing, not a strict 90° hemisphere. It also uses the actor's rotation rather than the resolved eye facing, so head-socket settings do not move the pulse.
 
-> Same range caveat as Vibration: the sense declares 2000 cm for target gathering. Setting `Echo Range` beyond that needs another sense with a longer range on the same profile, or targets past 2000 cm are never evaluated.
+> **Same gather-range caveat as Vibration**
+>
+> The sense declares 2000 cm for target gathering. Setting `Echo Range` beyond that needs another sense with a longer range on the same profile, or targets past 2000 cm are never evaluated.
 
 Echolocation fires **On AI See** — from the AI's point of view it *is* sight. Bind it exactly as you would vision.
 
@@ -2804,9 +2937,11 @@ The **Perception Profile** is a Data Asset that defines everything about how one
 
 Create one: Content Browser → right-click → **Miscellaneous → Data Asset** → `PerceptionProfile`.
 
-> **Every setting below ships with a working default.** Create a profile, assign it, press Play — you get a functional AI. Only open the sections you actually need.
+> **Every setting below ships with a working default**
+>
+> Create a profile, assign it, press Play, and you get a functional AI. Only open the sections you actually need.
 
-**Section map:** Senses|Setup · Ranges · Detection · Loss · Fusion · Memory · Awareness · Attention · Spatial · Performance · Brain|Emotions · Brain|Threat · Brain|Squad · Brain|PlayerModel · Senses|Pain · Senses|Touch · Fairness · Replication
+**Section map:** [Senses | Setup](#senses-setup) · [Ranges](#ranges) · [Detection](#detection-vision) · [Loss](#loss) · [Fusion](#fusion) · [Memory](#memory) · [Awareness](#awareness) · [Attention](#attention) · [Spatial](#spatial) · [Performance](#performance) · [Emotions](#brain-emotions) · [Threat](#brain-threat) · [Squad](#brain-squad) · [Player Model](#brain-player-model) · [Pain](#senses-pain) · [Touch](#senses-touch) · [Fairness](#fairness) · [Replication](#replication) · [Composition](#composition) · [Policies](#policies) · [Workbench](#workbench)
 
 ---
 
@@ -2867,6 +3002,8 @@ Create one: Content Browser → right-click → **Miscellaneous → Data Asset**
 | `Min Visible Points Crouched` | 1 | …when crouched. Raise to 2 for stance-aware stealth. |
 | `Min Visible Points Prone` | 1 | …when prone. Raise to 3. |
 
+> **Note**
+>
 > All three default to 1 on purpose: adding an APS Target Component must never silently make a character harder to see.
 
 ### Detection | Occlusion
@@ -3041,6 +3178,7 @@ These govern how *belief* decays. The settings below bound the separate, develop
 | `Base Update Interval` | 0.1 s | Perception tick rate. **The single biggest performance lever.** |
 | `Maintenance Interval` | 0.5 s | How often the ledger expires and compacts records |
 | `Max Tracked Targets` | 16 | Simultaneous tracked targets (1–32). Pre-allocated — lower is cheaper. |
+| `b Distance Tick Throttling` | true | Stop dispatching a component tick every frame for agents at LOD tier 3 and 4. Perception timing is unchanged, because the accumulator still receives the real elapsed time. |
 | `Sort Weight Confidence` | 0.5 | Target scoring: confidence weight |
 | `Sort Weight Recency` | 0.3 | …recency weight |
 | `Sort Weight Proximity` | 0.2 | …proximity weight |
@@ -3146,7 +3284,7 @@ Set both auto-share flags to false for tactical AI that only shares when *you* c
 
 ### Fairness
 
-Deliberate player-favouring rules. All opt-in, all default to off, so they never change behaviour until you ask for them.
+Deliberate player-favouring rules. The reaction window and the off-screen penalty are off by default. The telegraph event always fires at its threshold, and never-search zones are honoured by default but only matter once you register one.
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -3293,15 +3431,21 @@ Emit Sound At Location
   Sound Type     : DA_Sound_Explosion
 ```
 
-Use for sourceless sounds — explosions, traps, environmental triggers, thrown distractions. There is no target actor, so the AI investigates the *place*, not a person.
+Use for sourceless sounds — explosions, traps, environmental triggers, thrown distractions. There is no target actor, so the AI forms a **belief about the place** rather than about a person. It gets its own lifecycle, its confidence is the sound's loudness clamped to 1, and its tag is the asset's `Sound Name`. Read it with **On Location Belief Changed** or **Get Strongest Location Belief**. `On AI Hear` does not fire for these sounds.
 
-#### ⚠ Two differences between the two nodes
+#### Three differences between the two nodes
 
-**1. `Sound Name` doubles as a stimulus tag.** `Emit Sound` also broadcasts a stimulus event tagged `Stimulus.Sound.<Sound Name>`, which is how other senses intercept loud noises. The Vibration sense subscribes to `Stimulus.Sound.Explosion` — so **an explosion only shakes the ground for vibration-hunting AI if that asset's `Sound Name` field is literally `Explosion`.** Name the field carefully; it is not just a label.
+> **`Sound Name` doubles as a stimulus tag**
+>
+> `Emit Sound` also broadcasts a stimulus event tagged `Stimulus.Sound.<Sound Name>`, which is how other senses intercept loud noises. The Vibration sense subscribes to `Stimulus.Sound.Explosion`, so **an explosion only shakes the ground for vibration-hunting AI if that asset's `Sound Name` field is literally `Explosion`.** Name the field carefully; it is not just a label.
 
-**2. `Emit Sound At Location` does not emit a stimulus at all.** Only `Emit Sound` does. If you want an explosion to reach vibration senses, emit it from an actor — spawn a short-lived actor at the blast point if you have to — or call **Emit Stimulus** yourself alongside `Emit Sound At Location`.
+> **`Emit Sound At Location` does not emit a stimulus at all**
+>
+> Only `Emit Sound` does. If you want an explosion to reach vibration senses, emit it from an actor, spawning a short-lived one at the blast point if you have to, or call **Emit Stimulus** yourself alongside `Emit Sound At Location`.
 
-Sourceless sounds also do not accumulate (accumulation is keyed on the source actor) and are evaluated against every candidate target rather than one specific actor.
+> **Sourceless sounds are place beliefs, not target evidence**
+>
+> They never raise confidence on any actor, never accumulate (accumulation is keyed on the source actor) and never fire `On AI Hear`. They arrive as a place belief, read through `On Location Belief Changed`. Before v3.0 they were scored against every candidate target at once, which turned bystanders into suspects.
 
 #### Where to call it
 
@@ -3316,6 +3460,8 @@ Sourceless sounds also do not accumulate (accumulation is keyed on the source ac
 | Thrown objects | The projectile's `OnHit` — with `Emit Sound At Location` |
 | Explosions | Wherever you call `Apply Radial Damage` |
 
+> **Note**
+>
 > `Emit Sound` only feeds perception. Keep playing your actual audio however you normally do.
 
 #### A thrown-rock distraction in three nodes
@@ -3326,7 +3472,7 @@ Projectile OnComponentHit
   └─► Emit Sound At Location (Hit Location, DA_Sound_Thrown_Rock)
 ```
 
-Every guard in 1800 cm now investigates that spot. Classic stealth distraction, no extra systems.
+Every guard within 1800 cm now holds a place belief at that spot, tagged with the asset's `Sound Name`. Bind **On Location Belief Changed** and send the guard to investigate when the state reaches `Suspected`. Classic stealth distraction, no extra systems.
 
 ---
 
@@ -3391,7 +3537,9 @@ The reported confidence is `max(instant, accumulated)`, so accumulation can only
 
 **Design consequence:** a player who moves in short bursts, pausing longer than `Hold Time`, keeps the accumulator draining and stays under `Suspect Threshold`. A player who runs continuously builds past it. That is the core stealth loop and you tune it with these three numbers plus your `Awareness` thresholds.
 
-> `Hearing Base Threshold` is not read by any code path in v3.0 — there is no noise floor. Use `Suspect Threshold` and the sound filter's `Min Alert Level` instead.
+> **`Hearing Base Threshold` is inert in v3.0**
+>
+> It is not read by any code path, so there is no noise floor. Use `Suspect Threshold` and the sound filter's `Min Alert Level` instead.
 
 ---
 
@@ -3407,6 +3555,14 @@ Event On AI Hear (Location, Loudness, Sound Type Name)
 
 `Location` is where the AI *thinks* the sound came from — already degraded by `Location Accuracy Override` and `b Is Directional`. A vague sound gives a vague position, which is exactly what you want.
 
+Sourceless sounds arrive on a different event, because there is no actor to attach them to:
+
+```
+Event On Location Belief Changed (Location, Tag, State, Confidence)
+  └─► Branch: State == Suspected
+        True → Set Blackboard Vector "InvestigateLocation" = Location
+```
+
 ---
 
 ### Troubleshooting
@@ -3421,6 +3577,7 @@ Event On AI Hear (Location, Loudness, Sound Type Name)
 | AI reacts to every single footstep instantly | Lower `Sound Accumulation Rate`, raise `Suspect Threshold`, or give the archetype a filter with a higher `Min Alert Level` |
 | Explosions don't reach vibration-based AI | The sound asset's `Sound Name` must be `Explosion`, and you must use `Emit Sound` (not `Emit Sound At Location`) |
 | Sound filter makes AI totally deaf | `Accepted Categories` is empty — that means *nothing*, not *everything* |
+| A sourceless sound never fires `On AI Hear` | Correct. It is a place belief. Bind `On Location Belief Changed` instead |
 
 ---
 
@@ -3439,9 +3596,9 @@ Neither manages health. Your health system stays yours.
 
 ---
 
-## Damage
+### Damage
 
-### Setup
+#### Setup
 
 Add **Damage Sense** to your profile's `Sense Classes`. That is the entire setup.
 
@@ -3453,11 +3610,11 @@ Every UE5 damage path is wired automatically on Begin Play:
 
 Events are de-duplicated per frame, so the engine's habit of firing both `OnTakeAnyDamage` and `OnTakePointDamage` for one hit does not double-count.
 
-### Two modes
+#### Two modes
 
 **Profile → Ranges → `b Auto Confidence From Damage`**
 
-#### True (default) — automatic
+##### True (default) — automatic
 
 Confidence toward the instigator is set to:
 
@@ -3469,7 +3626,7 @@ Confidence = clamp(DamageAmount / 100, 0, 1)
 
 The instigator is added to the target list **regardless of range**, so a sniper far outside vision and hearing range still becomes a tracked target the moment they connect. The hit is reported with a `Location Accuracy` of 0.95.
 
-#### False — you decide
+##### False — you decide
 
 Damage fires **On AI Damaged** and nothing else. This is the mode you want for hardcore stealth, where a silenced hit should not reveal the shooter.
 
@@ -3482,25 +3639,25 @@ Event On AI Damaged (Instigator, Amount, Damage Type Tag, Hit Location)
 
 `Damage Type Tag` is derived from the `UDamageType` class name — create `DamageType_Fire`, `DamageType_Silenced`, `DamageType_Explosive` subclasses and you get free routing.
 
-### Threat weighting
+#### Threat weighting
 
 Damage received from a target feeds the threat score at `Threat Weight Damage Received` (default 0.30 — the second-largest term). The record also tracks `Damage Received From Target`, `Damage Dealt To Target`, `b Is Known Threat` and `Encounter Count`.
 
 `Threat Damage Decay Rate` controls how fast that contribution fades while the target is unsensed. Set it to `0` and the AI never forgets who shot it.
 
-### Loss behaviour
+#### Loss behaviour
 
 Grace **8 s**, no direct cut, decay ×0.5. An AI stays aware of a damage source for a long time — because a real one would.
 
 ---
 
-## Pain
+### Pain
 
 **Pain is perception impairment, not health.** Flashbang a guard and it should be temporarily near-blind. Set it on fire and it should be too distracted to hear well. Deafen it and it should still see fine.
 
 The Pain sense is **owner-internal** — it evaluates the AI itself, once per tick, and never participates in the target loop.
 
-### Setup
+#### Setup
 
 1. Add **Sense: Pain / Health** to `Sense Classes`.
 2. Create one **Pain Type Definition** data asset per kind of pain.
@@ -3508,7 +3665,7 @@ The Pain sense is **owner-internal** — it evaluates the AI itself, once per ti
 
 There is no array to register pain types in — you pass the asset directly to the node.
 
-### Pain Type Definition
+#### Pain Type Definition
 
 Content Browser → **Data Asset → PainTypeDefinition**.
 
@@ -3521,7 +3678,7 @@ Content Browser → **Data Asset → PainTypeDefinition**.
 | `Max Level` | Cap for this type. `0.5` caps at 50% no matter how many reports land. |
 | `Amount Override` | If > 0, every report adds this fixed amount instead of the caller's value. Useful for binary pain types like `Stunned`. |
 
-#### A useful set
+##### A useful set
 
 **`DA_Pain_Flashbang`** — Decay `0.8` · Max `1.0` · Amount Override `1.0`
 Sense Effects: `Vision Sense → 1.0`, `Hearing Sense → 0.7`
@@ -3543,7 +3700,7 @@ Stood next to an explosion. Sees fine, hears nothing.
 Sense Effects: `Vision Sense → 0.9`, `Smell Sense → 0.6`
 Tear gas / smoke grenade. Hearing untouched, so sound-based stealth still matters.
 
-### Using it
+#### Using it
 
 | Node | Purpose |
 |---|---|
@@ -3554,7 +3711,7 @@ Tear gas / smoke grenade. Hearing untouched, so sound-based stealth still matter
 | **Clear All Pain** | Full reset |
 | **Set Pain Type Enabled From Definition** (`Pain Def`, `b Enabled`) | Immunities — a fire elemental with `DA_Pain_Burning` disabled |
 
-#### Wiring a flashbang
+##### Wiring a flashbang
 
 ```
 Grenade explodes
@@ -3566,7 +3723,7 @@ Grenade explodes
 
 Guards behind cover are unaffected. Guards looking at it are blind for a second. No special-case code in the AI — the perception system simply stops feeding it vision.
 
-#### Reacting to pain
+##### Reacting to pain
 
 ```
 Event On AI Pain Reported (Pain Def, Pain Level)
@@ -3576,7 +3733,7 @@ Event On AI Pain Reported (Pain Def, Pain Level)
 
 Or poll it in a BT decorator: `Get Total Pain Level > 0.5` → run the "recover" branch.
 
-### How degradation is calculated
+#### How degradation is calculated
 
 ```
 start:          Deg = Lerp(SenseFloor, 1.0, HealthRatio)
@@ -3593,25 +3750,26 @@ Pain types stack **multiplicatively**, so burning at 0.5×effect 0.4 combined wi
 
 When pain suppresses a sense to effectively zero, APS clears that sense's active flag, so the memory system correctly starts its loss timer. A blinded AI actually *loses* you rather than freezing on a stale detection.
 
-### Health-based degradation — and the automatic hook
+#### Health-based degradation — and the automatic hook
 
 The same function applies **health** degradation to *every* sense, not just vision. Because non-vision senses have a floor of 0, an AI at 50% health perceives at roughly half strength across the board.
 
-That matters because **health is read automatically**. Every tick, the Pain sense scans the owner's components for a health accessor:
+That matters because **health is read automatically**. Every tick, the Pain sense asks the owner how hurt it is, in this order:
 
-1. `GetHealthPercent()` returning a float
-2. `GetHealth()` **and** `GetMaxHealth()`
-3. `GetCurrentHealth()` **and** `GetMaxHealth()`
+1. an **APS Health Provider** interface on the actor, then on any component ([Adapters](#adapters)),
+2. a function named `GetHealthPercent` returning a number,
+3. `GetHealth` **and** `GetMaxHealth`,
+4. `GetCurrentHealth` **and** `GetMaxHealth`.
 
-If your health component Blueprint exposes any of these — and most do — health-based sense degradation is **already running with zero setup**, and `Set Health Ratio` will be overwritten each tick.
+If your health component exposes any of these, and most do, health-based sense degradation is **already running with zero setup**, and `Set Health Ratio` is overwritten each tick.
 
 | Node | Purpose |
 |---|---|
-| **Set Health Ratio** (`Ratio`) | Feed a value manually. Only takes effect if no component on the AI exposes one of the function names above. |
+| **Set Health Ratio** (`Ratio`) | Feed a value manually. Only takes effect if nothing on the AI answers the health lookup above. |
 | **Get Health Ratio** | Read the current value |
 | **Get Pain State** | `Healthy` (>0.75) · `Wounded` (>0.40) · `Critical` (>0.15) · `Near Death` |
 
-**If you do not want health affecting perception**, either rename your accessor functions, or accept and tune the effect — it is often exactly what you want (a badly wounded guard genuinely should be worse at spotting you). Use `Get Pain State` as a cheap BT condition for "retreat when Critical".
+**If you do not want health affecting perception**, implement the interface and return 1, rename your accessor functions, or accept and tune the effect — it is often exactly what you want (a badly wounded guard genuinely should be worse at spotting you). Use `Get Pain State` as a cheap BT condition for "retreat when Critical".
 
 ---
 
@@ -3648,9 +3806,9 @@ Two independent systems:
 
 ---
 
-## Squad
+### Squad
 
-### Setup
+#### Setup
 
 Squad membership is just a matching `Name`. Call **Set Squad ID** from Begin Play:
 
@@ -3662,7 +3820,7 @@ Event Begin Play
 
 Every AI with `Patrol_A` is now a squadmate. Change it at runtime to move an AI between squads. `None` means no squad, and disables all squad features for that AI.
 
-### Automatic intel sharing
+#### Automatic intel sharing
 
 **Profile → Brain | Squad:**
 
@@ -3677,14 +3835,14 @@ Every AI with `Patrol_A` is now a squadmate. Change it at runtime to move an AI 
 
 **Both false = tactical behaviour.** Nothing is shared unless you explicitly call `Share Target With Squad` — from a radio animation, after a "contact!" bark, or only when the AI has actually finished a call-out. This is what makes military AI feel disciplined instead of telepathic.
 
-### Manual sharing
+#### Manual sharing
 
 | Node | What it sends | Use for |
 |---|---|---|
 | **Share Target With Squad** (`Target`) | The **full belief record** — position, confidence, threat, velocity, loss data | "I have confirmed contact, here is everything I know" |
 | **Broadcast Alert To Squad** (`Target`, `Alert Location`, `Threat Level`) | A **position and threat level only** | "I heard something over there" — no confirmed target yet |
 
-#### What the receiver actually gets
+##### What the receiver actually gets
 
 `Share Target With Squad` writes into the receiver's belief record:
 
@@ -3706,7 +3864,7 @@ Event On AI Detect (Target, Threat Level, Stimulus)
 
 That single branch is the difference between a squad that converges intelligently and one where everybody instantly headshots you through a wall.
 
-### Combat roles
+#### Combat roles
 
 Roles are **exclusive per squad** — only one AI holds each role at a time.
 
@@ -3721,7 +3879,7 @@ Roles are **exclusive per squad** — only one AI holds each role at a time.
 
 `Eligible Roles` on the profile restricts what an archetype may claim — a heavy gunner can be `Suppressor` or `Approacher` but never `Flanker`. An empty array means any role.
 
-#### A working pattern
+##### A working pattern
 
 ```
 Event On AI Detect
@@ -3741,9 +3899,9 @@ Four guards spotting you now naturally produce one flanker, one suppressor and t
 
 ---
 
-## Relationships
+### Relationships
 
-### The component
+#### The component
 
 Add **APS Relationship** to the AI alongside the APS Core. It is entirely optional — without it every relationship resolves to `Unknown`.
 
@@ -3758,7 +3916,7 @@ Add **APS Relationship** to the AI alongside the APS Core. It is entirely option
 | **Get Relationship** (`Target`) | Resolve the relationship for an actor |
 | **Set Relationship Override** (`Target`, `Relationship`) | Runtime override for one specific actor |
 
-### The values
+#### The values
 
 `ETargetRelationship`: `Unknown`, `Neutral`, `Friendly`, `Teammate`, `Enemy`, `HighValue`, `Feared`.
 
@@ -3771,14 +3929,14 @@ Add **APS Relationship** to the AI alongside the APS Core. It is entirely option
 | `HighValue` | Priority target — a VIP, an objective carrier. Use it to bias sorting and behaviour. |
 | `Feared` | Something this AI runs *from*. Drives the Fear emotion instead of Aggression. |
 
-### Resolution order
+#### Resolution order
 
 1. **Runtime override** (`Set Relationship Override`)
 2. **Class relationship** (`Class Relationships` map)
 3. **Team relationship** (`Team Relationships` map, via `IGenericTeamAgentInterface`)
 4. **Default relationship**
 
-### How it feeds threat
+#### How it feeds threat
 
 Relationship contributes to the threat score at `Threat Weight Relationship` (default 0.10). `Enemy` and `HighValue` push threat up; `Friendly` and `Teammate` push it down.
 
@@ -3794,7 +3952,7 @@ Event On AI Detect (Target, Threat Level, Stimulus)
         └─ Teammate  → ignore
 ```
 
-### Runtime changes
+#### Runtime changes
 
 `Set Relationship Override` handles the cases a static map cannot:
 
@@ -4205,14 +4363,18 @@ The bridge that connects an agent's own perception to the fabric. Add it beside 
 | Setting | Default | Meaning |
 |---|---|---|
 | `Faction` | `Police` | Which faction's store this reports to |
+| `Report Channel` | `Radio` | How reports travel. `Direct` is instant and complete; anything else costs time and detail and can be cut off before it lands |
 | `Min Confidence To Report` | 0.45 | Below this, not worth telling anyone |
 | `Report Interval` | 2.0 s | How often it may file |
 | `Ideal Observation Range` | 600 cm | Closer than this is a perfect look |
 | `Max Observation Range` | 4000 cm | Beyond this, nothing useful is made out |
 | `Alert Per Report` | 0.15 | How much each report raises faction alert |
 | `b Discover Evidence` | true | Also find [evidence](#evidence-and-search) in range |
+| `b Report Evidence To Faction` | true | Also file discovered evidence with the faction. Off keeps the discovery private to the AI that found it |
 
 **Get Observation Quality** (`Target`) returns how good a look this observer currently has — which is exactly the value **Get Observed Subset** wants. **Report Now** files immediately, ignoring the interval.
+
+A report only *names* the subject when observation quality reaches 0.75. Below that the faction receives a description and no actor, which is what a manhunt actually starts from. The position reported is the AI's believed position, not the actor's real one, so an AI that only heard someone cannot cheat on the faction's behalf.
 
 ---
 
@@ -4283,9 +4445,9 @@ The model updates automatically. There is nothing to call.
 
 | Field | What it actually measures |
 |---|---|
-| `Crouch Ratio` | Fraction of observed ticks the target moved **slower than `Player Crouch Speed Threshold`**. Classification is purely speed-based — a player standing still counts here too. Read it as "moves slowly / holds still", not literally "is crouching". |
+| `Crouch Ratio` | Fraction of observed ticks the target was **crouched or prone**, as reported by its posture. Only when nothing reports a posture does speed decide, and then anything slower than `Player Crouch Speed Threshold`, including standing still, lands here. |
 | `Sprint Ratio` | Fraction of ticks above `Player Sprint Speed Threshold` |
-| `Walk Ratio` | Fraction of ticks between the two thresholds |
+| `Walk Ratio` | Everything else: upright and below the sprint threshold |
 | `Stealth Ratio` | Fraction of engagements that ended with the target **behind the AI** (more than ~107° off its facing) when contact was lost |
 | `Aggression Ratio` | The complement of the above — engagements that ended with the target in front. **`Stealth Ratio + Aggression Ratio` always equals 1.** They are two readings of one measurement, not independent signals. |
 | `Recent Hide Locations` | Up to 5 **distinct** positions where contact was lost. A new entry is only stored if it is more than 200 cm from every existing one, so this is a list of separate hiding spots, not the last five losses. |
@@ -4371,6 +4533,7 @@ Whatever you drive from this model, give the player a way to perceive it. A line
 of dialogue — *"not this time"* — or a visibly changed patrol route makes it
 land. Silent adaptation is indistinguishable from the game getting harder for no
 reason.
+
 ---
 
 ---
@@ -4379,15 +4542,15 @@ reason.
 <a id="environment-and-fairness"></a>
 
 ## Environment & Fairness
-**For:** wiring your world into perception — light, weather, wind — and making detection feel fair to the player.
+**For:** wiring your world into perception, light, weather and wind, and making detection feel fair to the player
 
 ---
 
-## Environment
+### Environment
 
 The **APS Subsystem** holds world-wide state that every AI reads. Get it once with **Get APS Subsystem** (static node, works from any Blueprint).
 
-### Light
+#### Light
 
 | Node | Purpose |
 |---|---|
@@ -4400,9 +4563,11 @@ The resulting vision multiplier is `Lerp(Darkness Min Detection, 1.0, lightLevel
 
 **Best accuracy** comes from your own light-gem system: set `Light Level Override` on the target's APS Target Component and it wins over both the shadow trace and global ambient. `-1` (the default) means "let the AI work it out".
 
-> ⚠ `Light Level Override` is only consulted when the observing AI's profile has **`b Use Per Target Light` on**. With it off, the whole per-target path is skipped and global ambient is used — your override is silently ignored.
+> **Warning**
+>
+> `Light Level Override` is only consulted when the observing AI's profile has **`b Use Per Target Light` on**. With it off, the whole per-target path is skipped and global ambient is used, so your override is silently ignored.
 
-### Weather & wind
+#### Weather & wind
 
 | Node | Purpose |
 |---|---|
@@ -4417,12 +4582,12 @@ Built-in environmental effects:
 
 | Condition | Effect |
 |---|---|
-| Darkness | Vision down to 0.35× |
-| Rain | Hearing down to 0.55× at full intensity |
-| Wind | Smell down to 0.25× at 800 cm/s and above |
-| Indoors | Smell up to 1.2× |
+| Darkness | Vision down to `Darkness Min Detection` (0.1 by default) at light level 0 |
+| Rain | Vision, Hearing and Smell all multiplied by `1 − Rain Intensity`, so full rain silences every sense that reads it |
+| Wind | Smell down to 0.25× at 800 cm/s and above, outdoors only |
+| Indoors | Smell up to 1.2×, and wind is ignored |
 
-#### Wiring a weather system
+##### Wiring a weather system
 
 ```
 Weather actor, on state change:
@@ -4435,7 +4600,11 @@ Weather actor, on state change:
 
 A storm now genuinely makes AI harder to sneak past by sight but easier to sneak past by sound — with no AI-specific code at all.
 
-### The perceivable registry
+#### Local conditions
+
+One global state models day and night and nothing else. For a smoke-filled room, a noisy market or a sealed cellar, attach an **APS Environment** component to any actor. It becomes a sphere where light, rain, wind, the indoors flag and each sense's range are overridden, and overlapping spheres resolve by priority. **Get Environment At** and **Get Sense Range Scale At** on the subsystem read the result for any point. Settings and behaviour are in [Scale & Crowds](#environment-volumes).
+
+#### The perceivable registry
 
 **Pawns are found automatically.** Every `Pawn` in the world within maximum sense range is a candidate target, with no registration needed. Targets sharing the observer's controller are skipped.
 
@@ -4450,13 +4619,13 @@ Or just add an **APS Target Component** with `b Auto Register As Perceivable` ti
 
 ---
 
-## Fairness
+### Fairness
 
 Every shipped stealth game has these rules. None of them exist in the engine. They are what separates an AI that feels *sharp* from one that feels *cheap*.
 
-**All of them are opt-in and default to off**, so they never change behaviour until you ask for them.
+**Two of them are opt-in and default to off.** The telegraph always fires at its threshold, and never-search zones are honoured by default but only matter once you register one.
 
-### First-spot reaction time
+#### First-spot reaction time
 
 `Fairness → First Spot Reaction Time` (default `0.0`)
 
@@ -4471,7 +4640,7 @@ On **first acquisition only**, the AI must hold the target for this long before 
 
 While the window is counting, a contact gap longer than `max(0.5 s, BaseUpdateInterval × 4)` resets it — so genuinely breaking away before the AI reacts costs it the whole timer, while a sense running on a slower interval missing a tick does not.
 
-### Telegraphing
+#### Telegraphing
 
 `Fairness → Telegraph Threshold` (default `0.25`)
 
@@ -4488,7 +4657,7 @@ Event On AI Telegraph (Target, Confidence)
   └─► Show detection pip on HUD
 ```
 
-### Off-screen hearing penalty
+#### Off-screen hearing penalty
 
 `Fairness → b Offscreen Hearing Penalty` + `Offscreen Hearing Multiplier` (0.75)
 
@@ -4500,7 +4669,7 @@ The problem this solves: an AI the player has never seen reacting to a noise the
 
 That is the right trade for a fairness softening rather than a visibility guarantee — but do not use it as a general "is this AI visible" signal.
 
-### Never-search zones — guaranteed safe rooms
+#### Never-search zones — guaranteed safe rooms
 
 | Node | Purpose |
 |---|---|
@@ -4510,7 +4679,9 @@ That is the right trade for a fairness softening rather than a visibility guaran
 | **Is In Never Search Zone** (`Location`) *(subsystem)* | Test a location against all zones |
 | **Is Location In Never Search Zone** (`Location`) *(component)* | Same test, but returns false when this AI's profile has `b Respect Never Search Zones` off |
 
-> ⚠ **Zones are advisory — APS does not enforce them for you.** Registering a zone does not suppress perception, and nothing in the perception pipeline stops an AI walking into one. The plugin gives you the **query**; your Behavior Tree does the honouring. `b Respect Never Search Zones` only decides whether the per-AI query reports anything, so a profile with it switched off makes that AI ignore every zone.
+> **Zones are advisory. APS does not enforce them for you**
+>
+> Registering a zone does not suppress perception, and nothing in the perception pipeline stops an AI walking into one. The plugin gives you the **query**; your Behavior Tree does the honouring. `b Respect Never Search Zones` only decides whether the per-AI query reports anything, so a profile with it switched off makes that AI ignore every zone.
 
 This is the guarantee *Alien: Isolation* was built on: the player needs somewhere they are **certainly** safe, or the tension never releases and the game becomes exhausting instead of frightening.
 
@@ -4537,7 +4708,7 @@ Add the same check to any BT task that picks a search point, so an expanding swe
 
 Use it for: save rooms, lockers, vents, shops, hub areas, tutorial spaces, and anywhere a cutscene plays.
 
-### Putting it together
+#### Putting it together
 
 A well-tuned stealth guard:
 
@@ -4799,8 +4970,8 @@ There is deliberately **no recall event**. APS never tells you when to remember 
 
 | Node | Description |
 |---|---|
-| **Add Target Evidence** (`Target`, `Key`, `Op`, `Value`, `Lifetime`, `Source`) | Apply an external belief modifier — a floor, a ceiling, a relative reduction, or a forced zero |
-| **Remove Target Evidence** (`Target`, `Key`) | Drop one modifier |
+| **Add Target Evidence** (`Target`, `Evidence Tag`, `Operation`, `Value`, `Lifetime`, `Source`) | Apply an external belief modifier: a floor, a ceiling, a relative reduction, or a forced zero. Re-adding the same tag replaces the entry rather than stacking. `Lifetime` 0 holds until removed. |
+| **Remove Target Evidence** (`Target`, `Evidence Tag`) | Drop one modifier |
 | **Clear Target Evidence** (`Target`) | Drop all of them |
 | **Get Target Evidence** (`Target`) → `array<Evidence>` | What is currently applied |
 
@@ -4817,7 +4988,7 @@ See [`EAPSEvidenceOp`](#enum-reference) for what each operation means.
 | **Get Strongest Location Belief** | `bool` + `Belief Record` |
 | **Clear Location Belief** (`Location`, `Tag`) | `bool` |
 
-Place beliefs are kept out of the attention and all-clear paths, so an unattributed noise cannot steal focus from a person. See [Policies](#policies).
+Place beliefs are kept out of the attention and all-clear paths, so an unattributed noise cannot steal focus from a person. **On Location Belief Changed** fires on every state change. See [Core Concepts](#11-beliefs-about-places).
 
 ---
 
@@ -4965,23 +5136,25 @@ Readable and settable directly on the component.
 | `Current State` | String (read-only) | Human-readable state string |
 | `Replicated Targets` | array (read-only) | Raw replicated array — prefer `Get Replicated Perception State` |
 | `Replicated Awareness` | enum (read-only) | Replicated awareness level |
+| `Profile Overrides` | array | Per-agent changes stamped on a private copy of the profile. See [Profile Composition](#profile-composition) |
+| `Quality Profile` | APS Quality Profile | Optional cost controls. Swap with **Set Quality Profile** |
 
 ---
 
-## Global nodes — no component needed
+### Global nodes — no component needed
 
-### Sound (`Perception | Sound`)
+#### Sound (`Perception | Sound`)
 
 | Node | Description |
 |---|---|
 | **Emit Sound** (`Source`, `Sound Type`) | Emit a sound from an actor. Only agents within the sound type's `Max Range` are notified. |
 | **Emit Sound At Location** (`Sound Location`, `Sound Type`) | Emit from a world position with no source actor |
 
-### APS Subsystem
+#### APS Subsystem
 
 Get it with **Get APS Subsystem** (static, world context), then drag off the return.
 
-#### Environment
+##### Environment
 
 | Node | Description |
 |---|---|
@@ -4993,16 +5166,21 @@ Get it with **Get APS Subsystem** (static, world context), then drag off the ret
 | **Set Indoors** (`b Indoors`) | Indoors boosts scent, since it does not disperse |
 | **Set Time Of Day** (`Hour`) | 0–24 |
 | **Set Sun Direction** (`Direction`) | Pass your directional light's forward vector. **Required for per-target shadow tracing.** |
+| **Get Environment At** (`Location`) ⚡ | Conditions at a point, with any APS Environment volume covering it applied over the global state |
+| **Get Sense Range Scale At** (`Location`, `Sense ID`) ⚡ | Range multiplier at a point for `Vision`, `Hearing` or `Smell`. Anything else returns 1 |
 
-#### Registry
+##### Registry
 
 | Node | Description |
 |---|---|
 | **Register Perceivable Actor** (`Actor`) | Make a non-Pawn actor perceivable — turrets, vehicles, interactive props. Pawns are found automatically. |
 | **Unregister Perceivable Actor** (`Actor`) | Stop it being perceivable |
 | **Get Agent Count** | How many APS agents exist in the world |
+| **Get Agent Significance** (`Agent`) ⚡ | The agent's latest significance score, 0 to 1. See [Scale & Crowds](#scale-and-crowds) |
 
-#### Fairness
+Two properties also live on the subsystem and are set from Blueprint: `Max Perception Updates Per Frame` (0 = unlimited) and `Significance Policy`.
+
+##### Fairness
 
 | Node | Description |
 |---|---|
@@ -5011,7 +5189,7 @@ Get it with **Get APS Subsystem** (static, world context), then drag off the ret
 | **Clear Never Search Zones** | Remove all of them |
 | **Is In Never Search Zone** (`Location`) ⚡ | Test a location |
 
-#### Stimulus bus
+##### Stimulus bus
 
 | Node | Description |
 |---|---|
@@ -5075,11 +5253,13 @@ Event Begin Play
 
 Delegates and listener events both fire — you can use either or both.
 
-> **Naming note:** the "target lost" delegate on the component is exposed as **On AILost Event** (to avoid a name clash), while the listener event is **On AI Lost**. Same moment, same parameters.
+> **Naming note**
+>
+> The "target lost" delegate on the component is exposed as **On AILost Event** to avoid a name clash, while the listener event is **On AI Lost**. Same moment, same parameters.
 
 ---
 
-## Sense events
+### Sense events
 
 These fire **every tick the sense is active** — not just once. Use them for continuous reactions (aim tracking, head look-at, meters). For one-shot reactions use lifecycle events instead.
 
@@ -5093,7 +5273,7 @@ These fire **every tick the sense is active** — not just once. Use them for co
 
 ---
 
-## Lifecycle events
+### Lifecycle events
 
 These fire **once per transition** — the workhorses of AI behaviour.
 
@@ -5110,7 +5290,7 @@ These fire **once per transition** — the workhorses of AI behaviour.
 
 ---
 
-## Brain events
+### Brain events
 
 | Event | Parameters | Fires when |
 |---|---|---|
@@ -5124,11 +5304,13 @@ These fire **once per transition** — the workhorses of AI behaviour.
 | **On AI Pain Reported** | `Pain Def` (asset), `Pain Level` (float) | `Report Pain From Definition` was called. **One per perception tick** — if you report several pain types in the same frame, the first is broadcast and the others are applied silently. Poll `Get Pain Level From Definition` for the rest. |
 | **On AI Damaged** | `Instigator`, `Amount` (float), `Damage Type Tag` (Name), `Hit Location` (Vector) | Any damage event on the owner — `ApplyDamage`, `ApplyPointDamage`, `ApplyRadialDamage`. De-duplicated per frame. |
 
-> The listener component's `On AI Pain Reported` has a slightly wider signature — `Pain Type` (Name), `Pain Level`, `Threshold Crossed`, `Pain Def` — because it predates the data-asset workflow. `Threshold Crossed` is `-1` when nothing was crossed.
+> **Note**
+>
+> The listener component's `On AI Pain Reported` has a slightly wider signature, `Pain Type` (Name), `Pain Level`, `Threshold Crossed`, `Pain Def`, because it predates the data-asset workflow. `Threshold Crossed` is `-1` when nothing was crossed.
 
 ---
 
-## Squad events
+### Squad events
 
 | Event | Parameters | Fires when |
 |---|---|---|
@@ -5137,7 +5319,15 @@ These fire **once per transition** — the workhorses of AI behaviour.
 
 ---
 
-## Fairness & replication events
+### Place belief events
+
+| Event | Parameters | Fires when |
+|---|---|---|
+| **On Location Belief Changed** | `Location` (Vector), `Tag` (Name), `State` (enum), `Confidence` (float) | A belief about a **place** changed lifecycle state: a sourceless sound, a discovered piece of evidence, or anything filed with `Report Location Belief`. Delegate only. It is a separate event because every `On AI Suspect` handler ever written assumes a valid `Target`. See [Core Concepts](#11-beliefs-about-places). |
+
+---
+
+### Fairness & replication events
 
 | Event | Parameters | Fires when |
 |---|---|---|
@@ -5161,6 +5351,7 @@ These fire **once per transition** — the workhorses of AI behaviour.
 | React to being shot from an unknown direction | `On AI Damaged` |
 | Update a HUD detection meter | `On AI See` (server) or `On Replicated State Changed` (client) |
 | Swap alert music | `On AI Awareness Changed` |
+| Investigate a noise with no known source | `On Location Belief Changed` |
 
 ---
 
@@ -5168,7 +5359,9 @@ These fire **once per transition** — the workhorses of AI behaviour.
 
 Most events have a matching one-node print function in `APS | Debug`. Bind the event, drop in the matching node, wire the pins straight through — instant colour-coded screen and log output.
 
-> ⚠ **Three events have no print node in v3.0:** `On AI Telegraph`, `On Attention Changed` and `On Replicated State Changed`. Use a `Print String` for those, or read them from the Delegates debug mode.
+> **Four events have no print node in v3.0**
+>
+> `On AI Telegraph`, `On Attention Changed`, `On Location Belief Changed` and `On Replicated State Changed`. Use a `Print String` for those, or read them from the Delegates debug mode.
 
 `Print_OnAISee`, `Print_OnAIHear`, `Print_OnAISmell`, `Print_OnAIFeel`, `Print_OnAISenseVibration`, `Print_OnAISuspect`, `Print_OnAIDetect`, `Print_OnAITrack`, `Print_OnAILost`, `Print_OnAIRemember`, `Print_OnAIForget`, `Print_OnAIThinkThreat`, `Print_OnThreatIdentified`, `Print_OnAIAllClear`, `Print_OnAIAwarenessChanged`, `Print_OnAIPainReported`, `Print_OnAIDamaged`, `Print_OnAISquadAlert`, `Print_OnTargetStateChanged`, `Print_OnEmotionalStateChanged`, `Print_OnCombatRoleAssigned`.
 
@@ -5209,7 +5402,7 @@ Push APS state into the Blackboard from events, and let the BT read the Blackboa
 | `ThreatLevel` | Enum (`EThreatLevel`) | `On AI Detect` / `On AI Think Threat` |
 | `CombatRole` | Enum (`ECombatRole`) | `On Combat Role Assigned` |
 | `bHasTarget` | Bool | `On AI Detect` (true) / `On AI Forget` (false) |
-| `InvestigateLocation` | Vector | `On AI Hear`, `On AI Suspect`, `On AI Squad Alert` |
+| `InvestigateLocation` | Vector | `On AI Hear`, `On AI Suspect`, `On AI Squad Alert`, `On Location Belief Changed` |
 
 ---
 
@@ -5248,6 +5441,14 @@ Event On AI Hear (Location, Loudness, Sound Type Name)
 ```
 
 Guard it on `bHasTarget` so a footstep does not interrupt an active chase.
+
+For sounds with no source actor, such as a thrown rock or an explosion, the AI holds a place belief instead of a target. Read it the same way:
+
+```
+Event On Location Belief Changed (Location, Tag, State, Confidence)
+  └─► Branch: State == Suspected AND bHasTarget == false
+        True → Set Vector ("InvestigateLocation", Location)
+```
 
 #### Squad alerts
 
@@ -5315,6 +5516,8 @@ Task: Search Step
 ```
 
 Loop it three or four times and the AI naturally spirals outward.
+
+**With the Knowledge module:** an **APS Search Component** replaces the radius with a probability field that spreads at the target's speed, skips anything off the navmesh, and empties cells the AI has already walked through. See [Evidence & Search](#evidence-and-search).
 
 ---
 
@@ -5726,7 +5929,7 @@ At runtime:
 Set Profile Number ("VisionMaxRange", 7777.0)
 ```
 
-`Property` is the exact name from the Details panel with the spaces removed. A name that does not resolve is **refused and logged**, not silently ignored.
+`Property` is the C++ property name: the Details panel name with the spaces removed, keeping any leading `b` and any underscore, as in `VisionMaxRange`, `bEnablePeripheralCone` or `MinVisiblePoints_Crouched`. A name that does not resolve is **refused and logged**, not silently ignored.
 
 Three things worth knowing:
 
@@ -5743,6 +5946,8 @@ aps.Tune VisionMaxRange 5000
 ```
 
 Writes to every running agent's private copy. The asset on disk is untouched and the change is gone at the next launch — which is exactly what makes it safe to try anything mid-session, rather than stopping, editing and playing again by which point the situation that looked wrong has gone.
+
+Checkboxes take 0 or 1: `aps.Tune bKeyholeVision 1`.
 
 ---
 
@@ -5792,7 +5997,9 @@ Copy-paste profile settings for common AI types. Every one of these is a **start
 
 Settings not listed keep their defaults.
 
-> **One rule that shapes several of these builds:** targets are only handed to the senses if they fall inside the largest gather range on the profile, and Vibration and Echolocation declare fixed gather ranges of 800 and 2000 cm regardless of their profile settings. That is why the Zombie and Blind Creature builds below both carry a long `Hearing Max Range` — it is what pulls distant targets into evaluation range for their short-range senses.
+> **One rule that shapes several of these builds**
+>
+> Targets are only handed to the senses if they fall inside the largest gather range on the profile, and Vibration and Echolocation declare fixed gather ranges of 800 and 2000 cm regardless of their profile settings. That is why the Zombie and Blind Creature builds below both carry a long `Hearing Max Range`: it is what pulls distant targets into evaluation range for their short-range senses.
 
 ---
 
@@ -5851,12 +6058,12 @@ Settings not listed keep their defaults.
 | Awareness | Suspect / Detect / Track | 0.12 / 0.30 / 0.55 |
 | Loss | Smell Loss Grace | 30.0 |
 | Attention | Attention Stickiness Time | 3.0 |
-|Emotions | Aggression Rise Rate | 1.2 |
+| Brain\|Emotions | Aggression Rise Rate | 1.2 |
 | Brain\|Squad | b Auto Share On Detect | ✅ |
 
 Subclass **Smell Sense** in Blueprint with `Downwind Bonus` 2.5 and `Scent Threshold` 0.25, and put your Blueprint in `Sense Classes`.
 
-Drive **Set Wind State** from your weather system, and the level becomes a genuine wind-direction puzzle.
+Set `Wind Direction` on that Blueprint subclass and the level becomes a genuine wind-direction puzzle. **Set Wind State** on the subsystem only sets wind *speed*, which dampens scent globally; the directional bonus reads the sense's own property.
 
 ---
 
@@ -6059,9 +6266,7 @@ The cleanest approach: **make one profile per difficulty** and swap with **Set P
 | Min Time In Lost | 3.0 | 8.0 | 15.0 |
 | Memory Refresh Bonus | 0.05 | 0.10 | 0.20 |
 
-**Leave the cone angles and occlusion identical across difficulties.** The player's spatial understanding of what a guard can see should not change between playthroughs — only how quickly it acts on what it sees.
-
----
+**Leave the cone angles and occlusion identical across difficulties.** The player's spatial understanding of what a guard can see should not change between playthroughs, only how quickly it acts on what it sees.
 
 ---
 
@@ -6083,17 +6288,19 @@ Custom senses plug into the same pipeline as the built-in ones. Fusion, memory, 
 
 ---
 
-## The Blueprint path
+### The Blueprint path
 
-### Step 1 — Create the class
+#### Step 1 — Create the class
 
 Content Browser → right-click → **Blueprint Class** → expand **All Classes** → search `SenseUnit` → pick it as the parent.
 
 Name it `BP_Sense_Thermal`.
 
-> You can also parent to an existing sense — `SenseUnit_Vision`, `SenseUnit_Smell` — to inherit its behaviour and change only its default values or add extra logic on top.
+> **Tip**
+>
+> You can also parent to an existing sense such as `SenseUnit_Vision` or `SenseUnit_Smell` to inherit its behaviour and change only its default values, or add extra logic on top.
 
-### Step 2 — Override Get Sense ID
+#### Step 2 — Override Get Sense ID
 
 In the Class Defaults / Functions panel, **Override → Get Sense ID**. Return a unique name:
 
@@ -6103,7 +6310,7 @@ Get Sense ID → Return Value = "Thermal"
 
 This name appears in `Get Sense Contributions` and in the debug overlay, so make it readable.
 
-### Step 3 — Override Evaluate
+#### Step 3 — Override Evaluate
 
 **Override → Evaluate.** You receive:
 
@@ -6125,7 +6332,7 @@ Fill in `Out Result`:
 | `Location Accuracy` | 0–1 — how precise that position is |
 | `Sense ID` | Your sense name |
 
-#### A working thermal sense
+##### A working thermal sense
 
 ```
 Event Evaluate (Context, Profile, Target, Out Result)
@@ -6150,7 +6357,7 @@ Event Evaluate (Context, Profile, Target, Out Result)
      Sense ID          = "Thermal"
 ```
 
-### Step 4 — Add it to a profile
+#### Step 4 — Add it to a profile
 
 Open your Perception Profile → `Sense Classes` → add `BP_Sense_Thermal`.
 
@@ -6160,32 +6367,46 @@ Optionally set its weight in `Sense Weights` and its tick rate in `Sense Interva
 
 ---
 
-### What Blueprint can and cannot override
+#### What Blueprint can and cannot override
 
 | Feature | Blueprint | C++ |
 |---|---|---|
 | `Evaluate` — the detection logic | ✅ | ✅ |
 | `Get Sense ID` | ✅ | ✅ |
 | Custom `EditAnywhere` properties on the sense | ✅ | ✅ |
-| Tick rate | ✅ *via the profile's `Sense Intervals` map* | ✅ |
+| Tick rate | ✅ `Default Interval` in class defaults, or the profile's `Sense Intervals` map | ✅ |
 | Confidence weight | ✅ *via the profile's `Sense Weights` map* | ✅ |
-| Loss grace time / direct cut / loss reason | ❌ | ✅ |
-| Max sensing range (extends target gathering) | ❌ | ✅ |
+| Loss grace time / direct cut / loss reason | ✅ `Sense Contract` class defaults | ✅ |
+| Max sensing range (extends target gathering) | ✅ `Max Sensing Range` class default | ✅ |
+| Listing the stimulus tags to receive | ✅ `Subscribed Stimulus Tags` | ✅ |
+| Reacting when a stimulus arrives | ❌ | ✅ `OnStimulusReceived` |
 | Event-driven mode (`Report X` style APIs) | ❌ | ✅ |
 | Owner-internal senses (no target loop) | ❌ | ✅ |
-| Stimulus bus subscription | ❌ | ✅ |
 | Firing a built-in sense event (`On AI See` etc.) | ❌ | ✅ |
+| Reporting beliefs about places from a sense | ❌ | ✅ `CollectLocationObservations` |
 
-**Two practical consequences for Blueprint senses:**
+##### The Sense Contract
 
-1. **Loss behaviour falls back to the base defaults** — 0.3 s grace, no direct cut, loss reason `SensorDropout`. That is reasonable for most custom senses.
-2. **Target gathering is bounded by the other senses' ranges.** APS gathers candidates within the largest of `Vision Max Range`, `Hearing Max Range` and every sense's declared max range. A Blueprint sense cannot declare one, so if your thermal sense should reach 8000 cm but the profile's vision range is 2000, targets beyond 2000 cm never reach `Evaluate`. **Fix:** raise `Vision Max Range` (or `Hearing Max Range`) to cover it, or write the sense in C++ and override `GetMaxSensingRange()`.
+Every Blueprint sense derived from `Sense Unit` has a **Sense Contract** section in its Class Defaults. Those values are what the base class reports to the core, so a Blueprint sense declares how it behaves without a line of C++:
 
-For most gameplay senses neither limitation matters. When they do, the C++ path is short.
+| Property | Default | Meaning |
+|---|---|---|
+| `Default Interval` | 0.1 s | Seconds between evaluations, unless the profile's `Sense Intervals` overrides it |
+| `Max Sensing Range` | 0 | Furthest reach in cm. Feeds the candidate-gathering radius, so a sense that reaches further than vision must say so or its targets are never handed to `Evaluate`. 0 adds nothing |
+| `Loss Grace Time` | 0.3 s | Seconds of silence before the target may be considered lost |
+| `b Allows Direct Lost Cut` | false | Jump straight to `Lost` when grace expires, the way vision does, instead of fading down through the states |
+| `Sense Loss Reason` | `SensorDropout` | Written to the belief record when this sense is the one that lost the target |
+| `Subscribed Stimulus Tags` | empty | Prefixes this sense receives from the stimulus bus |
+
+> **The built-in senses ignore these fields**
+>
+> Vision, Hearing, Smell, Touch, Vibration, Damage, Pain and Echolocation answer these questions in C++. Setting `Sense Contract` values on a Blueprint child of `Vision Sense` does nothing; they apply to senses derived directly from `Sense Unit`.
+
+So a thermal sense that should reach 8000 cm sets `Max Sensing Range` to 8000, and targets that far out reach `Evaluate` whatever the profile's vision range says. The remaining gaps, reacting to a stimulus and firing a built-in sense event, need the short C++ path below.
 
 ---
 
-## The C++ path
+### The C++ path
 
 Subclass `USenseUnit` and override what you need:
 
@@ -6222,7 +6443,7 @@ The pipeline contract, called in this order every tick:
 
 `PerceptionCore` **never casts to a specific sense type**. Everything sense-specific lives in the sense class, which is why adding one requires no changes anywhere else.
 
-#### Optional overrides
+##### Optional overrides
 
 | Override | Purpose |
 |---|---|
@@ -6232,8 +6453,9 @@ The pipeline contract, called in this order every tick:
 | `GetStimulusTags()` / `OnStimulusReceived()` | Subscribe to the stimulus bus |
 | `TickFatigue()` / `GetFatigueMultiplier()` | Senses that tire with use |
 | `CountWallsBetween()` *(inherited helper)* | Wall counting for occlusion-aware senses |
+| `CollectLocationObservations()` | Report authorless observations that the core turns into beliefs about places |
 
-#### Firing a built-in event
+##### Firing a built-in event
 
 ```cpp
 virtual FSenseDelegatePayload GetSenseDelegatePayload(
@@ -6249,15 +6471,17 @@ virtual FSenseDelegatePayload GetSenseDelegatePayload(
 
 Return a payload with `DelegateType = None` to fire nothing — that is what the Damage sense does.
 
-> **The Smell sense is the reference implementation.** `SenseUnit_Smell.h/.cpp` is deliberately over-commented as a worked example of the full custom-sense workflow. Read it before writing your own.
+> **The Smell sense is the reference implementation**
+>
+> `SenseUnit_Smell.h` and its `.cpp` are deliberately over-commented as a worked example of the full custom-sense workflow. Read them before writing your own.
 
 ---
 
-## The stimulus bus
+### The stimulus bus
 
 A general-purpose broadcast channel. Emit a tagged stimulus from anywhere and every sense that registered a matching tag prefix receives it — without touching `PerceptionCore`.
 
-### Emitting (Blueprint or C++)
+#### Emitting (Blueprint or C++)
 
 ```
 Make FAPS Stimulus Event
@@ -6285,7 +6509,7 @@ Make FAPS Stimulus Event
 
 The delivery pipeline runs cheapest-first: radius cull → LOD tier → team filter → wall trace → deliver.
 
-### Built-in tag namespaces
+#### Built-in tag namespaces
 
 | Tag | Received by |
 |---|---|
@@ -6296,7 +6520,7 @@ The delivery pipeline runs cheapest-first: radius cull → LOD tier → team fil
 
 Your game can invent any tag it likes. There is no registration step.
 
-### Subscribing (C++ only)
+#### Subscribing
 
 ```cpp
 virtual TArray<FName> GetStimulusTags() const override
@@ -6310,7 +6534,7 @@ virtual void OnStimulusReceived(const FAPSStimulusEvent& Event) override
 }
 ```
 
-Blueprint senses cannot subscribe. If you need a Blueprint-driven reaction to a custom stimulus, emit it *and* separately call `Set Target Confidence` on the AI you want to affect.
+A Blueprint sense can list the tags it wants in `Subscribed Stimulus Tags`, but the delivery callback is C++ only, so nothing happens when one arrives. If you need a Blueprint-driven reaction to a custom stimulus, emit it *and* separately call `Set Target Confidence` or `Report Location Belief` on the AI you want to affect.
 
 ---
 
@@ -6367,7 +6591,7 @@ All text lives in a screen-space panel rather than floating in the world. World 
 | `b Show Sparkline` | Rolling confidence graph in the panel, with the three thresholds drawn behind it. Sampled at 20 Hz for a fixed ~5 s window regardless of framerate. |
 | `b Show Target Text` | Compact state chip pinned over each tracked target. Chips push each other down rather than overlapping. |
 | `b Show AI Text` | The AI's own posture and squad rows in the panel |
-| `b Show Emotion Bars` | Top two emotion channels in the panel |
+| ⚠ `b Show Emotion Bars` | **Not read in v3.0.** The panel shows the dominant emotion on its posture row instead |
 | `Debug Mode` | Which of the 7 information modes fills the panel body |
 | `Text Scale` | Font size multiplier for world labels |
 | `b Scale Text With Distance` | Shrink distant labels so the nearest agent reads first |
@@ -6763,7 +6987,17 @@ The subsystem scores every agent each pass and gives the important ones more att
 
 That score picks the agent's LOD tier, which drives tick throttling. A guard in a firefight ten metres away stays at full rate; one asleep on the far side of the map drops back.
 
-**Viewers** are all local players, so split-screen works without configuration.
+| Score | Tier | Perception interval |
+|---|---|---|
+| ≥ 0.75 | 0 | ×1 |
+| ≥ 0.50 | 1 | ×2 |
+| ≥ 0.30 | 2 | ×5 |
+| ≥ 0.15 | 3 | ×20 |
+| below | 4 | suspended |
+
+The distance term alone caps at 0.6, so an agent with nothing to do never reaches tier 0: idle is tier 1 within 50 m and tier 4 beyond 225 m. Engagement adds 0.55 on its own, which is why a chase stays at full rate almost anywhere on the map. The worked-out bands are in [How It Works](#significance-and-lod).
+
+**Viewers** are all local players, so split-screen works without configuration. A dedicated server has no viewer and scores every agent as if it were at zero distance.
 
 #### Writing your own
 
@@ -6798,7 +7032,7 @@ At high agent counts the expensive part is line traces. The statistical tier rem
 | `Statistical Detection Rate` | 1.0 | Rolls per second, scaled by the factors below |
 | `Statistical Detection Confidence` | 0.5 | Confidence granted on a hit |
 
-A statistical agent still respects distance falloff, which way it is facing, light level and target motion — it simply resolves them as a probability per second rather than by tracing geometry. A crowd member behind you is still much less likely to notice you than one looking straight at you.
+A statistical agent still respects distance falloff, which way it is facing, light level and target motion — it simply resolves them as a probability per second rather than by tracing geometry. A crowd member behind you is still much less likely to notice you than one looking straight at you. The check runs before the tier-4 cut-off, so a suspended agent with the crowd tier on still perceives statistically, at `max(4 × Base Update Interval, 0.25 s)`.
 
 > **It is a floor, not a ceiling**
 >
@@ -6833,12 +7067,13 @@ An **APS Environment Component** on any actor declares local conditions in a rad
 
 Each override is separate, so a volume can darken a room without claiming anything about the weather.
 
-> **Range scales are sampled at the target, not the observer**
+> **Vision samples the target's volume; hearing and smell sample the observer's**
 >
-> A guard standing in daylight looking into a darkened room gets the *room's*
-> reduced vision range, which is the behaviour people expect. Sampling at the
-> observer would have let guards see into fog perfectly well as long as they
-> were standing outside it.
+> A guard standing in daylight looking into a smoke-filled room gets the *room's*
+> reduced vision range, because smoke around what you are looking at is what
+> hides it. Hearing and smell read the volume the agent is standing in, so a
+> guard inside a noisy market hears less whatever the target's surroundings.
+> Light, rain, wind and the indoors flag are all resolved at the observer.
 
 ---
 
@@ -6846,7 +7081,7 @@ Each override is separate, so a volume can darken a room without claiming anythi
 
 `b Async Vision Traces` on the profile moves visibility tracing off the critical path — results arrive on a completion callback rather than blocking the tick.
 
-Off by default. Turn it on when trace cost is the measured bottleneck; the answer is the same, it simply arrives a frame later.
+Off by default. Turn it on when trace cost is the measured bottleneck. The exposure it reports describes where the target was one vision evaluation ago, about 0.15 s at default settings, so a target crossing cover quickly is judged a fraction late.
 
 > **Falls back to synchronous in two cases**
 >
@@ -6881,9 +7116,10 @@ See [Multiplayer](#multiplayer) for the full picture. The scale-relevant setting
 ### Ordering your effort
 
 1. **Measure first.** Use **Show Budget** on the profile ([Profile Composition](#profile-composition)) to see what the asset is asking for.
-2. `Vision Sample Count` multiplies directly into trace count. It is usually the first number to look at.
-3. Turn on distance tick throttling before anything more exotic.
-4. Reach for the crowd tier when the agent count, not the per-agent cost, is the problem.
+2. Sample points multiply directly into trace count. Trim the Target Component's samples, or cap them with a quality profile's `Max Vision Samples`.
+3. Hand distant agents a cheaper **quality profile** rather than a cheaper perception profile; nothing they believe is reset.
+4. Set `Max Perception Updates Per Frame` if spawn waves or level transitions spike the frame.
+5. Reach for the crowd tier when the agent count, not the per-agent cost, is the problem.
 
 ---
 
@@ -6903,19 +7139,21 @@ APS is built to run many agents at once. The main costs are **line traces** (vis
 
 ---
 
-### Automatic distance LOD
+### Automatic LOD
 
-The APS subsystem measures every agent's distance from the player camera and assigns a **LOD tier 0–4**. The tier scales the perception tick interval automatically. No setup.
+The APS subsystem scores every agent for **significance** and assigns a **LOD tier 0–4** from the score. The tier multiplies the perception tick interval. No setup.
 
-| Tier | Distance from camera | Tick interval | Notes |
+| Tier | Idle agent, distance to nearest viewer | Tick interval | Notes |
 |---|---|---|---|
-| **0** | < 30 m | `Base Update Interval` × 1 | Full rate |
-| **1** | 30–80 m | × 2 | |
-| **2** | 80–150 m | × 5 | |
-| **3** | 150–300 m | × 20 | Barely evaluating |
-| **4** | > 300 m | **Suspended** | Senses stop entirely; memory still decays so state stays coherent |
+| **0** | Never reached while idle | `Base Update Interval` × 1 | Full rate. Any agent that is Suspicious or more alert sits here out to roughly 260 m |
+| **1** | < 50 m | × 2 | The resting rate for an unaware agent |
+| **2** | 50–150 m | × 5 | |
+| **3** | 150–225 m | × 20 | Barely evaluating. Component tick throttled to 0.1 s |
+| **4** | > 225 m | **Suspended** | Senses stop entirely; memory still decays so state stays coherent. Component tick throttled to 0.25 s |
 
-At tier 4 nothing is evaluated — but belief records keep decaying, so an AI that comes back into range does not resume with stale certainty. It has forgotten you, exactly as it should have.
+The score weighs distance, engagement and awareness, so a guard mid-chase 200 m away keeps full rate while an idle one 40 m away does not. The formula and the exact bands are in [How It Works](#significance-and-lod); replacing the rule is covered in [Scale & Crowds](#scale-and-crowds).
+
+At tier 4 nothing is evaluated, unless the crowd tier is on, but belief records keep decaying, so an AI that comes back into range does not resume with stale certainty. It has forgotten you, exactly as it should have.
 
 LOD tiers also gate sounds and stimuli: a `Sound Type` with `Max LOD Tier = 1` is never even considered by AI at tier 2 or above. That is why setting sensible LOD tiers on your sound assets matters — it is a free, large saving.
 
@@ -6938,7 +7176,20 @@ The single biggest lever. Perception ticks 10× per second by default.
 
 **Doubling this halves your perception cost.** For most AI, 0.15–0.2 s is indistinguishable from 0.1 s in play.
 
-#### 2. Visibility sample count
+#### 2. Quality profile
+
+An **APS Quality Profile** data asset scales cost without touching behaviour. Assign it on the component, or call **Set Quality Profile** at runtime from a scalability setting or your own distance logic.
+
+| Setting | Default | Effect |
+|---|---|---|
+| `Update Interval Scale` | 1.0 | Multiplies `Base Update Interval` (0.1–20) |
+| `Sense Interval Scale` | 1.0 | Multiplies every per-sense interval, so vision can be thinned independently of the core tick |
+| `Max Vision Samples` | 0 | Hard cap on sample points per target, whatever their source. 0 leaves the profile alone. It only ever lowers the count |
+| `b Skip Per Target Light` | false | Skip the per-target light sample and sun-shadow trace. This changes stealth behaviour, since a target in shadow reads as lit, so reserve it for agents nobody is watching closely |
+
+Unlike swapping to a cheaper profile, a quality change never rebuilds senses or resets what the AI believes, so it is safe mid-chase. It deliberately does not expose `Max Tracked Targets`, because changing ledger capacity is exactly the reset it exists to avoid.
+
+#### 3. Visibility sample count
 
 Sample points are **traces per target per evaluation**, and they come from one of three places — which is what makes this lever confusing:
 
@@ -6961,7 +7212,7 @@ To actually cut trace cost:
 | 3 | Very good. The right default for most projects. |
 | 1 | Epic-equivalent — binary, no partial cover. Crowds and background AI only. |
 
-#### 3. Max tracked targets
+#### 4. Max tracked targets
 
 `Performance → Max Tracked Targets` (default 16)
 
@@ -6973,7 +7224,7 @@ Slots are **pre-allocated**, so this is memory as well as CPU. Most AI never nee
 | 8 | Small squad combat |
 | 16 | Large battles, many factions |
 
-#### 4. Sense intervals
+#### 5. Sense intervals
 
 `Senses | Setup → Sense Intervals` — a per-sense override.
 
@@ -6987,19 +7238,19 @@ Vibration    0.2
 Echolocation 0.4
 ```
 
-#### 5. Occlusion channels
+#### 6. Occlusion channels
 
 `Detection|Occlusion → Vision Occlusion Channels` — **every extra channel is another trace per sample point**.
 
 One channel × 5 samples = 5 traces. Three channels × 5 samples = 15 traces. Add channels only where the gameplay actually needs them.
 
-#### 6. Target gather range
+#### 7. Target gather range
 
 Candidates are gathered within the largest of `Vision Max Range`, `Hearing Max Range` and each sense's **declared** max range. A 20,000 cm hearing range means every AI iterates every Pawn in a 200 m sphere.
 
 Keep ranges honest. If your sniper only needs 9,000 cm, do not set 20,000.
 
-The gather itself is throttled to `max(0.2 s, Base Update Interval)` — at most 5 Hz — and iterates all Pawns in the world plus any non-Pawn actors in the perceivable registry. On very large levels with hundreds of pawns this iteration, not the traces, can become the cost. There is no spatial hash; if you hit that ceiling, the practical fix is fewer Pawns or a longer `Base Update Interval`.
+The gather itself is throttled to `max(0.2 s, Base Update Interval)`, at most 5 Hz, and reads from a **spatial grid** the subsystem rebuilds five times a second from every Pawn plus the perceivable registry. An agent queries the 15 m cells around it rather than walking the world, so gather cost no longer scales with agents times pawns. A range wide enough to cover more than 12 cells per axis, about 180 m, falls back to scanning the whole candidate list, which is still correct, just no longer cheap.
 
 Note that Vibration and Echolocation declare **fixed** gather ranges (800 and 2000 cm) that do not follow their profile settings. Raising `Vibration Detect Range` or `Echo Range` past those needs another sense on the same profile with a long enough range, or distant targets are never handed to them.
 
@@ -7025,8 +7276,8 @@ Rough, on a mid-range desktop CPU. Measure your own project — geometry complex
 | **1–10** | Everything on, defaults everywhere. No tuning needed. |
 | **10–30** | `Base Update Interval` 0.15 · `Vision Sample Count` 3 · `Max Tracked Targets` 8 |
 | **30–80** | `Base Update Interval` 0.2 · `Vision Sample Count` 3 · `Max Tracked Targets` 4 · per-sense intervals tuned · one occlusion channel |
-| **80–200** | Two profiles: a "near" profile at the settings above, and a "far" profile at `Base Update Interval` 0.5, `Vision Sample Count` 1, `Max Tracked Targets` 2 — swapped with **Set Profile** based on distance |
-| **200+** | As above, plus disable expensive senses entirely on the far profile and rely on LOD tier 4 suspension |
+| **80–200** | One profile plus a "far" **quality profile** at `Update Interval Scale` 5 and `Max Vision Samples` 1, swapped with **Set Quality Profile** by distance |
+| **200+** | As above, plus `b Enable Statistical Tier` so distant agents stop tracing, and `Max Perception Updates Per Frame` on the subsystem to cap spawn-wave spikes. See [Scale & Crowds](#scale-and-crowds) |
 
 ---
 
@@ -7046,7 +7297,7 @@ On a 2-second timer (or a distance-change event):
     False → Set Profile (DA_Profile_Guard_Far)
 ```
 
-`Set Profile` rebuilds senses and resets the ledger, emotions and attention — so **do not call it every tick**, and avoid swapping while an AI is mid-engagement. Gate it on `Has Any Detection == false` if that matters to you.
+When both profiles run the same senses in the same order with the same `Max Tracked Targets`, the swap keeps the ledger, emotions and attention, so it is safe mid-engagement. Make the far profile a child of the near one and that holds by construction. A structurally different profile rebuilds the senses and resets that state, so still do not swap every tick. For pure cost scaling, a **quality profile** does the same job with no structural risk at all.
 
 ---
 
@@ -7078,6 +7329,7 @@ Quick isolation test: set `Debug Settings → b Pause Perception` on every AI. I
 | Multiple occlusion channels | Linear multiplier on trace count | Doors and vehicles must block sight |
 | `Vision Sample Count` 5 | 5 traces per target per evaluation | Partial cover is a core mechanic |
 | `b Requires Clear Path` on stimuli | A trace per agent per stimulus | Rarely — prefer the sound system, which already does this efficiently |
+| `b Async Vision Traces` | Moves visibility traces off the game thread. Exposure is one evaluation stale | When trace time is the measured bottleneck and the profile uses one occlusion channel and no surface transmission |
 
 ---
 
@@ -7210,6 +7462,10 @@ Two requirements, both easy to miss:
 1. The sound asset's **`Sound Name` must be exactly `Explosion`** — the stimulus tag is built as `Stimulus.Sound.<Sound Name>`, and Vibration subscribes to `Stimulus.Sound.Explosion`.
 2. You must use **`Emit Sound`** with a source actor. `Emit Sound At Location` does not emit a stimulus at all.
 
+#### A thrown rock or explosion never fires `On AI Hear`
+
+Correct. `Emit Sound At Location` has no source actor, so it becomes a belief about the place rather than about a target. Bind **On Location Belief Changed**, or read **Get Strongest Location Belief**. See [Sound System](#sound-system).
+
 #### Smell ignores my wind direction
 
 `Set Wind State` on the subsystem controls wind *speed* (which dampens scent globally) but not the direction used for the upwind/downwind bonus. That comes from the `Wind Direction` property on the sense itself — set it as a class default on a Blueprint subclass of `SenseUnit_Smell`. See [The Senses](#senses).
@@ -7262,6 +7518,8 @@ Five profile properties are not read by any code path in v3.0. They are visible 
 | `Confidence Decay Smoothing` | The per-sense `Confidence Decay Multiplier` in the **Loss** section |
 | `Confidence Reduce Delay` | Per-sense `Grace Time` in the **Loss** section |
 
+One debug setting on the component is in the same category: `Debug Settings → b Show Emotion Bars` is not read.
+
 Two more behave differently than their names suggest:
 
 - **`Vision Sample Count`** only limits the built-in fallback sample set. Targets with an APS Target Component always use that component's samples — five by default. See [Performance](#performance).
@@ -7299,7 +7557,7 @@ The component delegate is exposed as **On AILost Event** to avoid a name clash. 
 
 Run **Debug Trace Squad Share Path** (`Sender`, `Target`). It checks every gate in order and prints the exact failure point.
 
-Common causes: `Set Squad ID` never called · IDs do not match exactly (they are case-sensitive `Name`s) · squadmates beyond `Squad Share Range` · threat below `Min Threat To Share` · both auto-share flags off.
+Common causes: `Set Squad ID` never called · IDs do not match (a `Name` comparison ignores case, not spelling) · squadmates beyond `Squad Share Range` · threat below `Min Threat To Share` · both auto-share flags off.
 
 #### The whole squad detects me the instant one does
 
@@ -7335,6 +7593,10 @@ In order: raise `Base Update Interval` · lower `Vision Sample Count` to 3 · lo
 
 Set `Debug Settings → b Pause Perception` on every AI. If the frame rate does not improve, the bottleneck is elsewhere.
 
+#### My idle AI never tick at full rate
+
+By design. LOD tiers come from a significance score, and the distance term alone tops out at tier 1. An agent reaches tier 0 only once it is Suspicious or more alert, and then it stays there out to roughly 260 m. See [How It Works](#significance-and-lod).
+
 ---
 
 ### Editor / build problems
@@ -7355,13 +7617,13 @@ Correct and by design. All debug rendering is compiled out of Shipping builds. U
 
 ---
 
-## FAQ
+### FAQ
 
 **Can I use APS alongside Epic's AIPerception?**
 Yes. APS does not touch or disable it. Run both while you migrate.
 
 **Do I need C++?**
-No. Everything in this documentation is Blueprint. C++ is only needed for advanced custom senses that must override loss behaviour, sensing range, or the stimulus bus.
+No. Everything in this documentation is Blueprint. A Blueprint sense can even declare its own loss behaviour, range and stimulus tags in its class defaults. C++ is only needed for a custom sense that must react to a stimulus, fire a built-in sense event, run event-driven or owner-internal, or report beliefs about places.
 
 **Does it work on a Blueprint-only project?**
 Yes — the plugin ships its own compiled module.
@@ -7526,7 +7788,7 @@ Priority when several land in one tick: **Explosion > Grab > Collision > Bump**
 
 #### EAPSBeliefSubject — what a belief is about
 
-A belief no longer has to be about an actor. See [Policies](#policies).
+A belief no longer has to be about an actor. See [Core Concepts](#11-beliefs-about-places).
 
 | Value | Meaning |
 |---|---|
@@ -7654,11 +7916,11 @@ Passed to every sense's `Evaluate`.
 
 | Field | Range | Effect |
 |---|---|---|
-| `Light Level` | 0–1 | Vision ×0.35 → ×1.0 |
-| `Rain Intensity` | 0–1 | Hearing ×1.0 → ×0.55 |
-| `Wind Speed` | 0–2000 | Smell ×1.0 → ×0.25 at 800+ |
-| `Wind Direction` | vector | Smell downwind bonus |
-| `b Is Indoors` | bool | Smell ×1.2 |
+| `Light Level` | 0–1 | Vision: `Lerp(Darkness Min Detection, 1, level)`, unless per-target light overrides it |
+| `Rain Intensity` | 0–1 | Vision, Hearing and Smell all multiplied by `1 − rain` |
+| `Wind Speed` | 0–2000 | Smell ×1.0 → ×0.25 at 800 and above, outdoors only |
+| `Wind Direction` | vector | Stored only. The Smell sense reads its own `Wind Direction` property for the downwind bonus |
+| `b Is Indoors` | bool | Smell ×1.2, and wind is ignored |
 | `Time Of Day` | 0–24 | Informational |
 
 #### Emotional State
@@ -7669,7 +7931,7 @@ Passed to every sense's `Evaluate`.
 
 `Crouch Ratio` · `Sprint Ratio` · `Walk Ratio` · `Stealth Ratio` · `Aggression Ratio` · `Recent Hide Locations` · `Custom Behavior Ratios` · `Engagement Count` · `b Has Enough Data`
 
-All movement ratios are **speed-band classifications**, not posture readings. `Stealth Ratio` and `Aggression Ratio` are complements of one measurement and always sum to 1. `Recent Hide Locations` holds up to 5 positions at least 200 cm apart. See [Player Behavior Model](#player-behavior-model).
+Movement ratios use the target's **observed posture** when anything reports one, and fall back to speed bands only when nothing does. `Stealth Ratio` and `Aggression Ratio` are complements of one measurement and always sum to 1. `Recent Hide Locations` holds up to 5 positions at least 200 cm apart. See [Player Behavior Model](#player-behavior-model).
 
 #### Sense Loss Config
 
@@ -7689,7 +7951,11 @@ All movement ratios are **speed-band classifications**, not posture readings. `S
 
 #### Perception Debug Settings
 
-`b Enabled` · `b Editor Preview` · `b Show Target Text` · `b Show AI Text` · `Debug Mode` · `b Vision Cone` · `b Hearing Rings` · `b Awareness Arc` · `b Last Known And Uncertainty` · `b Predicted Position` · `b Sound Event Lines` · `Sound Linger Seconds` · `b Freeze Snapshot` · `b Pause Perception` · `b Nearest AI Only`
+**Master:** `b Enabled` · `b Editor Preview`
+**Text:** `b Screen Panel` · `b Show Sparkline` · `b Show Target Text` · `b Show AI Text` · `Debug Mode` · `Text Scale` · `b Scale Text With Distance` · `b Show Emotion Bars` *(not read)* · `b Show Legend`
+**World geometry:** `b Vision Cone` · `b Hearing Rings` · `b Smell Range` · `b Awareness Arc` · `b Last Known And Uncertainty` · `b Predicted Position` · `b Sound Event Lines` · `b Sense Beams` · `b Sense Fields` · `b Environment Visuals` · `Sound Linger Seconds`
+**Style:** `Palette` · `b Animated Visuals` · `b Cone Volume` · `b Secondary Cones` · `b Draw Through Walls` · `Line Thickness` · `b Ground Anchor`
+**Controls:** `b Freeze Snapshot` · `b Pause Perception` · `Agent Scope` · `b Nearest AI Only` *(legacy alias)*
 
 ---
 
@@ -7704,6 +7970,11 @@ All movement ratios are **speed-band classifications**, not posture readings. `S
 | `UAPSTargetComponent` | **APS Target Component** | Makes an actor properly perceivable |
 | `URelationshipComponent` | **APS Relationship** | Team and class relationship rules |
 | `UAPSPerceptionRelay` | **APS Perception Relay** | Carries replicated state when the owner cannot replicate. Auto-managed. |
+| `UAPSEnvironmentComponent` | **APS Environment** | Local light, weather, wind and sense range inside a radius |
+| `UAPSObserverComponent` | **APS Observer** | Publishes one AI's perception into faction knowledge. Knowledge module |
+| `UAPSSignatureComponent` | **APS Signature** | Describable traits on an actor. Knowledge module |
+| `UAPSEvidenceComponent` | **APS Evidence** | A trace left in the world that an AI can discover. Knowledge module |
+| `UAPSSearchComponent` | **APS Search** | Where to look next, as a probability field. Knowledge module |
 
 #### Data assets
 
@@ -7713,6 +7984,18 @@ All movement ratios are **speed-band classifications**, not posture readings. `S
 | `USoundTypeDefinition` | One kind of sound |
 | `USoundFilterProfile` | Which sounds an archetype hears |
 | `UPainTypeDefinition` | One kind of pain and what it impairs |
+| `UAPSQualityProfile` | Cost controls layered on a profile without resetting belief |
+
+#### Policies and adapters
+
+| Class | Blueprint name | Purpose |
+|---|---|---|
+| `UAPSFusionPolicy` | APS Fusion Policy | How several senses become one confidence |
+| `UAPSThreatPolicy` | APS Threat Policy | How dangerous a target is |
+| `UAPSAttentionPolicy` | APS Attention Policy | Which target the AI commits to |
+| `UAPSSignificancePolicy` | APS Significance Policy | Which agents deserve CPU. Lives on the subsystem |
+| `IAPSHealthProvider` | APS Health Provider | Interface: how hurt an actor is |
+| `IAPSStanceProvider` | APS Stance Provider | Interface: what posture an actor is in |
 
 #### Senses
 
@@ -7734,7 +8017,8 @@ All movement ratios are **speed-band classifications**, not posture readings. `S
 |---|---|
 | `UPerceptionSoundSystem` | `Emit Sound` / `Emit Sound At Location` |
 | `UAPSDebugHelper` | Print nodes and squad debug utilities |
-| `UAPSSubsystem` | World state, registry, never-search zones, stimulus bus |
+| `UAPSSubsystem` | World state, registry, spatial index, significance, never-search zones, stimulus bus |
+| `UAPSKnowledgeSubsystem` | Faction knowledge, comms channels and alert level. Knowledge module |
 
 ---
 
@@ -7745,7 +8029,11 @@ All movement ratios are **speed-band classifications**, not posture readings. `S
 | Max sense slots | **8** | Senses per AI. Extra entries in `Sense Classes` are ignored. |
 | Max episodes | **5** | Stored engagements per target |
 | Max tracked targets | **1–32** | Configurable, default 16 |
-| LOD tiers | **0–4** | 0 = nearest, 4 = suspended |
+| LOD tiers | **0–4** | 0 = full rate, 4 = suspended. Derived from significance, not raw distance |
+| Significance bands | **0.75 / 0.50 / 0.30 / 0.15** | Score thresholds for tiers 0 to 3 |
+| Spatial grid cell | **1500 cm** | Candidate broadphase, rebuilt every 0.2 s |
+| Place-belief merge cell | **400 cm** | Reports with the same tag inside one cell merge into one belief |
+| Meaningful confidence floor | **0.02** | A sense reporting below this counts as silent |
 | Recent hide locations | **5** | Distinct spots, min 200 cm apart |
 | Lifecycle hysteresis | **0.04** | Confidence must fall this far below a threshold to step down |
 | Focal cone tolerance | **×1.1** | Applied when `b Use Separate Vertical FOV` is off |

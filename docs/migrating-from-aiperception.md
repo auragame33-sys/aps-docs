@@ -1,8 +1,10 @@
 # Migrating from AIPerception
 
-**For:** anyone with a working `AIPerception` setup they want to move across.
-**Time:** 20–40 minutes for a typical guard.
-**Risk:** low — the two systems run side by side, so you can migrate one behaviour at a time and roll back at any point.
+<div class="aps-meta" markdown>
+
+**For:** anyone with a working `AIPerception` setup to move across · **Time:** 20 to 40 minutes for a typical guard · **Risk:** low, the two systems run side by side
+
+</div>
 
 ---
 
@@ -172,7 +174,8 @@ If you want a strict baseline before tuning, this profile is close to `AIPercept
 
 Start there, confirm parity, then turn features on one at a time. That way any behaviour change is traceable to a single setting.
 
-⚠ With an APS Target Component on the target, `Vision Sample Count` is ignored — trim that component's `Visibility Samples` to one entry instead, or don't add the component while establishing parity.
+!!! warning
+    With an APS Target Component on the target, `Vision Sample Count` is ignored. Trim that component's `Visibility Samples` to one entry instead, or leave the component off while establishing parity.
 
 ---
 

@@ -30,11 +30,12 @@ Event Begin Play
 
 Delegates and listener events both fire — you can use either or both.
 
-> **Naming note:** the "target lost" delegate on the component is exposed as **On AILost Event** (to avoid a name clash), while the listener event is **On AI Lost**. Same moment, same parameters.
+!!! note "Naming note"
+    The "target lost" delegate on the component is exposed as **On AILost Event** to avoid a name clash, while the listener event is **On AI Lost**. Same moment, same parameters.
 
 ---
 
-# Sense events
+## Sense events
 
 These fire **every tick the sense is active** — not just once. Use them for continuous reactions (aim tracking, head look-at, meters). For one-shot reactions use lifecycle events instead.
 
@@ -48,7 +49,7 @@ These fire **every tick the sense is active** — not just once. Use them for co
 
 ---
 
-# Lifecycle events
+## Lifecycle events
 
 These fire **once per transition** — the workhorses of AI behaviour.
 
@@ -65,7 +66,7 @@ These fire **once per transition** — the workhorses of AI behaviour.
 
 ---
 
-# Brain events
+## Brain events
 
 | Event | Parameters | Fires when |
 |---|---|---|
@@ -79,11 +80,12 @@ These fire **once per transition** — the workhorses of AI behaviour.
 | **On AI Pain Reported** | `Pain Def` (asset), `Pain Level` (float) | `Report Pain From Definition` was called. **One per perception tick** — if you report several pain types in the same frame, the first is broadcast and the others are applied silently. Poll `Get Pain Level From Definition` for the rest. |
 | **On AI Damaged** | `Instigator`, `Amount` (float), `Damage Type Tag` (Name), `Hit Location` (Vector) | Any damage event on the owner — `ApplyDamage`, `ApplyPointDamage`, `ApplyRadialDamage`. De-duplicated per frame. |
 
-> The listener component's `On AI Pain Reported` has a slightly wider signature — `Pain Type` (Name), `Pain Level`, `Threshold Crossed`, `Pain Def` — because it predates the data-asset workflow. `Threshold Crossed` is `-1` when nothing was crossed.
+!!! note
+    The listener component's `On AI Pain Reported` has a slightly wider signature, `Pain Type` (Name), `Pain Level`, `Threshold Crossed`, `Pain Def`, because it predates the data-asset workflow. `Threshold Crossed` is `-1` when nothing was crossed.
 
 ---
 
-# Squad events
+## Squad events
 
 | Event | Parameters | Fires when |
 |---|---|---|
@@ -92,7 +94,15 @@ These fire **once per transition** — the workhorses of AI behaviour.
 
 ---
 
-# Fairness & replication events
+## Place belief events
+
+| Event | Parameters | Fires when |
+|---|---|---|
+| **On Location Belief Changed** | `Location` (Vector), `Tag` (Name), `State` (enum), `Confidence` (float) | A belief about a **place** changed lifecycle state: a sourceless sound, a discovered piece of evidence, or anything filed with `Report Location Belief`. Delegate only. It is a separate event because every `On AI Suspect` handler ever written assumes a valid `Target`. See [Core Concepts](core-concepts.md#11-beliefs-about-places). |
+
+---
+
+## Fairness & replication events
 
 | Event | Parameters | Fires when |
 |---|---|---|
@@ -116,6 +126,7 @@ These fire **once per transition** — the workhorses of AI behaviour.
 | React to being shot from an unknown direction | `On AI Damaged` |
 | Update a HUD detection meter | `On AI See` (server) or `On Replicated State Changed` (client) |
 | Swap alert music | `On AI Awareness Changed` |
+| Investigate a noise with no known source | `On Location Belief Changed` |
 
 ---
 
@@ -123,7 +134,8 @@ These fire **once per transition** — the workhorses of AI behaviour.
 
 Most events have a matching one-node print function in `APS | Debug`. Bind the event, drop in the matching node, wire the pins straight through — instant colour-coded screen and log output.
 
-> ⚠ **Three events have no print node in v3.0:** `On AI Telegraph`, `On Attention Changed` and `On Replicated State Changed`. Use a `Print String` for those, or read them from the Delegates debug mode.
+!!! warning "Four events have no print node in v3.0"
+    `On AI Telegraph`, `On Attention Changed`, `On Location Belief Changed` and `On Replicated State Changed`. Use a `Print String` for those, or read them from the Delegates debug mode.
 
 `Print_OnAISee`, `Print_OnAIHear`, `Print_OnAISmell`, `Print_OnAIFeel`, `Print_OnAISenseVibration`, `Print_OnAISuspect`, `Print_OnAIDetect`, `Print_OnAITrack`, `Print_OnAILost`, `Print_OnAIRemember`, `Print_OnAIForget`, `Print_OnAIThinkThreat`, `Print_OnThreatIdentified`, `Print_OnAIAllClear`, `Print_OnAIAwarenessChanged`, `Print_OnAIPainReported`, `Print_OnAIDamaged`, `Print_OnAISquadAlert`, `Print_OnTargetStateChanged`, `Print_OnEmotionalStateChanged`, `Print_OnCombatRoleAssigned`.
 

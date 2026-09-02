@@ -37,7 +37,7 @@ Slowing an expensive sense down is the cheapest performance win available. Visio
 
 ---
 
-## ⚠ Tuning a sense's own properties
+## Tuning a sense's own properties
 
 Most sense tuning lives on the **Perception Profile** (ranges, angles, thresholds, loss behaviour). But a few senses — **Smell** and **Touch** in particular — also carry their own `EditAnywhere` properties on the sense class itself.
 
@@ -52,7 +52,7 @@ This is also how you make two archetypes that share a profile shape but differ i
 
 ---
 
-# Vision
+## Vision
 
 **Fully automatic.** Nothing to call — if the target is in range, in the cone, lit, and not occluded, confidence rises.
 
@@ -116,7 +116,8 @@ Where the points come from, in priority order:
 2. The observing profile's `Default Visibility Samples`, if you filled that array in
 3. A built-in head / chest / pelvis / shoulders set, count-limited by `Vision Sample Count`
 
-> ⚠ **`Vision Sample Count` only limits option 3.** Any target carrying an APS Target Component is traced against all of that component's samples — five by default — no matter what `Vision Sample Count` says. To cut trace cost on targets that have the component, remove entries from **its** `Visibility Samples` array. See [Performance](performance.md).
+!!! warning "`Vision Sample Count` only limits option 3"
+    Any target carrying an APS Target Component is traced against all of that component's samples, five by default, no matter what `Vision Sample Count` says. To cut trace cost on targets that have the component, remove entries from **its** `Visibility Samples` array. A quality profile's `Max Vision Samples` caps every source at once. See [Performance](performance.md).
 
 The component's defaults are `head` (weight 1.0), a chest offset (0.9), a pelvis offset (0.7), and `clavicle_l` / `clavicle_r` (0.6 each). Points are resolved from **mesh sockets** each evaluation, so they follow animation — leaning out of cover genuinely exposes your head. An entry whose socket does not exist on the skeleton falls back to its local-space offset rather than being dropped, so a mis-typed bone name degrades instead of silently disabling the sample.
 
@@ -209,7 +210,8 @@ Epic anchors the cone to the actor root plus a fixed height, facing the **contro
 | `Eye Socket Rotation Weight` | Blended mode only: 0 = pure actor rotation, 1 = pure socket |
 | `Eye Turn Rate Deg Per Sec` | Degrees/second the facing may turn. `0` = instant. **Set this near your mesh's real turn rate** so the AI cannot see you before it has physically turned to look. |
 
-> **Why `Automatic` matters.** A bone's local axes are arbitrary. On Epic's mannequin the head bone's X axis runs *up the neck*, so binding a cone straight to it aims the AI at the sky. `Automatic` reads the skeleton's reference pose, works out how the bone is oriented relative to the character, and cancels it. You can point `Eye Socket Name` at a raw bone name like `head` on any rig with zero other setup.
+!!! info "Why `Automatic` matters"
+    A bone's local axes are arbitrary. On Epic's mannequin the head bone's X axis runs *up the neck*, so binding a cone straight to it aims the AI at the sky. `Automatic` reads the skeleton's reference pose, works out how the bone is oriented relative to the character, and cancels it. You can point `Eye Socket Name` at a raw bone name like `head` on any rig with zero other setup.
 
 ### Occlusion
 
@@ -237,7 +239,8 @@ Resolution order, when `b Use Per Target Light` is **on**:
 2. The sun-shadow trace, if `b Trace Sun Shadow` is on **and** `Set Sun Direction` has been called — a blocked trace yields `min(ambient, ShadowLightLevel)`, so shadow can only darken, never brighten
 3. Global ambient light
 
-> ⚠ **`Light Level Override` does nothing while `b Use Per Target Light` is off.** The whole per-target light path is skipped and global ambient is used. If you drive lighting from your own light-gem system, you must still tick this box.
+!!! warning "`Light Level Override` does nothing while `b Use Per Target Light` is off"
+    The whole per-target light path is skipped and global ambient is used. If you drive lighting from your own light-gem system, you must still tick this box.
 
 ### Loss behaviour
 
@@ -245,7 +248,7 @@ Grace 0.3 s, **direct cut**, decay multiplier ×3, loss reason `Occluded`. Visio
 
 ---
 
-# Hearing
+## Hearing
 
 **Event-driven. Sounds only exist if you emit them.** There is no passive velocity-based hearing.
 
@@ -299,13 +302,19 @@ Hearing builds. One footstep is a blip; a series of them in the same place is a 
 
 Accumulation is tracked **per source actor**. Sounds emitted with `Emit Sound At Location` have no source actor and therefore do not accumulate — they are evaluated as instant signals only.
 
-> ⚠ **Two settings in this section do nothing in v3.0:** `Hearing Base Threshold` and `b Sound Event Only Mode` are not read by any code path. Hearing is *always* event-only, and there is no noise floor — use `Suspect Threshold` and the sound filter's `Min Alert Level` to control sensitivity instead.
+!!! warning "Two settings in this section do nothing in v3.0"
+    `Hearing Base Threshold` and `b Sound Event Only Mode` are not read by any code path. Hearing is *always* event-only, and there is no noise floor. Use `Suspect Threshold` and the sound filter's `Min Alert Level` to control sensitivity instead.
 
-### A quirk worth knowing about location sounds
+### Sourceless sounds become beliefs about places
 
-`Emit Sound At Location` produces no source actor, so the hearing sense does not match it against a specific target — **every** candidate target the AI evaluates that tick picks up the same location-sound confidence. In practice that means a nearby explosion can nudge the AI's belief about an unrelated pawn.
+`Emit Sound At Location` has no source actor, so it is not evidence about any particular target and the hearing sense never scores it against one. Instead it becomes a **place belief** with its own lifecycle:
 
-It is rarely a problem (the estimated location points at the blast, not the pawn), but if it matters to you, prefer `Emit Sound` with an explicit source actor.
+- confidence is the sound's loudness clamped to 1, with no distance or wall attenuation beyond the sound system's range cull,
+- the belief's tag is the asset's `Sound Name`,
+- `Location Accuracy Override` sets how tight the resulting uncertainty radius is, defaulting to 0.4,
+- repeated sounds in the same spot merge into one belief rather than stacking.
+
+Read it with **On Location Belief Changed** or **Get Strongest Location Belief**. `On AI Hear` does **not** fire for these sounds, because there is no target to fire it about. See [Core Concepts](core-concepts.md#11-beliefs-about-places).
 
 ### Sound filter profile
 
@@ -322,7 +331,7 @@ Grace 3.0 s, no direct cut, decay ×1.0, loss reason `SoundFaded`. Sound lingers
 
 ---
 
-# Smell
+## Smell
 
 **Automatic while in range.** Also the reference example for writing your own sense — the source is heavily commented for that reason.
 
@@ -362,7 +371,8 @@ Range and accumulation come from the profile when set (`Smell Max Range` 400, `S
 | `Scent Threshold` | 0.4 | Divisor on intensity — **lower is more sensitive** |
 | `Wall Absorption Coeff` | 0.25 | Per-wall exponent. Lower than hearing, since scent seeps under doors. |
 
-> ⚠ **`Set Wind State` on the subsystem does not drive the directional wind bonus.** It sets wind *speed* (which dampens scent globally through the environment multiplier) but the direction used for the upwind/downwind calculation is the `Wind Direction` property on the **sense instance**. There is currently no Blueprint path to reach a live sense instance, so in practice you set it as a class default on a Blueprint subclass of `SenseUnit_Smell`. If you need runtime wind direction, that requires a small C++ addition.
+!!! warning "`Set Wind State` on the subsystem does not drive the directional wind bonus"
+    It sets wind *speed*, which dampens scent globally through the environment multiplier. The direction used for the upwind and downwind calculation is the `Wind Direction` property on the **sense instance**. There is no Blueprint path to a live sense instance, so in practice you set it as a class default on a Blueprint subclass of `SenseUnit_Smell`. Runtime wind direction needs a small C++ addition.
 
 ### Scent tags
 
@@ -374,7 +384,7 @@ Grace **20 s**, no direct cut, decay ×0.3, loss reason `ScentLost`. Scent persi
 
 ---
 
-# Touch
+## Touch
 
 Physical contact. Instant, maximum-certainty detection at zero range.
 
@@ -415,7 +425,8 @@ These three profile values overwrite the equivalents on the sense class each tic
 
 Touch reports `Location Accuracy` of 1.0 — contact is the only sense that knows exactly where the target is.
 
-> ⚠ **`Touch Confidence` in the profile does nothing in v3.0.** It is not read anywhere. Strength comes from the report call and the per-type multiplier instead.
+!!! warning "`Touch Confidence` in the profile does nothing in v3.0"
+    It is not read anywhere. Strength comes from the report call and the per-type multiplier instead.
 
 ### Loss behaviour
 
@@ -423,7 +434,7 @@ Grace 0.5 s, no direct cut, decay ×2.0, loss reason `SensorDropout`.
 
 ---
 
-# Vibration
+## Vibration
 
 Ground-transmitted movement detection. **Passes through walls. No line of sight needed.** The primary sense for zombies, burrowing creatures, blind bosses and anything that hunts by feel.
 
@@ -438,7 +449,8 @@ events:   Confidence = Strength × (1 − dist / VibrationDetectRange)
 
 The `speed / 600` term is the design lever: a target at 150 cm/s produces only a quarter of the signal of one at 600 cm/s, regardless of distance. **Walking versus sprinting matters more than proximity.**
 
-> ⚠ **Raising `Vibration Detect Range` above 800 needs a matching range elsewhere.** Candidate targets are gathered within the largest of `Vision Max Range`, `Hearing Max Range` and each sense's declared maximum — and Vibration declares a fixed 800 cm for that purpose regardless of the profile value. If you set `Vibration Detect Range` to 1500 on an AI whose vision and hearing are both shorter than that, targets beyond 800 cm never reach the sense. Raise `Hearing Max Range` to cover it.
+!!! warning "Raising `Vibration Detect Range` above 800 needs a matching range elsewhere"
+    Candidate targets are gathered within the largest of `Vision Max Range`, `Hearing Max Range` and each sense's declared maximum, and Vibration declares a fixed 800 cm for that purpose regardless of the profile value. If you set `Vibration Detect Range` to 1500 on an AI whose vision and hearing are both shorter than that, targets beyond 800 cm never reach the sense. Raise `Hearing Max Range` to cover it.
 
 ### Surface detection
 
@@ -458,7 +470,7 @@ Grace **0.0 s**, no direct cut, decay ×5.0, loss reason `SensorDropout`. Stop m
 
 ---
 
-# Damage
+## Damage
 
 A passive broadcaster. Add it and **every** UE5 damage path — `ApplyDamage`, `ApplyPointDamage`, `ApplyRadialDamage` — is wired up automatically. No setup.
 
@@ -489,7 +501,7 @@ Grace **8.0 s**, no direct cut, decay ×0.5, loss reason `OutOfRange`. An AI rem
 
 ---
 
-# Pain / Health
+## Pain / Health
 
 **Pain is not health.** It is a perception *impairment* that you trigger. Flashbang a guard and it should be temporarily near-blind; set it on fire and it should be too distracted to hear well.
 
@@ -544,21 +556,23 @@ Only **one** `On AI Pain Reported` event fires per perception tick. If you repor
 
 ### Automatic health detection
 
-Every tick, the Pain sense scans the owning actor's components for a health accessor and reads the ratio automatically. It looks for, in order:
+Every tick, the Pain sense asks the owning actor how hurt it is and reads the ratio automatically. It looks, in order, for:
 
-1. `GetHealthPercent()` returning a float
-2. `GetHealth()` **and** `GetMaxHealth()`
-3. `GetCurrentHealth()` **and** `GetMaxHealth()`
+1. an **APS Health Provider** interface on the actor, then on any of its components ([Adapters](adapters.md)),
+2. a function named `GetHealthPercent` returning a number,
+3. `GetHealth` **and** `GetMaxHealth`,
+4. `GetCurrentHealth` **and** `GetMaxHealth`.
 
-If your health component Blueprint has any of these — and most do — **health-based sense degradation works with zero setup**. You do not need to call `Set Health Ratio` at all.
+A percentage above 1 is treated as 0 to 100. If your health component exposes any of these, and most do, **health-based sense degradation works with zero setup**. You do not need to call `Set Health Ratio` at all.
 
-> This also means `Set Health Ratio` is overwritten each tick when a matching component exists. If you want manual control, make sure no component on the AI exposes one of those function names.
+!!! note
+    `Set Health Ratio` is overwritten each tick whenever something answers. For manual control, implement the interface and return the value you want, or make sure nothing on the AI exposes one of those function names.
 
 The legacy query API — **Get Health Ratio** and **Get Pain State** (`Healthy` >0.75 · `Wounded` >0.40 · `Critical` >0.15 · `Near Death`) — reads the same value, and works as a cheap Behavior Tree condition for "retreat when Critical".
 
 ---
 
-# Echolocation
+## Echolocation
 
 Pulse-based detection. **No line of sight required** — sonar bounces around geometry. For bats, aliens, blind bosses, cave creatures and sonar robots.
 
@@ -575,7 +589,8 @@ Quadratic falloff means echolocation is precise up close and drops off hard — 
 
 `Detection → b Echo Directional` restricts the pulse forward, but loosely: it rejects targets more than about **101°** off the AI's facing, not a strict 90° hemisphere. It also uses the actor's rotation rather than the resolved eye facing, so head-socket settings do not move the pulse.
 
-> Same range caveat as Vibration: the sense declares 2000 cm for target gathering. Setting `Echo Range` beyond that needs another sense with a longer range on the same profile, or targets past 2000 cm are never evaluated.
+!!! warning "Same gather-range caveat as Vibration"
+    The sense declares 2000 cm for target gathering. Setting `Echo Range` beyond that needs another sense with a longer range on the same profile, or targets past 2000 cm are never evaluated.
 
 Echolocation fires **On AI See** — from the AI's point of view it *is* sight. Bind it exactly as you would vision.
 

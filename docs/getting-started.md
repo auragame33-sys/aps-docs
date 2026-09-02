@@ -1,6 +1,10 @@
 # Install & Your First AI
 
-**For:** first-time users · **Time:** ~15 minutes · **Outcome:** an AI that detects you and fires Blueprint events.
+<div class="aps-meta" markdown>
+
+**For:** first-time users · **Time:** about 15 minutes · **Outcome:** an AI that detects you and fires Blueprint events
+
+</div>
 
 > **▶ Video walkthrough** — *Install and first detection (6 min).* Coming soon.
 > When it is live, delete this block and uncomment the embed below.
@@ -45,7 +49,8 @@ Content Browser → right-click → **Miscellaneous → Data Asset** → choose 
 
 Open it. It already has **Vision** and **Hearing** in the `Sense Classes` array, and every other setting has a working default. **You do not have to change anything yet.**
 
-> A brand-new profile is deliberately functional out of the box. An empty sense list would make the AI silently perceive nothing, which is the single most common first-run failure — so the two senses almost every game wants are already there.
+!!! info "Why it works before you touch anything"
+    A brand-new profile is deliberately functional. An empty sense list would make the AI silently perceive nothing, which is the single most common first-run failure, so the two senses almost every game wants are already there.
 
 ### Step 2 — Add the component to your AI
 
@@ -58,7 +63,8 @@ Select it, and in the Details panel set:
 - **Profile** → `DA_Profile_Guard`
 - **Debug Settings → b Enabled** → ✅ (turn this off before shipping; it is compiled out of Shipping builds anyway)
 
-> **Put it on the Pawn, not the AIController.** It works on either, but AIControllers never replicate, so putting it on the Pawn keeps multiplayer simple. See [Multiplayer](multiplayer.md).
+!!! tip "Put it on the Pawn, not the AIController"
+    It works on either, but AIControllers never replicate, so putting it on the Pawn keeps multiplayer simple. See [Multiplayer](multiplayer.md).
 
 ### Step 3 — Add the Listener component
 
@@ -93,8 +99,9 @@ Drop `BP_Guard` in the level, possess your player, walk into its vision cone.
 
 You should see:
 
-- a **vision cone** drawn on the ground,
-- a **text block** above the guard showing per-sense confidence and lifecycle state,
+- a **vision cone** drawn from the guard's eyes,
+- a **status panel** in the top-left corner: lifecycle state, a confidence graph, and one row per sense,
+- a **state chip** floating above your own character,
 - your **Print String** firing when confidence crosses the Detect threshold.
 
 Walk behind a wall. Watch the state go `Detected → Lost`, then decay to `Remembered` and finally `Expired`.
@@ -136,7 +143,8 @@ That is it. Every AI within `Max Range` that passes its own sound filter now hea
 
 For a location-based sound with no source actor (explosion, trap, falling crate) use **Emit Sound At Location** instead.
 
-> Play your actual audio however you normally would — `Emit Sound` only feeds the perception system.
+!!! note
+    Play your actual audio however you normally would. `Emit Sound` only feeds the perception system.
 
 ---
 
@@ -164,19 +172,19 @@ Copy this into your project notes.
 
 ## Where things live in the editor
 
-**Every component is prefixed `APS`, so typing `aps` into Add Component lists all four at once.**
+**Every component is prefixed `APS`, so typing `aps` into Add Component lists all of them at once.**
 
 | Thing | Where to find it |
 |---|---|
-| APS Core | Add Component → search `aps` |
-| APS Perception Listener | Add Component → search `aps` |
-| APS Target Component | Add Component → search `aps` |
-| APS Relationship | Add Component → search `aps` |
+| APS Core · APS Perception Listener · APS Target Component · APS Relationship · APS Environment | Add Component → search `aps` |
+| APS Observer · APS Signature · APS Evidence · APS Search *(Knowledge module)* | Add Component → search `aps` |
 | Perception Profile | Content Browser → Data Asset → `PerceptionProfile` |
+| Quality Profile | Content Browser → Data Asset → `APSQualityProfile` |
 | Sound Type / Filter | Content Browser → Data Asset → `SoundTypeDefinition` / `SoundFilterProfile` |
 | Pain Type | Content Browser → Data Asset → `PainTypeDefinition` |
 | Blueprint nodes | Right-click in any graph → type `APS` |
 | World settings (light, wind, zones) | `Get APS Subsystem` → drag off it |
+| Faction knowledge | `Get APS Knowledge` → drag off it |
 
 ---
 

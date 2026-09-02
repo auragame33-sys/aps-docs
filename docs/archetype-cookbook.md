@@ -4,7 +4,8 @@ Copy-paste profile settings for common AI types. Every one of these is a **start
 
 Settings not listed keep their defaults.
 
-> **One rule that shapes several of these builds:** targets are only handed to the senses if they fall inside the largest gather range on the profile, and Vibration and Echolocation declare fixed gather ranges of 800 and 2000 cm regardless of their profile settings. That is why the Zombie and Blind Creature builds below both carry a long `Hearing Max Range` — it is what pulls distant targets into evaluation range for their short-range senses.
+!!! note "One rule that shapes several of these builds"
+    Targets are only handed to the senses if they fall inside the largest gather range on the profile, and Vibration and Echolocation declare fixed gather ranges of 800 and 2000 cm regardless of their profile settings. That is why the Zombie and Blind Creature builds below both carry a long `Hearing Max Range`: it is what pulls distant targets into evaluation range for their short-range senses.
 
 ---
 
@@ -63,12 +64,12 @@ Settings not listed keep their defaults.
 | Awareness | Suspect / Detect / Track | 0.12 / 0.30 / 0.55 |
 | Loss | Smell Loss Grace | 30.0 |
 | Attention | Attention Stickiness Time | 3.0 |
-|Emotions | Aggression Rise Rate | 1.2 |
+| Brain\|Emotions | Aggression Rise Rate | 1.2 |
 | Brain\|Squad | b Auto Share On Detect | ✅ |
 
 Subclass **Smell Sense** in Blueprint with `Downwind Bonus` 2.5 and `Scent Threshold` 0.25, and put your Blueprint in `Sense Classes`.
 
-Drive **Set Wind State** from your weather system, and the level becomes a genuine wind-direction puzzle.
+Set `Wind Direction` on that Blueprint subclass and the level becomes a genuine wind-direction puzzle. **Set Wind State** on the subsystem only sets wind *speed*, which dampens scent globally; the directional bonus reads the sense's own property.
 
 ---
 
@@ -271,10 +272,7 @@ The cleanest approach: **make one profile per difficulty** and swap with **Set P
 | Min Time In Lost | 3.0 | 8.0 | 15.0 |
 | Memory Refresh Bonus | 0.05 | 0.10 | 0.20 |
 
-**Leave the cone angles and occlusion identical across difficulties.** The player's spatial understanding of what a guard can see should not change between playthroughs — only how quickly it acts on what it sees.
-
----
-
+**Leave the cone angles and occlusion identical across difficulties.** The player's spatial understanding of what a guard can see should not change between playthroughs, only how quickly it acts on what it sees.
 
 ---
 

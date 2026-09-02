@@ -74,15 +74,18 @@ Emit Sound At Location
   Sound Type     : DA_Sound_Explosion
 ```
 
-Use for sourceless sounds — explosions, traps, environmental triggers, thrown distractions. There is no target actor, so the AI investigates the *place*, not a person.
+Use for sourceless sounds — explosions, traps, environmental triggers, thrown distractions. There is no target actor, so the AI forms a **belief about the place** rather than about a person. It gets its own lifecycle, its confidence is the sound's loudness clamped to 1, and its tag is the asset's `Sound Name`. Read it with **On Location Belief Changed** or **Get Strongest Location Belief**. `On AI Hear` does not fire for these sounds.
 
-### ⚠ Two differences between the two nodes
+### Three differences between the two nodes
 
-**1. `Sound Name` doubles as a stimulus tag.** `Emit Sound` also broadcasts a stimulus event tagged `Stimulus.Sound.<Sound Name>`, which is how other senses intercept loud noises. The Vibration sense subscribes to `Stimulus.Sound.Explosion` — so **an explosion only shakes the ground for vibration-hunting AI if that asset's `Sound Name` field is literally `Explosion`.** Name the field carefully; it is not just a label.
+!!! warning "`Sound Name` doubles as a stimulus tag"
+    `Emit Sound` also broadcasts a stimulus event tagged `Stimulus.Sound.<Sound Name>`, which is how other senses intercept loud noises. The Vibration sense subscribes to `Stimulus.Sound.Explosion`, so **an explosion only shakes the ground for vibration-hunting AI if that asset's `Sound Name` field is literally `Explosion`.** Name the field carefully; it is not just a label.
 
-**2. `Emit Sound At Location` does not emit a stimulus at all.** Only `Emit Sound` does. If you want an explosion to reach vibration senses, emit it from an actor — spawn a short-lived actor at the blast point if you have to — or call **Emit Stimulus** yourself alongside `Emit Sound At Location`.
+!!! warning "`Emit Sound At Location` does not emit a stimulus at all"
+    Only `Emit Sound` does. If you want an explosion to reach vibration senses, emit it from an actor, spawning a short-lived one at the blast point if you have to, or call **Emit Stimulus** yourself alongside `Emit Sound At Location`.
 
-Sourceless sounds also do not accumulate (accumulation is keyed on the source actor) and are evaluated against every candidate target rather than one specific actor.
+!!! warning "Sourceless sounds are place beliefs, not target evidence"
+    They never raise confidence on any actor, never accumulate (accumulation is keyed on the source actor) and never fire `On AI Hear`. They arrive as a place belief, read through `On Location Belief Changed`. Before v3.0 they were scored against every candidate target at once, which turned bystanders into suspects.
 
 ### Where to call it
 
@@ -97,7 +100,8 @@ Sourceless sounds also do not accumulate (accumulation is keyed on the source ac
 | Thrown objects | The projectile's `OnHit` — with `Emit Sound At Location` |
 | Explosions | Wherever you call `Apply Radial Damage` |
 
-> `Emit Sound` only feeds perception. Keep playing your actual audio however you normally do.
+!!! note
+    `Emit Sound` only feeds perception. Keep playing your actual audio however you normally do.
 
 ### A thrown-rock distraction in three nodes
 
@@ -107,7 +111,7 @@ Projectile OnComponentHit
   └─► Emit Sound At Location (Hit Location, DA_Sound_Thrown_Rock)
 ```
 
-Every guard in 1800 cm now investigates that spot. Classic stealth distraction, no extra systems.
+Every guard within 1800 cm now holds a place belief at that spot, tagged with the asset's `Sound Name`. Bind **On Location Belief Changed** and send the guard to investigate when the state reaches `Suspected`. Classic stealth distraction, no extra systems.
 
 ---
 
@@ -172,7 +176,8 @@ The reported confidence is `max(instant, accumulated)`, so accumulation can only
 
 **Design consequence:** a player who moves in short bursts, pausing longer than `Hold Time`, keeps the accumulator draining and stays under `Suspect Threshold`. A player who runs continuously builds past it. That is the core stealth loop and you tune it with these three numbers plus your `Awareness` thresholds.
 
-> `Hearing Base Threshold` is not read by any code path in v3.0 — there is no noise floor. Use `Suspect Threshold` and the sound filter's `Min Alert Level` instead.
+!!! warning "`Hearing Base Threshold` is inert in v3.0"
+    It is not read by any code path, so there is no noise floor. Use `Suspect Threshold` and the sound filter's `Min Alert Level` instead.
 
 ---
 
@@ -188,6 +193,14 @@ Event On AI Hear (Location, Loudness, Sound Type Name)
 
 `Location` is where the AI *thinks* the sound came from — already degraded by `Location Accuracy Override` and `b Is Directional`. A vague sound gives a vague position, which is exactly what you want.
 
+Sourceless sounds arrive on a different event, because there is no actor to attach them to:
+
+```
+Event On Location Belief Changed (Location, Tag, State, Confidence)
+  └─► Branch: State == Suspected
+        True → Set Blackboard Vector "InvestigateLocation" = Location
+```
+
 ---
 
 ## Troubleshooting
@@ -202,6 +215,7 @@ Event On AI Hear (Location, Loudness, Sound Type Name)
 | AI reacts to every single footstep instantly | Lower `Sound Accumulation Rate`, raise `Suspect Threshold`, or give the archetype a filter with a higher `Min Alert Level` |
 | Explosions don't reach vibration-based AI | The sound asset's `Sound Name` must be `Explosion`, and you must use `Emit Sound` (not `Emit Sound At Location`) |
 | Sound filter makes AI totally deaf | `Accepted Categories` is empty — that means *nothing*, not *everything* |
+| A sourceless sound never fires `On AI Hear` | Correct. It is a place belief. Bind `On Location Belief Changed` instead |
 
 ---
 

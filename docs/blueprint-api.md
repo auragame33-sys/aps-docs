@@ -146,8 +146,8 @@ There is deliberately **no recall event**. APS never tells you when to remember 
 
 | Node | Description |
 |---|---|
-| **Add Target Evidence** (`Target`, `Key`, `Op`, `Value`, `Lifetime`, `Source`) | Apply an external belief modifier — a floor, a ceiling, a relative reduction, or a forced zero |
-| **Remove Target Evidence** (`Target`, `Key`) | Drop one modifier |
+| **Add Target Evidence** (`Target`, `Evidence Tag`, `Operation`, `Value`, `Lifetime`, `Source`) | Apply an external belief modifier: a floor, a ceiling, a relative reduction, or a forced zero. Re-adding the same tag replaces the entry rather than stacking. `Lifetime` 0 holds until removed. |
+| **Remove Target Evidence** (`Target`, `Evidence Tag`) | Drop one modifier |
 | **Clear Target Evidence** (`Target`) | Drop all of them |
 | **Get Target Evidence** (`Target`) → `array<Evidence>` | What is currently applied |
 
@@ -164,7 +164,7 @@ See [`EAPSEvidenceOp`](enum-reference.md) for what each operation means.
 | **Get Strongest Location Belief** | `bool` + `Belief Record` |
 | **Clear Location Belief** (`Location`, `Tag`) | `bool` |
 
-Place beliefs are kept out of the attention and all-clear paths, so an unattributed noise cannot steal focus from a person. See [Policies](policies.md).
+Place beliefs are kept out of the attention and all-clear paths, so an unattributed noise cannot steal focus from a person. **On Location Belief Changed** fires on every state change. See [Core Concepts](core-concepts.md#11-beliefs-about-places).
 
 ---
 
@@ -311,23 +311,25 @@ Readable and settable directly on the component.
 | `Current State` | String (read-only) | Human-readable state string |
 | `Replicated Targets` | array (read-only) | Raw replicated array — prefer `Get Replicated Perception State` |
 | `Replicated Awareness` | enum (read-only) | Replicated awareness level |
+| `Profile Overrides` | array | Per-agent changes stamped on a private copy of the profile. See [Profile Composition](profile-composition.md) |
+| `Quality Profile` | APS Quality Profile | Optional cost controls. Swap with **Set Quality Profile** |
 
 ---
 
-# Global nodes — no component needed
+## Global nodes — no component needed
 
-## Sound (`Perception | Sound`)
+### Sound (`Perception | Sound`)
 
 | Node | Description |
 |---|---|
 | **Emit Sound** (`Source`, `Sound Type`) | Emit a sound from an actor. Only agents within the sound type's `Max Range` are notified. |
 | **Emit Sound At Location** (`Sound Location`, `Sound Type`) | Emit from a world position with no source actor |
 
-## APS Subsystem
+### APS Subsystem
 
 Get it with **Get APS Subsystem** (static, world context), then drag off the return.
 
-### Environment
+#### Environment
 
 | Node | Description |
 |---|---|
@@ -339,16 +341,21 @@ Get it with **Get APS Subsystem** (static, world context), then drag off the ret
 | **Set Indoors** (`b Indoors`) | Indoors boosts scent, since it does not disperse |
 | **Set Time Of Day** (`Hour`) | 0–24 |
 | **Set Sun Direction** (`Direction`) | Pass your directional light's forward vector. **Required for per-target shadow tracing.** |
+| **Get Environment At** (`Location`) ⚡ | Conditions at a point, with any APS Environment volume covering it applied over the global state |
+| **Get Sense Range Scale At** (`Location`, `Sense ID`) ⚡ | Range multiplier at a point for `Vision`, `Hearing` or `Smell`. Anything else returns 1 |
 
-### Registry
+#### Registry
 
 | Node | Description |
 |---|---|
 | **Register Perceivable Actor** (`Actor`) | Make a non-Pawn actor perceivable — turrets, vehicles, interactive props. Pawns are found automatically. |
 | **Unregister Perceivable Actor** (`Actor`) | Stop it being perceivable |
 | **Get Agent Count** | How many APS agents exist in the world |
+| **Get Agent Significance** (`Agent`) ⚡ | The agent's latest significance score, 0 to 1. See [Scale & Crowds](scale-and-crowds.md) |
 
-### Fairness
+Two properties also live on the subsystem and are set from Blueprint: `Max Perception Updates Per Frame` (0 = unlimited) and `Significance Policy`.
+
+#### Fairness
 
 | Node | Description |
 |---|---|
@@ -357,7 +364,7 @@ Get it with **Get APS Subsystem** (static, world context), then drag off the ret
 | **Clear Never Search Zones** | Remove all of them |
 | **Is In Never Search Zone** (`Location`) ⚡ | Test a location |
 
-### Stimulus bus
+#### Stimulus bus
 
 | Node | Description |
 |---|---|
