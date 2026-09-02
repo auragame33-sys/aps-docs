@@ -63,7 +63,7 @@ Settings not listed keep their defaults.
 | Awareness | Suspect / Detect / Track | 0.12 / 0.30 / 0.55 |
 | Loss | Smell Loss Grace | 30.0 |
 | Attention | Attention Stickiness Time | 3.0 |
-| Brain\|Emotions | Aggression Rise Rate | 1.2 |
+|Emotions | Aggression Rise Rate | 1.2 |
 | Brain\|Squad | b Auto Share On Detect | ✅ |
 
 Subclass **Smell Sense** in Blueprint with `Downwind Bonus` 2.5 and `Scent Threshold` 0.25, and put your Blueprint in `Sense Classes`.
@@ -244,7 +244,6 @@ Pain sense with `DA_Pain_Bleeding` and `DA_Pain_Flashbang` makes flashbangs and 
 | Spatial | Uncertainty Growth Rate | 35 |
 | Spatial | Max Uncertainty Radius | 1800 |
 | Attention | Attention Stickiness Time | 8.0 |
-| Brain\|PlayerModel | b Enable Cross Session Memory | ✅ |
 | Brain\|PlayerModel | Min Engagements Required | 2 |
 | Fairness | Telegraph Threshold | 0.20 |
 | Fairness | b Respect Never Search Zones | ✅ |
@@ -276,3 +275,11 @@ The cleanest approach: **make one profile per difficulty** and swap with **Set P
 
 ---
 
+
+---
+
+## The built-in archetypes
+
+APS also ships five presets you can apply with one button — Guard, Civilian, Stalker, Military Patrol and Wildlife. They are a faster starting point than the recipes above, and you can tune from either. See **[Profile Composition](profile-composition.md)**.
+
+Once you have a base you like, give the variants a **Parent Profile** instead of duplicating the asset. That is what stops eight near-identical profiles drifting apart over a project.

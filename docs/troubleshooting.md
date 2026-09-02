@@ -1,6 +1,6 @@
 # Troubleshooting & FAQ
 
-**Start here when something is wrong.** Symptoms first, causes second — plus the five settings that are inert in v2.0.
+**Start here when something is wrong.** Symptoms first, causes second — plus the five settings that are inert in v3.0.
 
 ---
 
@@ -148,7 +148,7 @@ Never-search zones are **advisory**. Registering one does not stop anything by i
 
 ## Settings that appear to do nothing
 
-Five profile properties are not read by any code path in v2.0. They are visible in the editor but changing them has no effect:
+Five profile properties are not read by any code path in v3.0. They are visible in the editor but changing them has no effect:
 
 | Setting | Use instead |
 |---|---|
@@ -177,7 +177,7 @@ Two more behave differently than their names suggest:
 
 Confidence is hovering right at a threshold. Raise the gap between `Detect Threshold` and `Suspect Threshold`, raise `Vision Loss → Grace Time`, or lower `Vision Loss → Confidence Decay Multiplier` so belief falls more slowly once sight breaks.
 
-(`Confidence Reduce Delay` sounds like the fix and is **inert in v2.0** — the per-sense `Grace Time` is the real control.)
+(`Confidence Reduce Delay` sounds like the fix and is **inert in v3.0** — the per-sense `Grace Time` is the real control.)
 
 ### `On AI Detect` fires repeatedly for the same target
 
@@ -278,7 +278,9 @@ See [Performance](performance.md). Defaults are comfortable to ~30; with tuning 
 No — server only. An opt-in replicated summary exists for client UI.
 
 **Where is the player behaviour data saved?**
-`YourProject/Saved/APS/PlayerModel/` as plain JSON, one file per AI class per target.
+It is not. APS writes nothing to disk — no save files, no `Saved/` folder. The behaviour model and the [memory store](memory-and-recall.md) both live for the session, so a freshly spawned AI starts knowing nothing.
+
+To persist either, read the values you want and write them into your own save game. See [Memory & Recall](memory-and-recall.md).
 
 **Can I disable a sense at runtime?**
 Not individually. Swap to a profile without that sense using **Set Profile**, or use the Pain system to suppress it to zero — which is often what you actually want.

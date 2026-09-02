@@ -112,9 +112,77 @@ Cover is resolved by a single `Visibility` trace from the AI's eye to the target
 | **Get Last Episode** (`Target`) ⚡ | `bool` + `Perception Episode` | *"What happened last time?"* |
 | **Clear Episodes** (`Target`) | — | Wipe episode history. Use on respawn / new chapter. |
 
-**Perception Episode fields:** `How Lost`, `State When Lost`, `Location When Lost`, `AI Camera Direction`, `Target Flee Direciton` *(sic — the field name is misspelled in v2.0)*, `Engagement Duration`, `Peak Threat Level`, `World Time Stamp`.
+**Perception Episode fields:** `How Lost`, `State When Lost`, `Location When Lost`, `AI Camera Direction`, `Target Flee Direciton` *(sic — the field name is misspelled in v3.0)*, `Engagement Duration`, `Peak Threat Level`, `World Time Stamp`.
 
 An episode is written whenever `Detected` **or** `Tracked` transitions to `Lost`. `Engagement Duration` records the target's *cumulative* tracked time, not the length of that single engagement, so it only ever increases across a target's episodes.
+
+---
+
+## APS | Memory Store
+
+A tagged store per agent. You decide what goes in and when it comes out — see **[Memory & Recall](memory-and-recall.md)**.
+
+| Node | Returns | Description |
+|---|---|---|
+| **Make Actor Subject** (`Actor`) | `Memory Subject` | Something to remember *about* |
+| **Make Place Subject** (`Location`, `Place Tag`) | `Memory Subject` | A place, with no actor involved |
+| **Remember** (`Subject`, `Tag`, `Number`, `Place`, `Related Actor`) | — | File a tagged memory. Writing the same tag again updates it and increments `Count` |
+| **Recall** (`Subject`) | `bool` + `array<Memory>` | Everything held about a subject, newest first |
+| **Recall Tag** (`Subject`, `Tag`) | `bool` + `Memory` | One specific memory |
+| **Has Memory Of** (`Subject`) | `bool` | Whether anything at all is held |
+| **Get Remembered Subject Count** | `int` | Distinct subjects this agent holds |
+| **Forget** (`Subject`, `Tag`) | `bool` | Drop one tag |
+| **Forget Subject** (`Subject`) | — | Drop everything about one subject |
+| **Forget Everything** | — | Wipe this agent's store |
+
+**Memory fields:** `Tag` · `Number` · `Place` · `Related Actor` · `Count` · `Age`.
+`Count` and `Age` are maintained for you and are usually what makes the behaviour interesting.
+
+There is deliberately **no recall event**. APS never tells you when to remember something — call **Recall** where your own logic wants to know.
+
+---
+
+## APS | Evidence
+
+| Node | Description |
+|---|---|
+| **Add Target Evidence** (`Target`, `Key`, `Op`, `Value`, `Lifetime`, `Source`) | Apply an external belief modifier — a floor, a ceiling, a relative reduction, or a forced zero |
+| **Remove Target Evidence** (`Target`, `Key`) | Drop one modifier |
+| **Clear Target Evidence** (`Target`) | Drop all of them |
+| **Get Target Evidence** (`Target`) → `array<Evidence>` | What is currently applied |
+
+See [`EAPSEvidenceOp`](enum-reference.md) for what each operation means.
+
+---
+
+## APS | Beliefs about places
+
+| Node | Description |
+|---|---|
+| **Report Location Belief** (`Location`, `Tag`, `Confidence`, `Accuracy`) | File a belief about a place rather than an actor |
+| **Get Location Beliefs** → `array<Belief Record>` | All of them |
+| **Get Strongest Location Belief** | `bool` + `Belief Record` |
+| **Clear Location Belief** (`Location`, `Tag`) | `bool` |
+
+Place beliefs are kept out of the attention and all-clear paths, so an unattributed noise cannot steal focus from a person. See [Policies](policies.md).
+
+---
+
+## APS | Explain & Record
+
+| Node | Description |
+|---|---|
+| **Explain Perception** (`Target`) → `String` | Why the AI does or does not believe in this target right now |
+| **Get Sense Blocker** (`Target`, `Sense ID`) → `EAPS Perception Blocker` | The specific reason one sense is silent |
+| **Start Recording** (`Seconds`) | Begin capturing belief, keeping the last N seconds |
+| **Stop Recording** / **Is Recording** | Control and query |
+| **Get Recorded Frames** → `array<Perception Frame>` | Everything captured, oldest first |
+| **Get Recorded Frames For** (`Target`) | Just one target's frames |
+| **Get Recorded Frame At** (`Target`, `World Seconds`) | `bool` + `Perception Frame` |
+| **Explain Recorded At** (`Target`, `World Seconds`) → `String` | A past moment, described in words |
+| **Clear Recording** | Discard what was captured |
+
+See **[Explaining & Recording](explaining-and-recording.md)**.
 
 ---
 
@@ -179,9 +247,6 @@ An episode is written whenever `Detected` **or** `Tracked` transitions to `Lost`
 |---|---|
 | **Get Player Behavior Model** (`Target`) ⚡ | `bool` + `Player Behavior Model` — crouch/sprint/walk ratios, stealth and aggression ratios, recent hide locations, custom ratios, engagement count, `b Has Enough Data` |
 | **Reset Player Behavior Model** (`Target`) | Wipe observations for one target |
-| **Save Cross Session Memory** | Write models to `Saved/APS/PlayerModel/`. Called automatically on End Play. |
-| **Load Cross Session Memory** | Read them back. Called automatically on Begin Play. |
-| **Clear Cross Session Memory** | Delete the saved files |
 
 ---
 
@@ -189,8 +254,26 @@ An episode is written whenever `Detected` **or** `Tracked` transitions to `Lost`
 
 | Node | Description |
 |---|---|
-| **Set Profile** (`New Profile`) | Hot-swap the entire perception profile at runtime. Rebuilds senses, resets the ledger, emotions and attention. Use for alert states, difficulty changes, or transformations. |
+| **Set Profile** (`New Profile`) | Hot-swap the entire perception profile at runtime. Use for alert states, difficulty changes, or transformations. |
+| **Set Quality Profile** (`New Quality`) | Cost controls on top of the profile. Never resets anything |
+| **Get Source Profile** → `Perception Profile` | The asset as assigned, before inheritance and overrides resolve |
+| **Set Profile Number** (`Property`, `Value`) → `bool` | Change one numeric profile setting for this agent alone. Returns false and logs if the name does not resolve |
+| **Set Profile Flag** (`Property`, `Value`) → `bool` | As above, for a checkbox |
+| **Get Profile Number** (`Property`, `Fallback`) → `float` | Read one back |
+| **Clear Profile Overrides** | Drop this agent's overrides and return to the asset as authored |
 | **Get Replicated Perception State** → `array<Replicated Target State>`, `EAwareness Level` | Read the replicated summary on clients. Always use this rather than the raw array — it resolves the relay automatically. See [Multiplayer](multiplayer.md). |
+
+!!! info "A profile swap does not necessarily reset anything"
+    When the new profile runs the **same senses in the same order** and wants the
+    same ledger capacity, the swap keeps everything the agent knows — ledger,
+    emotions, attention. Only a structurally different profile rebuilds.
+
+    This is what makes swapping profiles a safe way to scale an agent's cost up
+    and down mid-encounter. It used to wipe the ledger every time, so an AI
+    throttled mid-chase forgot who it was chasing.
+
+    Per-agent overrides survive a swap, because they belong to the agent rather
+    than the asset. See [Profile Composition](profile-composition.md).
 
 ---
 
