@@ -86,47 +86,54 @@ That is a working AI. Everything else in these docs is tuning and depth.
 
 ### What ships in the box
 
-**8 built-in senses** — Vision, Hearing, Smell, Touch, Vibration, Damage, Pain, Echolocation. Up to 8 senses run per AI simultaneously, and you can add your own in Blueprint.
+-    **Eight senses, one belief**
 
-**Belief, not booleans** — continuous 0–1 confidence per target with a full lifecycle, smoothing, and configurable decay curves.
+    ---
 
-**Multi-point visibility** — the AI traces against head, chest, pelvis and shoulders (or your own socket list) and gets a *percentage exposed*, not a yes/no. Lean out of cover and only your head is visible — the AI reacts accordingly.
+    Vision, Hearing, Smell, Touch, Vibration, Damage, Pain and Echolocation, fused into one 0 to 1 confidence per target. A seven-state lifecycle fires a Blueprint event on every transition, and you can add a sense of your own in Blueprint.
 
-**Three vision cones** — a focal cone, an optional wider/weaker peripheral cone, and an optional rear cone that only registers *moving* targets. Plus keyhole vision (narrow at distance, wide up close).
+-    **Vision that respects cover**
 
-**Vision bound to the mesh** — the cone origin and direction can come from a head socket, so head turns and aim offsets actually move the AI's gaze. A turn-rate limit stops the cone snapping to a target before the body has physically turned.
+    ---
 
-**Real occlusion** — multi-channel line-of-sight tests with per-physical-surface transmission. Glass is transparent, foliage dampens, concrete blocks. Optionally other pawns block sight too.
+    Weighted sample points from your skeleton give a percentage exposed, not a yes or no. Focal, peripheral, rear-motion and keyhole cones. Multi-channel occlusion with per-surface transmission. Per-target shadow tracing. Eyes bound to the head bone, with a turn-rate limit.
 
-**Per-target lighting** — a shadow trace at the target's location, so a dark corner is genuinely dark, not just "night time".
+-    **Memory, threat and emotion**
 
-**Spatial belief** — last known position, smoothed velocity and acceleration, an uncertainty radius that grows the longer you stay hidden, and predictive extrapolation of where you probably went.
+    ---
 
-**Episodic memory** — the last 5 engagements with each target: how it ended, where, which way you fled, peak threat.
+    Loss reasons, last known position, velocity, an uncertainty radius that grows while you hide, prediction, five episodes per target, weighted threat scoring, five emotion channels, and a tagged memory store you write into yourself.
 
-**Emotional state** — five channels (Fear, Aggression, Curiosity, Alertness, Panic) driven by perception, with a dominant emotion and change events.
+-    **Squads, factions and search**
 
-**Threat assessment** — a weighted composite score from confidence, damage taken, number of corroborating senses and relationship, mapped to five threat levels.
+    ---
 
-**Squad coordination** — range-gated intel sharing, positional alerts, and exclusive combat role claiming (Flanker, Suppressor, Investigator…).
+    Range-gated intel sharing, positional alerts and exclusive combat roles in the core. The optional Knowledge module adds faction-wide knowledge with lossy comms channels, describable identities, evidence left in the world, and a search that gets colder as it goes.
 
-**Player behaviour model** — observes how you play using only what the AI could legitimately perceive: movement style, engagement style, favourite hiding spots. It lives for the session, like everything else APS holds.
+-    **Fairness and scripting**
 
-**Fairness rules** — first-spot reaction delay, telegraph events for "huh?" barks, off-screen hearing penalty, and designer-defined never-search zones for guaranteed safe rooms.
+    ---
 
-**Replication** — an opt-in compact per-target summary replicated to clients, so detection meters and spectator HUDs work without hand-rolled plumbing.
+    Reaction delay, telegraph events, an off-screen hearing penalty and safe rooms. Scripted evidence floors, caps, lowers or zeroes belief. Beliefs about places. Blueprint policies for fusion, threat and attention. Profile inheritance, per-agent overrides and live console tuning.
 
-**Scripted evidence** — a disguise, an alibi or a cutscene can floor, cap, lower or zero what the AI believes about a target, with its own lifetime and a provenance tag.
+-    **Tooling that explains itself**
 
-**Beliefs about places** — a gunshot with no known shooter, a body, a forced lock. The AI can believe something happened *over there* without pinning it on whoever happened to be nearby.
+    ---
 
-**Policies** — take over sense fusion, threat scoring or target attention with a Blueprint class of your own. Leave the slot empty and the built-in rule runs.
+    A 7-mode overlay with sense beams and a confidence sparkline, a print node for every event, an explain trace that says why a sense is silent, a belief recorder, a profile validator and a budget estimator. Server-authoritative, with an opt-in replicated summary for client UI.
 
-**Profile composition** — inherit from a parent profile, override one number on one agent, stamp on a built-in archetype, or tune every running agent from the console.
+### Start from a ready-made AI
 
-**Explain and record** — ask an AI, in words, why it cannot see you. Read back what it believed ten seconds ago.
+Eight tuned builds in the cookbook, each nothing but values on an ordinary profile. Pick the nearest one and tune from there.
 
-**7-mode debug suite** — on-screen overlays for Sense, Memory, Brain, Squad, Delegates, Player Model and Environment, plus a one-node print function for every single event.
+-    **[Stealth Guard](#stealth-guard)** · sharp but fair, warns before it commits
+-    **[Guard Dog](#guard-dog)** · hunts by nose and ears, weak eyes
+-    **[Zombie](#zombie-infected)** · feels you through the floor, never lets go
+-    **[Blind Creature](#blind-creature)** · echolocation and vibration, freeze to vanish
+-    **[Sniper](#sniper-overwatch)** · long narrow sight, leads a moving target
+-    **[Security Camera](#security-camera-turret)** · consistent, emotionless, no allowances
+-    **[Soldier](#soldier-tactical-enemy)** · coordinated, disciplined, reacts to damage
+-    **[Horror Antagonist](#horror-antagonist)** · patient, remembers everything
 
 ---
 
@@ -866,6 +873,23 @@ Ready-made settings for other archetypes — dog, zombie, sniper, horror stalker
 
 ---
 
+### Ten words you will see everywhere
+
+| Term | Meaning |
+|---|---|
+| **Confidence** | A 0 to 1 belief that a target is where a sense says it is. Every sense produces one per target on every tick it runs. |
+| **Fused** and **Smoothed** | Fused is this tick's raw combination of the senses. Smoothed is the version that drives everything: it rises while a sense is active, holds, and decays only once every sense is silent. |
+| **Lifecycle state** | Undetected → Suspected → Detected → Tracked → Lost → Remembered → Expired, per target, with an event on every transition. |
+| **Awareness** | The AI's overall alert level, derived from its top target: Unaware, Peripheral, Suspicious, Alerted, Fully Aware. |
+| **Attention target** | The one target the AI is committed to. Sticky, so it does not flicker between two similar contacts. |
+| **Loss reason** | Why contact broke: Occluded, Out Of Range, Sound Faded, Scent Lost, Sensor Dropout. It decides how the AI should search. |
+| **Belief record** | Everything the AI holds about one target, in one struct. `Get Belief Data` returns it. |
+| **Profile** | The data asset holding every perception setting for one archetype. Swap it to change how an AI perceives. |
+| **Evidence** | A scripted floor, ceiling, reduction or reset on belief about a target. A disguise, an alibi, a cutscene. |
+| **Place belief** | A belief about a location rather than an actor: a gunshot with no known shooter, a body, a forced lock. |
+
+---
+
 ### The 10 nodes you will actually use
 
 | Node | Returns | For |
@@ -926,12 +950,7 @@ Ready-made settings for other archetypes — dog, zombie, sniper, horror stalker
 
 ### Default thresholds
 
-```
-0.00 ─────────────────────────────────────────────────── 1.00
-     │        │           │              │         │
-   0.15     0.25        0.35           0.60      0.85
-  Suspect  Telegraph   Detect         Track    Fully Aware
-```
+*Figure: Default confidence thresholds and the states they open.*
 
 | Confidence | Lifecycle state | Awareness level |
 |---|---|---|
@@ -976,7 +995,7 @@ Leave cone angles and occlusion **identical** across difficulties — the player
 
 ```
 APS Core → Debug Settings → b Enabled  ✅
-                          → Agent Scope = Focus + Outlines   (the default; keeps a squad readable)
+                          → Agent Scope = Focus + Outlines  (default)
 
 F1 → Debug Cycle Display Mode     F3 → Debug Toggle Pause
 F2 → Debug Toggle Freeze Snapshot F4 → Debug Print Belief State
@@ -1733,15 +1752,7 @@ FusedConfidence = (best active sense × its weight)
                 + (number of other active senses × CorroborationBonus)
 ```
 
-```
-Sense confidences this tick          Fused result
-─────────────────────────────        ──────────────────────────────
-Vision   ████████░░  0.80   ─┐
-Hearing  ███░░░░░░░  0.30   ─┼─►  best (0.80)
-Smell    ██░░░░░░░░  0.20   ─┘    + 2 extra active × 0.10
-Touch    ░░░░░░░░░░  0.00  (silent — contributes nothing)
-                                  = 1.00
-```
+*Figure: Fusion: the strongest active sense sets the floor and each extra active sense adds a flat bonus.*
 
 Worked example with `Corroboration Bonus = 0.1`:
 
@@ -1766,21 +1777,8 @@ Raw fused confidence is then **smoothed** into `Smoothed Confidence`, and that i
 
 The rule that surprises people: **while any sense is active, confidence never goes down.** It rises, or it holds. Reduction happens only once every sense has gone silent.
 
-```
-confidence
-   1.0 ┤                     ╭────────────╮
-       │                   ╭─╯            ╰╮
-  0.60 ┼ ─ ─ ─ ─ ─ ─ ─ ─ ╭╯ ─ ─ ─ ─ ─ ─ ─ ─╰╮─ ─ ─ ─ ─  Track
-       │                ╭╯                  ╰╮
-  0.35 ┼ ─ ─ ─ ─ ─ ─ ─╭╯ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ╰─╮─ ─ ─ ─  Detect
-       │             ╭╯                        ╰─╮
-  0.15 ┼ ─ ─ ─ ─ ─ ╭─╯ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ╰──╮─ ─  Suspect
-       │        ╭──╯                                 ╰────
-   0.0 ┼────────╯                                          time
-       └──────────────────────────────────────────────────►
-        │◄ rise ►│◄──── hold ────►│◄────── decay ─────────►
-         sense active               all senses silent
-```
+*Figure: Smoothed confidence over time: rise while a sense is active, hold, then decay once every sense is silent.*
+Ray-sampling noise makes the raw fused value dip a few percent between ticks. The hold phase is what stops that noise reaching the lifecycle.
 
 **Rising** (fused > smoothed, sense active):
 
@@ -2395,20 +2393,8 @@ The angle test is measured against the **first sample point** — the head, by c
 
 Epic traces one ray to the capsule centre. Stand behind a waist-high crate with your head fully exposed and you register as *not seen*. APS traces a **set** of points and returns the weighted fraction that have a clear line.
 
-```
-                                              ○ head      w 1.0   ✓ clear
-   AI eye                        ┄┄┄┄┄┄┄┄┄┄┄┄►
-      ●┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄►  ○ shoulder  w 0.6   ✓ clear
-       ┆ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄╳         ○ chest      w 0.9   ✗ blocked
-       ┆ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄╳         ○ shoulder   w 0.6   ✗ blocked
-       ┆ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄╳ ██████  ○ pelvis     w 0.7   ✗ blocked
-                         crate
-
-   exposure = (1.0 + 0.6) ÷ (1.0 + 0.9 + 0.7 + 0.6 + 0.6) = 0.41
-
-   →  41% exposed  →  confidence scaled to 41%  →  a slow, uncertain detection
-      Epic would report:  "not seen"
-```
+*Figure: Multi-point visibility: five weighted sample points, two of them with a clear line to the eye.*
+exposure = (1.0 + 0.6) ÷ (1.0 + 0.9 + 0.7 + 0.6 + 0.6) = <strong>0.42</strong>. Confidence is scaled to 42 %: a slow, uncertain detection. Epic would report <em>not seen</em>.
 
 Peek your head over the crate and exposure climbs; duck fully and it snaps to zero. That continuous middle ground is the whole reason partial cover feels like cover.
 
@@ -2435,30 +2421,8 @@ Results are exposed on the sense result as `Exposure Ratio` and `Visible Point C
 
 #### The three cones
 
-```
-                              forward
-                                 ▲
-                                 │
-          ╲                      │                      ╱
-            ╲      FOCAL         │        FOCAL       ╱
-              ╲   ×1.00 conf     │      ×1.00 conf  ╱
-                ╲   full range   │     full range ╱
-                  ╲              │              ╱
-    ╲               ╲────────────┼────────────╱               ╱
-      ╲   PERIPHERAL  ╲          │          ╱  PERIPHERAL   ╱
-        ╲  ×0.45 conf   ╲        │        ╱   ×0.45 conf  ╱
-          ╲  0.6× range    ╲     │     ╱    0.6× range  ╱
-            ╲                 ╲  │  ╱                 ╱
-              ╲─────────────────╲│╱─────────────────╱
-                                 ●  AI
-                              ╱  │  ╲
-                            ╱    │    ╲
-                          ╱  REAR-MOTION ╲
-                        ╱   ×0.25 conf    ╲
-                      ╱     0.35× range     ╲
-                    ╱   moving targets only   ╲
-                                 ▼
-```
+*Figure: The three vision cones, seen from above.*
+Cones resolve in order: focal, then peripheral, then rear motion. Outside all three, vision reports nothing at all.
 
 Cones are resolved in order — focal first, then peripheral, then rear-motion. Outside all three, vision returns nothing at all.
 
@@ -2476,19 +2440,8 @@ The detection reports which cone produced it via `Detected By Cone` on the sense
 
 `b Keyhole Vision` makes the cone **narrow at distance and wide up close** — the shape used in *The Last of Us*.
 
-```
-        near (≤ 400 cm)                    far (max range)
-              ╱                                   ╲
-        ╱                                            ╲
-   ╱         90° wide                    15° narrow    ╲
-  ●═══════════════════════════════════════════════════════►
-  AI    ╲                                             ╱
-        ╲                                            ╱
-              ╲                                   ╱
-
-   you can slip past at 20 m by drifting off centre …
-   … but at 3 m the guard catches you in a wide arc
-```
+*Figure: Keyhole vision: wide up close, narrow at distance.*
+Drift off the centre line at distance and you slip past; walk the same bearing up close and the guard catches you in a wide arc.
 
 | Setting | Meaning |
 |---|---|
@@ -2496,7 +2449,7 @@ The detection reports which cone produced it via `Detected By Cone` on the sense
 | `Keyhole Far Angle` (15°) | Half-angle at max range |
 | `Keyhole Near Distance` (400) | Distance at which the near angle is fully applied |
 
-The practical effect: you can sneak past a guard at 20 m by staying slightly off his centre line, but at 3 m he catches you in a wide arc. It reads as far more natural than a fixed cone.
+The practical effect: you can sneak past a guard at 20 m by staying slightly off its centre line, but at 3 m it catches you in a wide arc. It reads as far more natural than a fixed cone.
 
 #### Eye origin and facing
 

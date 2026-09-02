@@ -16,6 +16,23 @@
 
 ---
 
+## Ten words you will see everywhere
+
+| Term | Meaning |
+|---|---|
+| **Confidence** | A 0 to 1 belief that a target is where a sense says it is. Every sense produces one per target on every tick it runs. |
+| **Fused** and **Smoothed** | Fused is this tick's raw combination of the senses. Smoothed is the version that drives everything: it rises while a sense is active, holds, and decays only once every sense is silent. |
+| **Lifecycle state** | Undetected → Suspected → Detected → Tracked → Lost → Remembered → Expired, per target, with an event on every transition. |
+| **Awareness** | The AI's overall alert level, derived from its top target: Unaware, Peripheral, Suspicious, Alerted, Fully Aware. |
+| **Attention target** | The one target the AI is committed to. Sticky, so it does not flicker between two similar contacts. |
+| **Loss reason** | Why contact broke: Occluded, Out Of Range, Sound Faded, Scent Lost, Sensor Dropout. It decides how the AI should search. |
+| **Belief record** | Everything the AI holds about one target, in one struct. `Get Belief Data` returns it. |
+| **Profile** | The data asset holding every perception setting for one archetype. Swap it to change how an AI perceives. |
+| **Evidence** | A scripted floor, ceiling, reduction or reset on belief about a target. A disguise, an alibi, a cutscene. |
+| **Place belief** | A belief about a location rather than an actor: a gunshot with no known shooter, a body, a forced lock. |
+
+---
+
 ## The 10 nodes you will actually use
 
 | Node | Returns | For |
@@ -76,12 +93,31 @@
 
 ## Default thresholds
 
-```
-0.00 ─────────────────────────────────────────────────── 1.00
-     │        │           │              │         │
-   0.15     0.25        0.35           0.60      0.85
-  Suspect  Telegraph   Detect         Track    Fully Aware
-```
+<div class="aps-figure">
+<svg viewBox="0 0 680 150" role="img" aria-labelledby="fig-thresholds">
+  <title id="fig-thresholds">Default confidence thresholds and the states they open</title>
+  <g class="band">
+    <rect class="band0" x="40" y="70" width="90" height="16"/>
+    <rect class="band1" x="130" y="70" width="120" height="16"/>
+    <rect class="band2" x="250" y="70" width="150" height="16"/>
+    <rect class="band3" x="400" y="70" width="240" height="16"/>
+  </g>
+  <line class="ln" x1="40" y1="78" x2="640" y2="78"/>
+  <g class="tick">
+    <line x1="130" y1="60" x2="130" y2="96"/><line x1="190" y1="60" x2="190" y2="96"/><line x1="250" y1="60" x2="250" y2="96"/><line x1="400" y1="60" x2="400" y2="96"/><line x1="550" y1="60" x2="550" y2="96"/>
+  </g>
+  <g class="lbl b" text-anchor="middle">
+    <text x="130" y="48">SUSPECT</text><text x="190" y="30">TELEGRAPH</text><text x="250" y="48">DETECT</text><text x="400" y="48">TRACK</text><text x="550" y="48">FULLY AWARE</text>
+  </g>
+  <g class="sub" text-anchor="middle">
+    <text x="130" y="116">0.15</text><text x="190" y="116">0.25</text><text x="250" y="116">0.35</text><text x="400" y="116">0.60</text><text x="550" y="116">0.85</text>
+    <text x="40" y="116">0</text><text x="640" y="116">1.0</text>
+  </g>
+  <g class="sub" text-anchor="middle">
+    <text x="85" y="140">Undetected</text><text x="190" y="140">Suspected</text><text x="325" y="140">Detected</text><text x="520" y="140">Tracked</text>
+  </g>
+</svg>
+</div>
 
 | Confidence | Lifecycle state | Awareness level |
 |---|---|---|
@@ -126,7 +162,7 @@ Leave cone angles and occlusion **identical** across difficulties — the player
 
 ```
 APS Core → Debug Settings → b Enabled  ✅
-                          → Agent Scope = Focus + Outlines   (the default; keeps a squad readable)
+                          → Agent Scope = Focus + Outlines  (default)
 
 F1 → Debug Cycle Display Mode     F3 → Debug Toggle Pause
 F2 → Debug Toggle Freeze Snapshot F4 → Debug Print Belief State

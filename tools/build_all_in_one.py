@@ -101,6 +101,9 @@ def demote(markdown: str) -> str:
 
 
 ICON = re.compile(r":(?:material|octicons|fontawesome)-[a-z0-9-]+:")
+SVG = re.compile(r"<svg\b.*?</svg>", re.DOTALL)
+SVG_TITLE = re.compile(r"<title[^>]*>(.*?)</title>", re.DOTALL)
+CAPTION = re.compile(r'<p class="aps-figure__caption">(.*?)</p>', re.DOTALL)
 ATTR_LIST = re.compile(r"\{\s*[.#][^}]*\}")
 HTML_WRAPPER = re.compile(r"^\s*</?(?:div|p|span)\b[^>]*>\s*$", re.IGNORECASE)
 ADMONITION = re.compile(r'^(\s*)(?:!!!|\?\?\?\+?)\s+(\w+)(?:\s+"([^"]*)")?\s*$')
@@ -115,6 +118,17 @@ def portable(markdown: str) -> str:
     into an indented block, and an icon shortcode is visible punctuation. The
     site keeps all of it; only this output is flattened.
     """
+    # The site draws its diagrams as inline SVG, which GitHub strips and a
+    # plain editor shows as markup. Keep the figure's title as a one-line note
+    # and let its caption stand as an ordinary paragraph.
+    def figure_note(match: re.Match[str]) -> str:
+        title = SVG_TITLE.search(match.group(0))
+        label = title.group(1).strip() if title else "diagram"
+        return f"*Figure: {label}.*"
+
+    markdown = SVG.sub(figure_note, markdown)
+    markdown = CAPTION.sub(r"\1", markdown)
+
     lines = markdown.splitlines()
     out: list[str] = []
     i = 0

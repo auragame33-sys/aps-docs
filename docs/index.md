@@ -89,47 +89,62 @@ That is a working AI. Everything else in these docs is tuning and depth.
 
 ## What ships in the box
 
-**8 built-in senses** — Vision, Hearing, Smell, Touch, Vibration, Damage, Pain, Echolocation. Up to 8 senses run per AI simultaneously, and you can add your own in Blueprint.
+<div class="grid cards" markdown>
 
-**Belief, not booleans** — continuous 0–1 confidence per target with a full lifecycle, smoothing, and configurable decay curves.
+-   :material-eye-outline:{ .lg .middle } **Eight senses, one belief**
 
-**Multi-point visibility** — the AI traces against head, chest, pelvis and shoulders (or your own socket list) and gets a *percentage exposed*, not a yes/no. Lean out of cover and only your head is visible — the AI reacts accordingly.
+    ---
 
-**Three vision cones** — a focal cone, an optional wider/weaker peripheral cone, and an optional rear cone that only registers *moving* targets. Plus keyhole vision (narrow at distance, wide up close).
+    Vision, Hearing, Smell, Touch, Vibration, Damage, Pain and Echolocation, fused into one 0 to 1 confidence per target. A seven-state lifecycle fires a Blueprint event on every transition, and you can add a sense of your own in Blueprint.
 
-**Vision bound to the mesh** — the cone origin and direction can come from a head socket, so head turns and aim offsets actually move the AI's gaze. A turn-rate limit stops the cone snapping to a target before the body has physically turned.
+-   :material-cube-scan:{ .lg .middle } **Vision that respects cover**
 
-**Real occlusion** — multi-channel line-of-sight tests with per-physical-surface transmission. Glass is transparent, foliage dampens, concrete blocks. Optionally other pawns block sight too.
+    ---
 
-**Per-target lighting** — a shadow trace at the target's location, so a dark corner is genuinely dark, not just "night time".
+    Weighted sample points from your skeleton give a percentage exposed, not a yes or no. Focal, peripheral, rear-motion and keyhole cones. Multi-channel occlusion with per-surface transmission. Per-target shadow tracing. Eyes bound to the head bone, with a turn-rate limit.
 
-**Spatial belief** — last known position, smoothed velocity and acceleration, an uncertainty radius that grows the longer you stay hidden, and predictive extrapolation of where you probably went.
+-   :material-brain:{ .lg .middle } **Memory, threat and emotion**
 
-**Episodic memory** — the last 5 engagements with each target: how it ended, where, which way you fled, peak threat.
+    ---
 
-**Emotional state** — five channels (Fear, Aggression, Curiosity, Alertness, Panic) driven by perception, with a dominant emotion and change events.
+    Loss reasons, last known position, velocity, an uncertainty radius that grows while you hide, prediction, five episodes per target, weighted threat scoring, five emotion channels, and a tagged memory store you write into yourself.
 
-**Threat assessment** — a weighted composite score from confidence, damage taken, number of corroborating senses and relationship, mapped to five threat levels.
+-   :material-account-group-outline:{ .lg .middle } **Squads, factions and search**
 
-**Squad coordination** — range-gated intel sharing, positional alerts, and exclusive combat role claiming (Flanker, Suppressor, Investigator…).
+    ---
 
-**Player behaviour model** — observes how you play using only what the AI could legitimately perceive: movement style, engagement style, favourite hiding spots. It lives for the session, like everything else APS holds.
+    Range-gated intel sharing, positional alerts and exclusive combat roles in the core. The optional Knowledge module adds faction-wide knowledge with lossy comms channels, describable identities, evidence left in the world, and a search that gets colder as it goes.
 
-**Fairness rules** — first-spot reaction delay, telegraph events for "huh?" barks, off-screen hearing penalty, and designer-defined never-search zones for guaranteed safe rooms.
+-   :material-scale-balance:{ .lg .middle } **Fairness and scripting**
 
-**Replication** — an opt-in compact per-target summary replicated to clients, so detection meters and spectator HUDs work without hand-rolled plumbing.
+    ---
 
-**Scripted evidence** — a disguise, an alibi or a cutscene can floor, cap, lower or zero what the AI believes about a target, with its own lifetime and a provenance tag.
+    Reaction delay, telegraph events, an off-screen hearing penalty and safe rooms. Scripted evidence floors, caps, lowers or zeroes belief. Beliefs about places. Blueprint policies for fusion, threat and attention. Profile inheritance, per-agent overrides and live console tuning.
 
-**Beliefs about places** — a gunshot with no known shooter, a body, a forced lock. The AI can believe something happened *over there* without pinning it on whoever happened to be nearby.
+-   :material-bug-outline:{ .lg .middle } **Tooling that explains itself**
 
-**Policies** — take over sense fusion, threat scoring or target attention with a Blueprint class of your own. Leave the slot empty and the built-in rule runs.
+    ---
 
-**Profile composition** — inherit from a parent profile, override one number on one agent, stamp on a built-in archetype, or tune every running agent from the console.
+    A 7-mode overlay with sense beams and a confidence sparkline, a print node for every event, an explain trace that says why a sense is silent, a belief recorder, a profile validator and a budget estimator. Server-authoritative, with an opt-in replicated summary for client UI.
 
-**Explain and record** — ask an AI, in words, why it cannot see you. Read back what it believed ten seconds ago.
+</div>
 
-**7-mode debug suite** — on-screen overlays for Sense, Memory, Brain, Squad, Delegates, Player Model and Environment, plus a one-node print function for every single event.
+## Start from a ready-made AI
+
+Eight tuned builds in the cookbook, each nothing but values on an ordinary profile. Pick the nearest one and tune from there.
+
+<div class="grid cards aps-archetypes" markdown>
+
+-   :material-shield-account:{ .middle } **[Stealth Guard](archetype-cookbook.md#stealth-guard)** · sharp but fair, warns before it commits
+-   :material-dog:{ .middle } **[Guard Dog](archetype-cookbook.md#guard-dog)** · hunts by nose and ears, weak eyes
+-   :material-skull-outline:{ .middle } **[Zombie](archetype-cookbook.md#zombie-infected)** · feels you through the floor, never lets go
+-   :material-eye-off-outline:{ .middle } **[Blind Creature](archetype-cookbook.md#blind-creature)** · echolocation and vibration, freeze to vanish
+-   :material-crosshairs:{ .middle } **[Sniper](archetype-cookbook.md#sniper-overwatch)** · long narrow sight, leads a moving target
+-   :material-cctv:{ .middle } **[Security Camera](archetype-cookbook.md#security-camera-turret)** · consistent, emotionless, no allowances
+-   :material-account-group:{ .middle } **[Soldier](archetype-cookbook.md#soldier-tactical-enemy)** · coordinated, disciplined, reacts to damage
+-   :material-ghost-outline:{ .middle } **[Horror Antagonist](archetype-cookbook.md#horror-antagonist)** · patient, remembers everything
+
+</div>
 
 ---
 
