@@ -105,7 +105,7 @@ body::after {
 
 /* ═══ Typography ═══════════════════════════════════════════════════════════ */
 
-.md-typeset { font-size: .775rem; line-height: 1.72; }
+.md-typeset { font-size: .8rem; line-height: 1.7; }
 
 .md-typeset h1 { font-weight: 700; letter-spacing: -.026em; margin-bottom: .55em; }
 
@@ -598,10 +598,78 @@ body::after {
   color: var(--md-default-fg-color--light);
 }
 
+/* Long reference tables read row by row; a faint stripe keeps the eye on one. */
+.md-typeset table:not([class]) tbody tr:nth-child(even) { background: var(--aps-surface); }
+
 /* Setting and node names live in the first column. Keep each on one line;
    the table scrolls sideways if it must, which beats a name broken in two.   */
 .md-typeset table:not([class]) td:first-child code,
 .md-typeset table:not([class]) td:first-child strong { white-space: nowrap; }
+
+/* ═══ Figures ══════════════════════════════════════════════════════════════
+   Diagrams are inline SVG so they inherit the theme: currentColor for ink,
+   the brand tokens for accents. Every visual rule lives here, not in the
+   markup, so a figure is a handful of shapes with class names.               */
+
+.md-typeset .aps-figure { margin: 1.6rem auto 2rem; max-width: 720px; }
+.md-typeset .aps-figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  color: var(--md-default-fg-color);
+  font-family: var(--md-text-font-family, "Inter", system-ui, sans-serif);
+}
+.md-typeset .aps-figure .lbl  { fill: currentColor; font-size: 13px; }
+.md-typeset .aps-figure .b    { font-weight: 700; letter-spacing: .06em; }
+.md-typeset .aps-figure .sub  { fill: currentColor; fill-opacity: .68; font-size: 11.5px; }
+.md-typeset .aps-figure .ln   { stroke: currentColor; stroke-opacity: .55; stroke-width: 1.5; fill: none; }
+.md-typeset .aps-figure .dim  { stroke-opacity: .3; }
+.md-typeset .aps-figure .node { fill: var(--aps-accent); stroke: var(--md-default-bg-color); stroke-width: 2; }
+.md-typeset .aps-figure .fill-acc  { fill: var(--aps-accent);   fill-opacity: .2;  stroke: var(--aps-accent);   stroke-width: 1.5; }
+.md-typeset .aps-figure .fill-blue { fill: var(--aps-accent-2); fill-opacity: .16; stroke: var(--aps-accent-2); stroke-width: 1.5; }
+.md-typeset .aps-figure .fill-dim  { fill: currentColor; fill-opacity: .08; stroke: currentColor; stroke-opacity: .45; stroke-width: 1.5; stroke-dasharray: 4 4; }
+.md-typeset .aps-figure .box  { fill: currentColor; fill-opacity: .14; stroke: currentColor; stroke-opacity: .5; stroke-width: 1.5; }
+.md-typeset .aps-figure .ray  { fill: none; stroke-width: 1.75; }
+.md-typeset .aps-figure .ray.clear   { stroke: var(--aps-accent); }
+.md-typeset .aps-figure .ray.blocked { stroke: currentColor; stroke-opacity: .5; }
+.md-typeset .aps-figure .ray.ghost   { stroke: currentColor; stroke-opacity: .18; stroke-dasharray: 3 5; }
+.md-typeset .aps-figure .hit path    { stroke: currentColor; stroke-opacity: .7; stroke-width: 2; fill: none; }
+.md-typeset .aps-figure .pt.clear    { fill: var(--aps-accent); }
+.md-typeset .aps-figure .pt.blocked  { fill: none; stroke: currentColor; stroke-opacity: .6; stroke-width: 1.75; }
+.md-typeset .aps-figure .ok { fill: var(--aps-accent); font-weight: 650; }
+.md-typeset .aps-figure .no { fill: currentColor; fill-opacity: .55; }
+.md-typeset .aps-figure .person circle,
+.md-typeset .aps-figure .person line { stroke-width: 2; fill: none; }
+.md-typeset .aps-figure .person.ok { stroke: var(--aps-accent); }
+.md-typeset .aps-figure .person.no { stroke: currentColor; stroke-opacity: .55; }
+.md-typeset .aps-figure .thr line { stroke: currentColor; stroke-opacity: .22; stroke-dasharray: 2 5; }
+.md-typeset .aps-figure .thr text { fill: currentColor; fill-opacity: .68; font-size: 11.5px; }
+.md-typeset .aps-figure .curve { fill: none; stroke: var(--aps-accent); stroke-width: 3; stroke-linecap: round; }
+.md-typeset .aps-figure .track rect { fill: currentColor; fill-opacity: .08; }
+.md-typeset .aps-figure .bar rect   { fill: var(--aps-accent); fill-opacity: .85; }
+.md-typeset .aps-figure .tick line  { stroke: currentColor; stroke-opacity: .5; stroke-width: 1.5; }
+.md-typeset .aps-figure .band rect  { fill: var(--aps-accent); }
+.md-typeset .aps-figure .band0 { fill: currentColor; fill-opacity: .08; }
+.md-typeset .aps-figure .band1 { fill-opacity: .18; }
+.md-typeset .aps-figure .band2 { fill-opacity: .36; }
+.md-typeset .aps-figure .band3 { fill-opacity: .6; }
+.md-typeset .aps-figure__caption {
+  margin: .55rem 0 0;
+  font-size: .72rem;
+  line-height: 1.55;
+  text-align: center;
+  color: var(--md-default-fg-color--light);
+}
+
+/* ═══ Archetype picker ═════════════════════════════════════════════════════ */
+
+.md-typeset .grid.cards.aps-archetypes > ul > li { padding: .75rem .95rem; font-size: .74rem; }
+.md-typeset .grid.cards.aps-archetypes .twemoji {
+  height: 1.35rem; width: 1.35rem;
+  margin-right: .35rem;
+  vertical-align: -.35rem;
+}
 
 /* ═══ Content tabs ═════════════════════════════════════════════════════════ */
 

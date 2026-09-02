@@ -93,20 +93,47 @@ The angle test is measured against the **first sample point** — the head, by c
 
 Epic traces one ray to the capsule centre. Stand behind a waist-high crate with your head fully exposed and you register as *not seen*. APS traces a **set** of points and returns the weighted fraction that have a clear line.
 
-```
-                                              ○ head      w 1.0   ✓ clear
-   AI eye                        ┄┄┄┄┄┄┄┄┄┄┄┄►
-      ●┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄►  ○ shoulder  w 0.6   ✓ clear
-       ┆ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄╳         ○ chest      w 0.9   ✗ blocked
-       ┆ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄╳         ○ shoulder   w 0.6   ✗ blocked
-       ┆ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄╳ ██████  ○ pelvis     w 0.7   ✗ blocked
-                         crate
-
-   exposure = (1.0 + 0.6) ÷ (1.0 + 0.9 + 0.7 + 0.6 + 0.6) = 0.41
-
-   →  41% exposed  →  confidence scaled to 41%  →  a slow, uncertain detection
-      Epic would report:  "not seen"
-```
+<div class="aps-figure">
+<svg viewBox="0 0 820 320" role="img" aria-labelledby="fig-exposure">
+  <title id="fig-exposure">Multi-point visibility: five weighted sample points, two of them with a clear line to the eye</title>
+  <line class="ln dim" x1="30" y1="285" x2="790" y2="285"/>
+  <rect class="box" x="440" y="125" width="60" height="160" rx="3"/>
+  <text class="sub" x="470" y="303" text-anchor="middle">crate</text>
+  <g class="ln dim">
+    <circle cx="590" cy="80" r="14"/>
+    <line x1="590" y1="94" x2="590" y2="215"/>
+    <line x1="555" y1="108" x2="625" y2="112"/>
+    <line x1="590" y1="215" x2="574" y2="284"/>
+    <line x1="590" y1="215" x2="606" y2="284"/>
+  </g>
+  <line class="ray clear" x1="60" y1="160" x2="590" y2="80"/>
+  <line class="ray clear" x1="60" y1="160" x2="555" y2="108"/>
+  <line class="ray blocked" x1="60" y1="160" x2="440" y2="127.7"/>
+  <line class="ray ghost" x1="440" y1="127.7" x2="625" y2="112"/>
+  <line class="ray blocked" x1="60" y1="160" x2="440" y2="152.8"/>
+  <line class="ray ghost" x1="440" y1="152.8" x2="590" y2="150"/>
+  <line class="ray blocked" x1="60" y1="160" x2="440" y2="199.4"/>
+  <line class="ray ghost" x1="440" y1="199.4" x2="590" y2="215"/>
+  <g class="hit">
+    <path d="M435,122.7 l10,10 m0,-10 l-10,10"/>
+    <path d="M435,147.8 l10,10 m0,-10 l-10,10"/>
+    <path d="M435,194.4 l10,10 m0,-10 l-10,10"/>
+  </g>
+  <circle class="pt clear" cx="590" cy="80" r="6"/>
+  <circle class="pt clear" cx="555" cy="108" r="6"/>
+  <circle class="pt blocked" cx="625" cy="112" r="6"/>
+  <circle class="pt blocked" cx="590" cy="150" r="6"/>
+  <circle class="pt blocked" cx="590" cy="215" r="6"/>
+  <circle class="node" cx="60" cy="160" r="9"/>
+  <text class="lbl" x="60" y="190" text-anchor="middle">AI eye</text>
+  <text class="lbl" x="650" y="84">head · weight 1.0 · <tspan class="ok">clear</tspan></text>
+  <text class="lbl" x="650" y="108">left shoulder · 0.6 · <tspan class="ok">clear</tspan></text>
+  <text class="lbl" x="650" y="130">right shoulder · 0.6 · <tspan class="no">blocked</tspan></text>
+  <text class="lbl" x="650" y="154">chest · 0.9 · <tspan class="no">blocked</tspan></text>
+  <text class="lbl" x="650" y="219">pelvis · 0.7 · <tspan class="no">blocked</tspan></text>
+</svg>
+<p class="aps-figure__caption">exposure = (1.0 + 0.6) ÷ (1.0 + 0.9 + 0.7 + 0.6 + 0.6) = <strong>0.42</strong>. Confidence is scaled to 42 %: a slow, uncertain detection. Epic would report <em>not seen</em>.</p>
+</div>
 
 Peek your head over the crate and exposure climbs; duck fully and it snaps to zero. That continuous middle ground is the whole reason partial cover feels like cover.
 
@@ -132,30 +159,25 @@ Results are exposed on the sense result as `Exposure Ratio` and `Visible Point C
 
 ### The three cones
 
-```
-                              forward
-                                 ▲
-                                 │
-          ╲                      │                      ╱
-            ╲      FOCAL         │        FOCAL       ╱
-              ╲   ×1.00 conf     │      ×1.00 conf  ╱
-                ╲   full range   │     full range ╱
-                  ╲              │              ╱
-    ╲               ╲────────────┼────────────╱               ╱
-      ╲   PERIPHERAL  ╲          │          ╱  PERIPHERAL   ╱
-        ╲  ×0.45 conf   ╲        │        ╱   ×0.45 conf  ╱
-          ╲  0.6× range    ╲     │     ╱    0.6× range  ╱
-            ╲                 ╲  │  ╱                 ╱
-              ╲─────────────────╲│╱─────────────────╱
-                                 ●  AI
-                              ╱  │  ╲
-                            ╱    │    ╲
-                          ╱  REAR-MOTION ╲
-                        ╱   ×0.25 conf    ╲
-                      ╱     0.35× range     ╲
-                    ╱   moving targets only   ╲
-                                 ▼
-```
+<div class="aps-figure">
+<svg viewBox="0 0 760 440" role="img" aria-labelledby="fig-cones">
+  <title id="fig-cones">The three vision cones, seen from above</title>
+  <path class="fill-blue" d="M380,300 L244.7,349.2 A144,144 0 1 1 515.3,349.2 Z"/>
+  <path class="fill-acc" d="M380,300 L172.2,180 A240,240 0 0 1 587.8,180 Z"/>
+  <path class="fill-dim" d="M380,300 L307.3,342 A84,84 0 0 0 452.7,342 Z"/>
+  <line class="ln dim" x1="380" y1="300" x2="380" y2="44" stroke-dasharray="4 6"/>
+  <text class="sub" x="388" y="52">forward</text>
+  <text class="lbl b" x="380" y="118" text-anchor="middle">FOCAL</text>
+  <text class="sub" x="380" y="136" text-anchor="middle">×1.00 confidence · full range · half-angle 60°</text>
+  <text class="lbl b" x="210" y="262" text-anchor="end">PERIPHERAL</text>
+  <text class="sub" x="210" y="279" text-anchor="end">×0.45 · 0.6× range · half-angle 110°</text>
+  <text class="lbl b" x="380" y="412" text-anchor="middle">REAR MOTION</text>
+  <text class="sub" x="380" y="429" text-anchor="middle">×0.25 · 0.35× range · moving targets only · 60° from behind</text>
+  <circle class="node" cx="380" cy="300" r="9"/>
+  <text class="lbl" x="396" y="305">AI</text>
+</svg>
+<p class="aps-figure__caption">Cones resolve in order: focal, then peripheral, then rear motion. Outside all three, vision reports nothing at all.</p>
+</div>
 
 Cones are resolved in order — focal first, then peripheral, then rear-motion. Outside all three, vision returns nothing at all.
 
@@ -173,19 +195,24 @@ The detection reports which cone produced it via `Detected By Cone` on the sense
 
 `b Keyhole Vision` makes the cone **narrow at distance and wide up close** — the shape used in *The Last of Us*.
 
-```
-        near (≤ 400 cm)                    far (max range)
-              ╱                                   ╲
-        ╱                                            ╲
-   ╱         90° wide                    15° narrow    ╲
-  ●═══════════════════════════════════════════════════════►
-  AI    ╲                                             ╱
-        ╲                                            ╱
-              ╲                                   ╱
-
-   you can slip past at 20 m by drifting off centre …
-   … but at 3 m the guard catches you in a wide arc
-```
+<div class="aps-figure">
+<svg viewBox="0 0 680 300" role="img" aria-labelledby="fig-keyhole">
+  <title id="fig-keyhole">Keyhole vision: wide up close, narrow at distance</title>
+  <path class="fill-acc" d="M50,150 L170,40 Q260,100 640,122 L640,178 Q260,200 170,260 Z"/>
+  <line class="ln dim" x1="170" y1="28" x2="170" y2="272" stroke-dasharray="4 5"/>
+  <text class="sub" x="178" y="24">Keyhole Near Distance · 400 cm</text>
+  <line class="ln dim" x1="50" y1="150" x2="620" y2="47" stroke-dasharray="3 6"/>
+  <g class="person no"><circle cx="560" cy="58" r="6"/><line x1="560" y1="64" x2="560" y2="84"/></g>
+  <text class="sub" x="546" y="50" text-anchor="end">20 m out, 10° off centre: unseen</text>
+  <g class="person ok"><circle cx="130" cy="130" r="6"/><line x1="130" y1="136" x2="130" y2="156"/></g>
+  <text class="sub" x="150" y="178">3 m out, same bearing: seen</text>
+  <circle class="node" cx="50" cy="150" r="9"/>
+  <text class="lbl" x="50" y="180" text-anchor="middle">AI</text>
+  <text class="sub" x="170" y="292" text-anchor="middle">90° half-angle inside 400 cm</text>
+  <text class="sub" x="560" y="292" text-anchor="middle">15° half-angle at max range</text>
+</svg>
+<p class="aps-figure__caption">Drift off the centre line at distance and you slip past; walk the same bearing up close and the guard catches you in a wide arc.</p>
+</div>
 
 | Setting | Meaning |
 |---|---|
@@ -193,7 +220,7 @@ The detection reports which cone produced it via `Detected By Cone` on the sense
 | `Keyhole Far Angle` (15°) | Half-angle at max range |
 | `Keyhole Near Distance` (400) | Distance at which the near angle is fully applied |
 
-The practical effect: you can sneak past a guard at 20 m by staying slightly off his centre line, but at 3 m he catches you in a wide arc. It reads as far more natural than a fixed cone.
+The practical effect: you can sneak past a guard at 20 m by staying slightly off its centre line, but at 3 m it catches you in a wide arc. It reads as far more natural than a fixed cone.
 
 ### Eye origin and facing
 

@@ -26,15 +26,37 @@ FusedConfidence = (best active sense × its weight)
                 + (number of other active senses × CorroborationBonus)
 ```
 
-```
-Sense confidences this tick          Fused result
-─────────────────────────────        ──────────────────────────────
-Vision   ████████░░  0.80   ─┐
-Hearing  ███░░░░░░░  0.30   ─┼─►  best (0.80)
-Smell    ██░░░░░░░░  0.20   ─┘    + 2 extra active × 0.10
-Touch    ░░░░░░░░░░  0.00  (silent — contributes nothing)
-                                  = 1.00
-```
+<div class="aps-figure">
+<svg viewBox="0 0 680 210" role="img" aria-labelledby="fig-fusion">
+  <title id="fig-fusion">Fusion: the strongest active sense sets the floor and each extra active sense adds a flat bonus</title>
+  <g class="lbl">
+    <text x="100" y="45" text-anchor="end">Vision</text>
+    <text x="100" y="85" text-anchor="end">Hearing</text>
+    <text x="100" y="125" text-anchor="end">Smell</text>
+    <text x="100" y="165" text-anchor="end">Touch</text>
+  </g>
+  <g class="track">
+    <rect x="116" y="32" width="280" height="18" rx="4"/>
+    <rect x="116" y="72" width="280" height="18" rx="4"/>
+    <rect x="116" y="112" width="280" height="18" rx="4"/>
+    <rect x="116" y="152" width="280" height="18" rx="4"/>
+  </g>
+  <g class="bar">
+    <rect x="116" y="32" width="224" height="18" rx="4"/>
+    <rect x="116" y="72" width="84" height="18" rx="4"/>
+    <rect x="116" y="112" width="56" height="18" rx="4"/>
+  </g>
+  <g class="sub">
+    <text x="404" y="45">0.80 · best active sense sets the floor</text>
+    <text x="404" y="85">0.30 · active, adds the +0.10 bonus</text>
+    <text x="404" y="125">0.20 · active, adds the +0.10 bonus</text>
+    <text x="404" y="165">0.00 · silent, contributes nothing</text>
+  </g>
+  <line class="ln dim" x1="116" y1="184" x2="640" y2="184"/>
+  <text class="lbl b" x="116" y="204">FUSED</text>
+  <text class="lbl" x="200" y="204">0.80 + 2 × 0.10 = <tspan class="b">1.00</tspan></text>
+</svg>
+</div>
 
 Worked example with `Corroboration Bonus = 0.1`:
 
@@ -59,21 +81,29 @@ Raw fused confidence is then **smoothed** into `Smoothed Confidence`, and that i
 
 The rule that surprises people: **while any sense is active, confidence never goes down.** It rises, or it holds. Reduction happens only once every sense has gone silent.
 
-```
-confidence
-   1.0 ┤                     ╭────────────╮
-       │                   ╭─╯            ╰╮
-  0.60 ┼ ─ ─ ─ ─ ─ ─ ─ ─ ╭╯ ─ ─ ─ ─ ─ ─ ─ ─╰╮─ ─ ─ ─ ─  Track
-       │                ╭╯                  ╰╮
-  0.35 ┼ ─ ─ ─ ─ ─ ─ ─╭╯ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ╰─╮─ ─ ─ ─  Detect
-       │             ╭╯                        ╰─╮
-  0.15 ┼ ─ ─ ─ ─ ─ ╭─╯ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ╰──╮─ ─  Suspect
-       │        ╭──╯                                 ╰────
-   0.0 ┼────────╯                                          time
-       └──────────────────────────────────────────────────►
-        │◄ rise ►│◄──── hold ────►│◄────── decay ─────────►
-         sense active               all senses silent
-```
+<div class="aps-figure">
+<svg viewBox="0 0 680 300" role="img" aria-labelledby="fig-curve">
+  <title id="fig-curve">Smoothed confidence over time: rise while a sense is active, hold, then decay once every sense is silent</title>
+  <g class="thr">
+    <line x1="120" y1="118" x2="640" y2="118"/><text x="112" y="122" text-anchor="end">Track 0.60</text>
+    <line x1="120" y1="173" x2="640" y2="173"/><text x="112" y="177" text-anchor="end">Detect 0.35</text>
+    <line x1="120" y1="217" x2="640" y2="217"/><text x="112" y="221" text-anchor="end">Suspect 0.15</text>
+  </g>
+  <line class="ln" x1="120" y1="30" x2="120" y2="250"/>
+  <line class="ln" x1="120" y1="250" x2="640" y2="250"/>
+  <text class="sub" x="112" y="34" text-anchor="end">1.0</text>
+  <text class="sub" x="112" y="254" text-anchor="end">0</text>
+  <line class="ln dim" x1="340" y1="30" x2="340" y2="250" stroke-dasharray="4 5"/>
+  <line class="ln dim" x1="430" y1="30" x2="430" y2="250" stroke-dasharray="4 5"/>
+  <text class="lbl b" x="240" y="22" text-anchor="middle">RISE</text>
+  <text class="lbl b" x="385" y="22" text-anchor="middle">HOLD</text>
+  <text class="lbl b" x="535" y="22" text-anchor="middle">DECAY</text>
+  <path class="curve" d="M140,250 C230,250 270,58 340,48 L430,48 C470,48 500,95 535,135 S610,228 640,239"/>
+  <text class="sub" x="285" y="276" text-anchor="middle">a sense is active: confidence rises or holds, never falls</text>
+  <text class="sub" x="535" y="276" text-anchor="middle">every sense silent: decay begins</text>
+</svg>
+<p class="aps-figure__caption">Ray-sampling noise makes the raw fused value dip a few percent between ticks. The hold phase is what stops that noise reaching the lifecycle.</p>
+</div>
 
 **Rising** (fused > smoothed, sense active):
 
