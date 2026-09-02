@@ -3,6 +3,11 @@ name: Deploy documentation
 on:
   push:
     branches: [main]
+  # Build pull requests too, so a broken link or a page missing from nav is
+  # caught before it reaches main. Without this the first job that validates a
+  # change is the one already deploying it.
+  pull_request:
+    branches: [main]
   workflow_dispatch:        # lets you republish by hand from the Actions tab
 
 permissions:
@@ -27,6 +32,9 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      - name: Check the single-file docs are up to date
+        run: python tools/build_all_in_one.py --check
+
       - name: Build site
         run: mkdocs build --strict
 
@@ -36,6 +44,8 @@ jobs:
 
   deploy:
     needs: build
+    # Pull requests are validated by the build job above but never published.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
