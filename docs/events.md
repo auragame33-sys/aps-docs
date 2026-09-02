@@ -123,7 +123,7 @@ These fire **once per transition** — the workhorses of AI behaviour.
 
 Most events have a matching one-node print function in `APS | Debug`. Bind the event, drop in the matching node, wire the pins straight through — instant colour-coded screen and log output.
 
-> ⚠ **Three events have no print node in v2.0:** `On AI Telegraph`, `On Attention Changed` and `On Replicated State Changed`. Use a `Print String` for those, or read them from the Delegates debug mode.
+> ⚠ **Three events have no print node in v3.0:** `On AI Telegraph`, `On Attention Changed` and `On Replicated State Changed`. Use a `Print String` for those, or read them from the Delegates debug mode.
 
 `Print_OnAISee`, `Print_OnAIHear`, `Print_OnAISmell`, `Print_OnAIFeel`, `Print_OnAISenseVibration`, `Print_OnAISuspect`, `Print_OnAIDetect`, `Print_OnAITrack`, `Print_OnAILost`, `Print_OnAIRemember`, `Print_OnAIForget`, `Print_OnAIThinkThreat`, `Print_OnThreatIdentified`, `Print_OnAIAllClear`, `Print_OnAIAwarenessChanged`, `Print_OnAIPainReported`, `Print_OnAIDamaged`, `Print_OnAISquadAlert`, `Print_OnTargetStateChanged`, `Print_OnEmotionalStateChanged`, `Print_OnCombatRoleAssigned`.
 

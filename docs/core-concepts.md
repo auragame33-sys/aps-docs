@@ -96,7 +96,7 @@ with curve: Smoothed = Lerp(Smoothed, LastActiveConfidence × DecayCurve(TimeSin
 
 `SenseDecayMultiplier` is the `Confidence Decay Multiplier` from the **Loss** config of the sense that was last dominant.
 
-> ⚠ **Two profile settings in the Fusion section do nothing in v2.0:** `Confidence Decay Smoothing` and `Confidence Reduce Delay` are not read by any code path. Ignore them; use `Confidence Rise Rate` and the per-sense `Confidence Decay Multiplier` instead.
+> ⚠ **Two profile settings in the Fusion section do nothing in v3.0:** `Confidence Decay Smoothing` and `Confidence Reduce Delay` are not read by any code path. Ignore them; use `Confidence Rise Rate` and the per-sense `Confidence Decay Multiplier` instead.
 
 ---
 
@@ -318,7 +318,7 @@ Four details that matter when tuning:
 - **100 points of damage saturates the damage term.** Scale your damage numbers to match, or reweight.
 - **Sense corroboration divides by 8** — the maximum sense slots, not the number of senses this AI actually owns. A two-sense guard can never contribute more than `0.25` to that term.
 - **Relationship modifier:** `Feared` 1.5 · `HighValue` 1.2 · `Enemy` 1.0 · `Unknown` 0.5 · `Neutral` 0.3 · `Friendly`/`Teammate` 0.
-- **Approach modifier is effectively a constant in v2.0** — `1.0` while `Detected`/`Tracked`, `0` otherwise. With the default weight of 0.10 it acts as a flat bonus for having an active contact rather than a measure of closing speed.
+- **Approach modifier is effectively a constant in v3.0** — `1.0` while `Detected`/`Tracked`, `0` otherwise. With the default weight of 0.10 it acts as a flat bonus for having an active contact rather than a measure of closing speed.
 
 `Friendly` and `Teammate` targets short-circuit to threat `None` with a score of 0, however confident the AI is and however much damage it has taken. So do `Expired` records.
 

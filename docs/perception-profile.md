@@ -115,9 +115,9 @@ Create one: Content Browser → right-click → **Miscellaneous → Data Asset**
 
 | Setting | Default | Meaning |
 |---|---|---|
-| ⚠ `Hearing Base Threshold` | 0.3 | **Not used in v2.0.** There is no noise floor — control sensitivity with `Suspect Threshold` and the sound filter's `Min Alert Level`. |
+| ⚠ `Hearing Base Threshold` | 0.3 | **Not used in v3.0.** There is no noise floor — control sensitivity with `Suspect Threshold` and the sound filter's `Min Alert Level`. |
 | `Wall Absorption Coeff` | 0.4 | Occlusion exponent. For sound-system sounds this is **binary** — `exp(-coeff)` when the path is blocked, `1.0` when clear — not a per-wall count. Smell does count walls. |
-| ⚠ `b Sound Event Only Mode` | true | **Not used in v2.0.** Hearing is always event-only regardless of this value. |
+| ⚠ `b Sound Event Only Mode` | true | **Not used in v3.0.** Hearing is always event-only regardless of this value. |
 | `Sound Filter` | none | Sound Filter Profile asset — which categories and alert levels this AI hears |
 | `Sound Accumulation Rate` | 0.5 | Confidence built per second from repeated sounds |
 | `Sound Accumulation Hold Time` | 1.0 s | Silence before accumulated confidence starts decaying |
@@ -130,7 +130,7 @@ Create one: Content Browser → right-click → **Miscellaneous → Data Asset**
 | `Smell Accumulation Rate` | 0.1 | Scent confidence built per second in range |
 | `Smell Decay Rate` | 0.05 | Decay per second out of range |
 | `Vibration Min Speed` | 10 cm/s | Minimum target speed to produce detectable vibration |
-| ⚠ `Touch Confidence` | 1.0 | **Not used in v2.0.** Contact strength comes from the report call and the per-type multiplier. |
+| ⚠ `Touch Confidence` | 1.0 | **Not used in v3.0.** Contact strength comes from the report call and the per-type multiplier. |
 | `Touch Max Impulse For Full Strength` | 1000 | Physics impulse mapping to strength 1.0 |
 | `Touch Persistent Accumulation Rate` | 0.3 | Confidence per second while a contact is held |
 | `Touch Max Persistent Bonus` | 0.5 | Cap on that bonus |
@@ -168,8 +168,8 @@ One `Sense Loss Config` per sense. Each has three fields:
 | `Confidence Rise Rate` | 5.0 | How fast confidence climbs while a sense is active. Higher = snappier. |
 | `Standing Dwell Rate` | 0.02 | Extra confidence climb per second for a stationary target |
 | `Moving Dwell Rate` | 0.12 | Extra confidence climb per second for a target at 600+ cm/s |
-| ⚠ `Confidence Decay Smoothing` | 1.5 | **Not used in v2.0** — no code path reads it |
-| ⚠ `Confidence Reduce Delay` | 3.0 s | **Not used in v2.0** — no code path reads it |
+| ⚠ `Confidence Decay Smoothing` | 1.5 | **Not used in v3.0** — no code path reads it |
+| ⚠ `Confidence Reduce Delay` | 3.0 s | **Not used in v3.0** — no code path reads it |
 
 While any sense is active, confidence rises or holds — it never falls. Reduction happens only once every sense is silent, driven by `Default Decay Exponent` / `Decay Curve` and scaled by the last dominant sense's `Confidence Decay Multiplier`. See [Core Concepts](core-concepts.md).
 
@@ -185,6 +185,14 @@ While any sense is active, confidence rises or holds — it never falls. Reducti
 | `Memory Refresh Bonus` | 0.1 | Confidence head start when re-detecting a previously lost target |
 | `Memory Expire Threshold` | 0.05 | Confidence below which a Remembered target expires and its slot is freed |
 | `Min Time In Lost` | 0.0 s | Minimum seconds in `Lost` before the AI may move to `Remembered`. Raise it to force longer searches. |
+
+These govern how *belief* decays. The settings below bound the separate, developer-driven [memory store](memory-and-recall.md) — what the AI has been told to remember, as opposed to how sure it is of a contact.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `Memory Max Subjects` | 32 | Distinct subjects one agent may hold memories about (1–512). Least recently written is dropped past this |
+| `Memory Max Tags Per Subject` | 16 | Distinct tags per subject (1–64). Oldest is dropped past this |
+| `Memory Retention Seconds` | 300 s | A subject untouched for this long is released |
 
 ---
 
@@ -237,6 +245,18 @@ While any sense is active, confidence rises or holds — it never falls. Reducti
 | `Sort Weight Recency` | 0.3 | …recency weight |
 | `Sort Weight Proximity` | 0.2 | …proximity weight |
 | `Max Sort Distance` | 5000 cm | Distance considered for proximity scoring |
+| `b Async Vision Traces` | false | Move visibility tracing off the critical path. Same answer, arriving a frame later. Falls back to synchronous for multi-channel and surface-transmission setups |
+
+## Performance | Crowd
+
+The statistical tier drops line tracing entirely for agents distant enough not to matter, rolling for detection instead. See [Scale & Crowds](scale-and-crowds.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `b Enable Statistical Tier` | false | Turn the crowd tier on |
+| `Statistical Tier Threshold` | 3 | LOD tier at which an agent goes statistical (1–4). A value of 1 makes almost everything statistical |
+| `Statistical Detection Rate` | 1.0 | Rolls per second, scaled by distance, facing, light and target motion (0–10) |
+| `Statistical Detection Confidence` | 0.5 | Confidence granted on a hit (0–1) |
 
 ---
 
@@ -306,7 +326,6 @@ Set both auto-share flags to false for tactical AI that only shares when *you* c
 | `Min Engagements Required` | 3 | Engagements before the model is considered ready (`b Has Enough Data`) |
 | `Player Crouch Speed Threshold` | 120 cm/s | Below this counts as crouching |
 | `Player Sprint Speed Threshold` | 500 cm/s | Above this counts as sprinting |
-| `b Enable Cross Session Memory` | false | Persist the model to `Saved/APS/PlayerModel/` between sessions |
 
 ---
 
@@ -346,6 +365,51 @@ Deliberate player-favouring rules. All opt-in, all default to off, so they never
 | `b Replicate Perception State` | false | Replicate a compact per-target summary to clients. Perception itself stays server-authoritative. |
 | `Max Replicated Targets` | 3 | Targets included in the summary (1–8). Keep small — this is bandwidth on **every** AI. |
 | `Replication Interval` | 0.25 s | Seconds between refreshes |
+| `b Use Replication Relevance` | true | Filter the summary before sending it |
+| `Replication Relevance Range` | 15000 cm | Drop targets further than this from every viewer. `0` disables the distance test |
+| `Replication Min Confidence` | 0.1 | Drop contacts below this — a meter that has barely flickered is not worth the bandwidth |
+| `b Skip Unchanged Replication` | true | Do not resend a summary that has not meaningfully moved |
+| `Replication Confidence Delta` | 0.02 | How far confidence must move to be worth sending (0–0.5) |
+
+---
+
+## Composition
+
+Inherit from another profile instead of duplicating one. See [Profile Composition](profile-composition.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `Parent Profile` | none | Inherit everything from this profile, keeping only the fields changed here |
+| `Overrides` | empty | Extra changes stamped on after inheritance resolves. Use this to pin a value that equals the class default |
+
+## Archetype
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `Archetype` | Guard | Which preset **Apply Archetype** stamps on. Nothing reads this at runtime |
+
+**Apply Archetype** writes ordinary values onto ordinary fields. It is a starting point, not a mode.
+
+## Policies
+
+Leave a slot empty and the built-in rule runs. See [Policies](policies.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `Fusion Policy` | none | How several senses combine into one confidence |
+| `Threat Policy` | none | How dangerous a target is |
+| `Attention Policy` | none | Which target the AI commits to |
+
+## Workbench
+
+Editor buttons, not runtime settings.
+
+| Button / setting | Does |
+|---|---|
+| **Validate Profile** | Report settings that are contradictory, unreachable or inert |
+| **Show Budget** | Estimate traces and sense evaluations per second for a level of agents |
+| **Show Composition** | Log field by field what is inherited from the parent |
+| `Compare To` + **Compare With** | Log every field where this profile differs from another |
 
 ---
 

@@ -61,7 +61,7 @@ Put it on the AIController when your AI possesses multiple pawn types and you wa
 - [ ] `Max Replicated Targets` set to the smallest number your UI actually needs
 - [ ] Client UI reads **Get Replicated Perception State**, driven by **On AI Replicated State Changed**
 - [ ] All `Emit Sound` / `Report Pain` / `Set Target Confidence` calls happen **on the server** (`Has Authority`)
-- [ ] Cross-session memory is server-only — it will not run on clients, which is correct
+- [ ] Player behaviour models are built on the server from what the server perceives; clients read state through **Get Replicated Perception State**
 
 ## Common mistakes
 

@@ -172,7 +172,7 @@ The reported confidence is `max(instant, accumulated)`, so accumulation can only
 
 **Design consequence:** a player who moves in short bursts, pausing longer than `Hold Time`, keeps the accumulator draining and stays under `Suspect Threshold`. A player who runs continuously builds past it. That is the core stealth loop and you tune it with these three numbers plus your `Awareness` thresholds.
 
-> `Hearing Base Threshold` is not read by any code path in v2.0 — there is no noise floor. Use `Suspect Threshold` and the sound filter's `Min Alert Level` instead.
+> `Hearing Base Threshold` is not read by any code path in v3.0 — there is no noise floor. Use `Suspect Threshold` and the sound filter's `Min Alert Level` instead.
 
 ---
 

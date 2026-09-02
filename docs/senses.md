@@ -299,7 +299,7 @@ Hearing builds. One footstep is a blip; a series of them in the same place is a 
 
 Accumulation is tracked **per source actor**. Sounds emitted with `Emit Sound At Location` have no source actor and therefore do not accumulate — they are evaluated as instant signals only.
 
-> ⚠ **Two settings in this section do nothing in v2.0:** `Hearing Base Threshold` and `b Sound Event Only Mode` are not read by any code path. Hearing is *always* event-only, and there is no noise floor — use `Suspect Threshold` and the sound filter's `Min Alert Level` to control sensitivity instead.
+> ⚠ **Two settings in this section do nothing in v3.0:** `Hearing Base Threshold` and `b Sound Event Only Mode` are not read by any code path. Hearing is *always* event-only, and there is no noise floor — use `Suspect Threshold` and the sound filter's `Min Alert Level` to control sensitivity instead.
 
 ### A quirk worth knowing about location sounds
 
@@ -415,7 +415,7 @@ These three profile values overwrite the equivalents on the sense class each tic
 
 Touch reports `Location Accuracy` of 1.0 — contact is the only sense that knows exactly where the target is.
 
-> ⚠ **`Touch Confidence` in the profile does nothing in v2.0.** It is not read anywhere. Strength comes from the report call and the per-type multiplier instead.
+> ⚠ **`Touch Confidence` in the profile does nothing in v3.0.** It is not read anywhere. Strength comes from the report call and the per-type multiplier instead.
 
 ### Loss behaviour
 

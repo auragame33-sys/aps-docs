@@ -18,11 +18,21 @@ That constraint is what stops it feeling like cheating. If the AI never saw you 
 |---|---|---|
 | `b Enable Player Behavior Model` | true | Observe player behaviour |
 | `Min Engagements Required` | 3 | Engagements before the model is considered usable |
-| `Player Crouch Speed Threshold` | 120 cm/s | Below this counts as crouching |
+| `Player Crouch Speed Threshold` | 120 cm/s | Below this counts as crouching — *fallback only*, see below |
 | `Player Sprint Speed Threshold` | 500 cm/s | Above this counts as sprinting |
-| `b Enable Cross Session Memory` | false | Persist between play sessions |
 
 The model updates automatically. There is nothing to call.
+
+!!! note "Posture is observed, not guessed from speed"
+    The two speed thresholds are a **fallback**. When the AI can see the target's
+    posture — a `Character`'s crouch state, an **APS Target Component**'s stance,
+    or your own [stance adapter](adapters.md) — that posture decides the tally and
+    speed is ignored.
+
+    This matters because speed alone gets it wrong in both directions: a player
+    walking carefully reads as crouching, and so does a player standing perfectly
+    still. Only targets that expose no posture at all fall through to the
+    thresholds above.
 
 ---
 
@@ -90,36 +100,34 @@ Change *behaviour* instead: patrol routes, facing direction, search order, how l
 
 ---
 
-## Cross-session memory
+## The model lives for the session, and no longer
 
-Turn on `b Enable Cross Session Memory` and the model persists between play sessions.
+There is no save file. A freshly spawned AI is a fresh mind: it has met nobody
+and has learned nothing until it perceives something itself.
 
-- **Saved to:** `YourProject/Saved/APS/PlayerModel/`
-- **Filenames:** `<AIClassName>_<TargetID>.json`
-- **Saved:** automatically on End Play (and manually via **Save Cross Session Memory**)
-- **Loaded:** automatically on Begin Play (and manually via **Load Cross Session Memory**)
-- **Only models with `b Has Enough Data` are written** — no noise from brief encounters
-- **Never runs on clients** — server only
-
-Manual control:
+This is deliberate. Persisting a behaviour model keyed to a runtime actor was
+both unreliable and the wrong default — an AI that "already knows" the player at
+the moment it spawns is difficult to reason about, impossible to test, and
+almost never what a designer actually wanted.
 
 | Node | Use for |
 |---|---|
-| **Save Cross Session Memory** | Checkpoint saves, chapter transitions |
-| **Load Cross Session Memory** | Loading a save game |
-| **Clear Cross Session Memory** | New game, difficulty reset, or a "the enemy has forgotten you" story beat |
-| **Reset Player Behavior Model** (`Target`) | Wipe one target's in-memory model without touching disk |
+| **Get Player Behavior Model** (`Target`) | Read the ratios for one target |
+| **Reset Player Behavior Model** (`Target`) | Wipe one target's model — a "the enemy has forgotten you" story beat, a difficulty reset, or an accessibility toggle |
 
-### What this unlocks
+!!! info "Want it to survive a save?"
+    Read the ratios you care about with **Get Player Behavior Model**, write them
+    into your own save game alongside everything else you persist, and feed them
+    back through your own logic on load. APS does not decide what is worth
+    keeping, because that decision belongs to your game — see
+    [Memory & Recall](memory-and-recall.md) for the same principle applied to what
+    an AI remembers.
 
-A boss you have fought three times already knows you dodge left. A stealth level replayed on a second run has guards who check the vent you used last time. A horror antagonist that learns your route through the house over a whole playthrough.
+### Adaptation the player cannot see is just difficulty drift
 
-Two things to keep in mind:
-
-- **Give the player a way to see it.** Adaptation the player cannot perceive is indistinguishable from difficulty drift. A line of dialogue — *"not this time"* — or a visibly changed patrol route makes it land.
-- **Offer a reset.** Ship `Clear Cross Session Memory` on a "new game" or an accessibility toggle. Some players want a fresh start; some do not want the AI learning at all.
-
-Because the format is plain JSON in `Saved/`, it is trivial to inspect during development and equally trivial for players to delete.
-
+Whatever you drive from this model, give the player a way to perceive it. A line
+of dialogue — *"not this time"* — or a visibly changed patrol route makes it
+land. Silent adaptation is indistinguishable from the game getting harder for no
+reason.
 ---
 

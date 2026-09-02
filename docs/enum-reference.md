@@ -115,6 +115,78 @@ Priority when several land in one tick: **Explosion > Grab > Collision > Bump**
 | `Critical` | > 0.15 |
 | `Near Death` | ≤ 0.15 |
 
+### EAPSBeliefSubject — what a belief is about
+
+A belief no longer has to be about an actor. See [Policies](policies.md).
+
+| Value | Meaning |
+|---|---|
+| `Actor` | A specific actor. The original behaviour |
+| `Location` | A place something happened, with no known author |
+| `Descriptor` | A described presence — "someone in a red coat" — not yet resolved to an actor |
+| `Object` | A perceivable thing rather than a person — a body, a forced lock |
+
+### EAPSPerceptionBlocker — why a sense is silent
+
+Returned by **Get Sense Blocker**. See [Explaining & Recording](explaining-and-recording.md).
+
+| Value | Meaning |
+|---|---|
+| `None` | Nothing is blocking it |
+| `Out Of Range` | Beyond that sense's reach |
+| `Outside Cone` | In range, but outside the cone |
+| `Occluded` | Line of sight blocked by geometry |
+| `Below Min Exposure` | Visible, but not enough of the target is exposed |
+| `Too Few Visible Points` | Not enough sample points cleared for this stance |
+| `Target Opted Out` | The target excluded itself from this sense |
+| `Suppressed By Pain` | The AI is too hurt to use this sense |
+| `Fairness Reaction Hold` | The telegraph window is running — deliberate, not a fault |
+| `Not Evaluated This Tick` | This sense did not run on this tick |
+| `No Context` | The sense had nothing to evaluate against |
+
+### EAPSEvidenceOp — how evidence moves belief
+
+Used by **Add Target Evidence**.
+
+| Value | Meaning |
+|---|---|
+| `Raise (floor)` | Belief is at least `Value`. What **Set Target Confidence** does |
+| `Clamp (ceiling)` | Belief is at most `Value` — a disguise that stops the AI ever becoming certain while it holds |
+| `Lower (relative reduction)` | Belief settles `Value` *below* where the senses alone would have put it. Applies only while something is actually being sensed |
+| `Invalidate (force zero)` | Belief forced to zero, and the target steps back down the lifecycle. The AI concluding it was a false alarm |
+
+!!! note "`Clamp` is absolute, `Lower` is relative"
+    A clamp of 0.5 caps belief at 0.5 no matter how good the evidence gets.
+    A lower of 0.5 means "half a unit less sure than the senses say" — doubt that
+    scales with the evidence rather than a hard ceiling.
+
+    `Lower` only applies while a sense is actually reading. Once every sense is
+    silent there is no reading left to reduce and normal memory decay owns the
+    fade; use `Invalidate` to force belief down regardless.
+
+### EAPSArchetype — built-in profile presets
+
+See [Profile Composition](profile-composition.md).
+
+| Value | Character |
+|---|---|
+| `Guard` | Alert, forward-facing, commits quickly and holds on |
+| `Civilian` | Wide senses, high thresholds, short memory |
+| `Stalker` | Narrow, long look; a memory that does not let go |
+| `Military Patrol` | Longest sight, shares with the squad, holds through cover |
+| `Wildlife` | Smell and hearing over sight; reacts before it is sure |
+
+### EAPSCommsChannel — how information travels
+
+APS Knowledge module. See [Knowledge & Comms](knowledge-and-comms.md).
+
+| Value | Delay | Position error | Trait loss | Confidence |
+|---|---|---|---|---|
+| `Direct (witnessed)` | 0 s | 0 cm | 0% | ×1.00 |
+| `Shout` | 0.5 s | 300 cm | 25% | ×0.85 |
+| `Radio` | 2 s | 600 cm | 35% | ×0.75 |
+| `Report (in person)` | 8 s | 1500 cm | 55% | ×0.60 |
+
 ### EPerceptionDebugMode
 
 `Sense` · `Memory` · `Brain` · `Squad` · `Delegates` · `Player Model` · `Environment`
@@ -158,7 +230,7 @@ One past engagement. Up to 5 per target, ring buffer, written on `Detected`/`Tra
 
 `How Lost` · `State When Lost` · `Location When Lost` · `AI Camera Direction` · `Target Flee Direciton` · `Engagement Duration` · `Peak Threat Level` · `World Time Stamp`
 
-Two notes: `Target Flee Direciton` is misspelled in v2.0 — that is the actual pin name. `Engagement Duration` holds the target's *cumulative* tracked time, not the length of that single engagement.
+Two notes: `Target Flee Direciton` is misspelled in v3.0 — that is the actual pin name. `Engagement Duration` holds the target's *cumulative* tracked time, not the length of that single engagement.
 
 ### Perception Context
 
@@ -295,11 +367,22 @@ Log LogAdvancedPerception Verbose
 
 ---
 
-## Save locations
+## Console commands
 
-| Data | Path |
+| Command | Does |
 |---|---|
-| Player behaviour models | `YourProject/Saved/APS/PlayerModel/<AIClassName>_<TargetID>.json` |
+| `aps.Tune <PropertyName> <Value>` | Set a profile value on every running agent, without touching the asset. Gone at the next launch |
+| `aps.UseSpatialIndex 0\|1` | Turn the spatial candidate index off or on. For A/B testing only |
+
+---
+
+## Persistence
+
+**APS writes nothing to disk.** There are no save files, no `Saved/` folder, and no cross-session state of any kind.
+
+Both the [memory store](memory-and-recall.md) and the [player behaviour model](player-behavior-model.md) live for the session and no longer — a freshly spawned AI has met nobody and remembers nothing until it perceives something itself.
+
+To persist either, read the values you care about and write them into your own save game. Your game knows what a save means; APS does not, and guessing would be worse than asking.
 
 ---
 

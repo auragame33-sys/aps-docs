@@ -113,7 +113,7 @@ That is a working AI. Everything else in these docs is tuning and depth.
 
 **Squad coordination** — range-gated intel sharing, positional alerts, and exclusive combat role claiming (Flanker, Suppressor, Investigator…).
 
-**Player behaviour model** — observes how you play using only what the AI could legitimately perceive (movement style, engagement style, favourite hiding spots) and can persist it across sessions.
+**Player behaviour model** — observes how you play using only what the AI could legitimately perceive: movement style, engagement style, favourite hiding spots. It lives for the session, like everything else APS holds.
 
 **Fairness rules** — first-spot reaction delay, telegraph events for "huh?" barks, off-screen hearing penalty, and designer-defined never-search zones for guaranteed safe rooms.
 
@@ -161,6 +161,8 @@ That is a working AI. Everything else in these docs is tuning and depth.
 
 APS has **no external dependencies**, ships **no content assets you are forced to use**, and adds **no required project settings**.
 
+The plugin contains two modules. **APS** is the perception kernel and is all most projects need. **APS Knowledge** is optional and adds the faction-level systems — [descriptions and comms channels](knowledge-and-comms.md), [evidence and search](evidence-and-search.md). The kernel never depends on it, which is what keeps the core genre-blind.
+
 ---
 
 ## What APS does *not* do
@@ -170,7 +172,8 @@ Being clear about scope saves you time:
 - **It is not a Behavior Tree.** APS tells your AI *what it believes*. What the AI *does* about it is your BT or state machine. [Behavior Trees](behavior-trees.md) shows the wiring.
 - **It does not move your AI.** No pathfinding, no steering, no cover selection. It reports where to search; you drive the movement.
 - **It does not play audio.** `Emit Sound` tells the AI a sound happened — you still play your own `Sound Cue` alongside it.
-- **It does not manage health.** The Pain sense models *perception impairment*, not hit points. You call it from your own damage/health system.
+- **It does not manage health.** The Pain sense models *perception impairment*, not hit points. You call it from your own damage/health system, or let it read yours through a [health adapter](adapters.md).
+- **It does not decide what an AI should remember.** [Memory](memory-and-recall.md) is a store you write into and read from; what is worth remembering, and what it means, is your game's logic.
 - **It does not ship animations, meshes or a sample level** — it is a runtime system, not a template project.
 
 ---
@@ -222,7 +225,10 @@ Being clear about scope saves you time:
 | Page | What it covers |
 |---|---|
 | **[Squad & Relationships](squad-and-relationships.md)** | Intel sharing, alerts, combat roles, teams |
-| **[Player Behavior Model](player-behavior-model.md)** | AI that learns how you play, across sessions |
+| **[Memory & Recall](memory-and-recall.md)** | A tagged store per agent — you decide what is worth remembering |
+| **[Evidence & Search](evidence-and-search.md)** | Things left in the world, and a search that gets colder as it goes |
+| **[Knowledge & Comms](knowledge-and-comms.md)** | Faction-wide knowledge, descriptions, and what gets lost in the telling |
+| **[Player Behavior Model](player-behavior-model.md)** | AI that learns how you play over a session |
 | **[Environment & Fairness](environment-and-fairness.md)** | Light, weather, wind, safe rooms, reaction time, telegraphing |
 | **[Multiplayer](multiplayer.md)** | Server authority, replicated detection meters, the relay component |
 
@@ -233,25 +239,30 @@ Being clear about scope saves you time:
 | **[Blueprint API](blueprint-api.md)** | Every Blueprint node, grouped by category |
 | **[Events Reference](events.md)** | Every event, its parameters, exactly when it fires |
 | **[Behavior Trees](behavior-trees.md)** | Blackboard wiring, search behaviour driven by loss reason |
+| **[Policies](policies.md)** | Take over fusion, threat scoring or attention with your own rule |
+| **[Adapters](adapters.md)** | Tell APS how your project stores health and posture |
 
 ## Build & ship
 
 | Page | What it covers |
 |---|---|
+| **[Profile Composition](profile-composition.md)** | Inheritance, per-agent overrides, built-in archetypes, live tuning |
 | **[Archetype Cookbook](archetype-cookbook.md)** | Copy-paste settings: stealth guard, dog, zombie, blind creature, sniper, camera, soldier, horror stalker |
 | **[Custom Senses](custom-senses.md)** | Build your own sense in Blueprint or C++, and the stimulus bus |
 | **[Debugging](debugging.md)** | The 7-mode overlay and the one-node print library |
+| **[Explaining & Recording](explaining-and-recording.md)** | Ask why it cannot see you, and read back a moment already gone |
+| **[Scale & Crowds](scale-and-crowds.md)** | Significance, frame budget, the crowd tier, environment volumes |
 | **[Performance](performance.md)** | LOD tiers, tick budgets, scaling to hundreds of agents |
-| **[Troubleshooting & FAQ](troubleshooting.md)** | Every common failure, and the settings that are inert in v2.0 |
+| **[Troubleshooting & FAQ](troubleshooting.md)** | Every common failure, and the settings that are inert in v3.0 |
 | **[Enum & Type Reference](enum-reference.md)** | Every enum value, struct field and constant |
 
 ---
 
 ## A note on accuracy
 
-Every formula, default value and firing condition in these pages was read out of the v2.0 source rather than inferred from the property names. Where a setting exists in the editor but is not wired up, or where behaviour differs from what its name implies, it is flagged inline with ⚠ rather than quietly omitted. [Troubleshooting](troubleshooting.md) collects those in one place.
+Every formula, default value and firing condition in these pages was read out of the v3.0 source rather than inferred from the property names. Where a setting exists in the editor but is not wired up, or where behaviour differs from what its name implies, it is flagged inline with ⚠ rather than quietly omitted. [Troubleshooting](troubleshooting.md) collects those in one place.
 
 ---
 
-*Documentation for APS v2.0 · Unreal Engine 5.2 · by AuraGame*
+*Documentation for APS v3.0 · Unreal Engine 5.2 · by AuraGame*
 

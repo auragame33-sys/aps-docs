@@ -97,7 +97,8 @@ Tiers also gate sounds and stimuli: a sound whose `Max LOD Tier` is 1 is never e
 | Squad membership & roles | The world subsystem | World lifetime |
 | Environment (light, wind, weather) | The world subsystem | World lifetime |
 | Never-search zones | The world subsystem | World lifetime |
-| Player behaviour models | The component, keyed by target | Optionally saved to `Saved/APS/` |
+| Player behaviour models | The component, keyed by target | Component lifetime |
+| Memory store | The component, keyed by subject | Component lifetime, bounded by `Memory Retention Seconds` |
 
 **The ledger is pre-allocated** at `Max Tracked Targets` and slots are reused, so steady-state perception performs no heap allocation.
 

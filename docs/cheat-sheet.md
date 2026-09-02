@@ -152,7 +152,7 @@ A sense volume only appears when that sense is in the profile's `Sense Classes`.
 | Client sees nothing | Use `Get Replicated Perception State` |
 | Cone points at the sky | `Eye Socket Alignment` → **Automatic** |
 | Crouch-walk is not hiding me | Set `Min Visible Points Crouched` to 2 |
-| A setting seems to do nothing | Check the ⚠ list in [Troubleshooting](troubleshooting.md) — five are inert in v2.0 |
+| A setting seems to do nothing | Check the ⚠ list in [Troubleshooting](troubleshooting.md) — five are inert in v3.0 |
 
 ---
 
