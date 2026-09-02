@@ -116,7 +116,9 @@ Leave cone angles and occlusion **identical** across difficulties — the player
 | Trim APS Target Component samples 5 → 3 | −40% vision traces |
 | `Max Tracked Targets` 16 → 4 | Less memory, faster sorting |
 | One occlusion channel instead of three | −66% trace count |
-| LOD tier 4 (>300 m) | Suspended automatically |
+| Assign an `APS Quality Profile` | Scales tick rate and trims vision samples without resetting what the AI believes |
+| `b Enable Statistical Tier` | Distant agents stop tracing entirely |
+| LOD tier 4 | Suspended automatically. Roughly beyond 225 m for an idle agent |
 
 ---
 
@@ -152,6 +154,8 @@ A sense volume only appears when that sense is in the profile's `Sense Classes`.
 | Client sees nothing | Use `Get Replicated Perception State` |
 | Cone points at the sky | `Eye Socket Alignment` → **Automatic** |
 | Crouch-walk is not hiding me | Set `Min Visible Points Crouched` to 2 |
+| "Why can't it see me?" | Print `Explain Perception` (Target) |
+| A thrown-rock sound is ignored | Sourceless sounds arrive on `On Location Belief Changed`, not `On AI Hear` |
 | A setting seems to do nothing | Check the ⚠ list in [Troubleshooting](troubleshooting.md) — five are inert in v3.0 |
 
 ---
@@ -161,7 +165,9 @@ A sense volume only appears when that sense is in the profile's `Sense Classes`.
 - **Confidence never falls while a sense is active.** It rises or holds. Decay starts only when every sense goes silent.
 - **`Vision Sample Count` is ignored** for any target carrying an APS Target Component — that component brings its own 5 samples.
 - **Never-search zones are advisory.** You must call `Is Location In Never Search Zone` in your BT; nothing is blocked automatically.
-- **The Pain sense reads your health component automatically** (`GetHealthPercent` / `GetHealth`+`GetMaxHealth`) and degrades *all* senses.
+- **The Pain sense reads your health automatically.** It asks for an `APS Health Provider` interface first, then falls back to a function named `GetHealthPercent`, or `GetHealth` with `GetMaxHealth`, and degrades *all* senses.
+- **Sourceless sounds never fire `On AI Hear`.** `Emit Sound At Location` creates a belief about a place. Read it with `On Location Belief Changed`.
+- **Idle AI tick at half rate.** An agent that is not at least Suspicious can never reach LOD tier 0, whatever the distance.
 - **A sound asset's `Sound Name` becomes a stimulus tag** — an explosion only shakes the ground for vibration senses if that field reads exactly `Explosion`.
 - **100 damage in one hit = full confidence.** Scale to your damage numbers.
 - **`Set Target Confidence` only raises.** It cannot clear a detection.

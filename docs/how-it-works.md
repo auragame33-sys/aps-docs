@@ -1,7 +1,10 @@
 # How It Works
 
-**For:** developers who want the mental model before they start tuning, and anyone extending the plugin.
-**Read this if:** you've hit behaviour you can't explain from the settings alone.
+<div class="aps-meta" markdown>
+
+**For:** developers who want the mental model before they start tuning, and anyone extending the plugin · **Read this if:** you have hit behaviour you cannot explain from the settings alone
+
+</div>
 
 ---
 
@@ -45,7 +48,7 @@ The component ticks every frame, but the pipeline only *runs* every `Base Update
 ```mermaid
 flowchart TD
     T0{"Client?"} -->|yes| STOP1["Skip entirely<br/>perception is server-only"]
-    T0 -->|no| T1{"LOD tier 4?<br/>(>300 m)"}
+    T0 -->|no| T1{"LOD tier 4?"}
     T1 -->|yes| STOP2["Decay memory only<br/>no sense evaluation"]
     T1 -->|no| T2{"Interval<br/>elapsed?"}
     T2 -->|no| STOP3["Draw debug, return"]
@@ -54,7 +57,7 @@ flowchart TD
     P1["1 · Gather candidate targets<br/>max 5 Hz"] --> P2
     P2["2 · PreTick every sense<br/>accumulators, health, contacts"] --> P3
     P3["3 · Owner-internal senses fire<br/>Pain → OnAIPainReported"] --> P4
-    P4["4 · FOR EACH TARGET<br/>evaluate senses → pain degradation<br/>→ fuse → fairness rules"] --> P5
+    P4["4 · FOR EACH TARGET<br/>evaluate senses → pain degradation<br/>→ fuse → fairness rules → evidence"] --> P5
     P5["5 · Memory engine<br/>smoothing · decay · state transition"] --> P6
     P6["6 · Spatial belief update"] --> P7
     P7["7 · Threat + relationship"] --> P8
@@ -71,19 +74,34 @@ Two consequences worth internalising:
 
 ---
 
-## Distance LOD
+## Significance and LOD
 
-The subsystem assigns every agent a tier from its distance to the player camera, and the tier scales the tick interval. No setup.
+Every subsystem tick, each agent is scored for **significance**, 0 to 1, and the score picks its LOD tier. No setup. The built-in score is:
 
-| Tier | Distance | Interval | Behaviour |
+```
+Significance = 0.6 × (1 − distanceToNearestViewer / 30000 cm)
+             + 0.55 if the agent is Suspicious or more alert
+             + 0.25 × (awareness level / 4)
+```
+
+| Score | Tier | Perception interval | Behaviour |
 |---|---|---|---|
-| **0** | < 30 m | ×1 | Full rate |
-| **1** | 30–80 m | ×2 | |
-| **2** | 80–150 m | ×5 | |
-| **3** | 150–300 m | ×20 | Barely evaluating |
-| **4** | > 300 m | — | **Suspended.** Memory still decays. |
+| ≥ 0.75 | **0** | ×1 | Full rate |
+| ≥ 0.50 | **1** | ×2 | |
+| ≥ 0.30 | **2** | ×5 | |
+| ≥ 0.15 | **3** | ×20 | Barely evaluating. Component tick throttled to 0.1 s |
+| below | **4** | — | **Suspended** unless the crowd tier is on. Memory still decays. Component tick throttled to 0.25 s |
+
+Two things follow from the weights, and both surprise people:
+
+- **An idle agent never reaches tier 0.** With no engagement and no awareness the score tops out at 0.6, so an unaware guard runs at tier 1 out to 50 m, tier 2 to 150 m, tier 3 to 225 m, and is suspended beyond that. Half rate is the resting state.
+- **An engaged agent almost never drops below tier 0.** Once it is Suspicious or more alert, the engagement bonus keeps it at full rate out to roughly 260 m, and at tier 1 beyond that. A chase does not stutter because the camera is far away.
+
+*Viewer* means every local player camera, so split-screen and listen servers work. A dedicated server has no viewer and scores every agent as if it were at zero distance.
 
 Tiers also gate sounds and stimuli: a sound whose `Max LOD Tier` is 1 is never even considered by a tier-2 agent. Setting sensible LOD tiers on sound assets is a free, large saving.
+
+Replace the score with your own **APS Significance Policy** when your game has a different idea of what matters. Setting a tier directly does not stick; the subsystem rewrites it every pass. See [Scale & Crowds](scale-and-crowds.md).
 
 ---
 
@@ -99,6 +117,9 @@ Tiers also gate sounds and stimuli: a sound whose `Max LOD Tier` is 1 is never e
 | Never-search zones | The world subsystem | World lifetime |
 | Player behaviour models | The component, keyed by target | Component lifetime |
 | Memory store | The component, keyed by subject | Component lifetime, bounded by `Memory Retention Seconds` |
+| Scripted evidence | The component, keyed by target | Until it expires or is removed. Deliberately kept when a target leaves the ledger, so a disguise applied at level start survives |
+| Place beliefs | `FBeliefRecord` in the ledger, like any target | Until `Expired` |
+| Recorded frames | The component | The recording window |
 
 **The ledger is pre-allocated** at `Max Tracked Targets` and slots are reused, so steady-state perception performs no heap allocation.
 
@@ -119,6 +140,7 @@ flowchart LR
     E --> F["Evaluated by every sense"]
 ```
 
+- **Candidates come from a broadphase grid** the subsystem rebuilds five times a second: every Pawn plus every registered actor, bucketed in 15 m cells. An agent asks for the cells around it instead of walking the world, so gather cost no longer scales with agents times pawns. `aps.UseSpatialIndex 0` restores the exhaustive scan for A/B testing.
 - **Pawns are automatic.** No registration needed.
 - **Non-Pawn actors** must call `Register Perceivable Actor`, or carry an APS Target Component with auto-register on.
 - **Gather range** is the largest of `Vision Max Range`, `Hearing Max Range`, and each sense's *declared* maximum. Vibration declares 800 cm and Echolocation 2000 cm regardless of their profile settings — so a long-range vibration build needs another sense reaching far enough to pull targets in.
@@ -137,7 +159,7 @@ Every sense — built-in or yours — implements the same four-stage contract. `
 | `GetSenseDelegatePayload` | If active | Which built-in event to fire |
 | `PostTickFlush` | After all targets | Clear per-tick caches |
 
-A sense also declares its loss behaviour (grace time, direct-cut, loss reason) and its maximum sensing range. Blueprint subclasses can override `Evaluate` and `Get Sense ID`; the rest is C++ only. See [Custom Senses](custom-senses.md).
+A sense also declares its loss behaviour (grace time, direct cut, loss reason), its maximum sensing range and the stimulus tags it subscribes to. A Blueprint subclass of `Sense Unit` sets all of those in its class defaults and overrides `Evaluate` and `Get Sense ID`. Reacting to a stimulus, firing a built-in sense event, and event-driven or owner-internal senses are C++ only. See [Custom Senses](custom-senses.md).
 
 ---
 
@@ -154,10 +176,12 @@ Two properties of the machinery are worth stating here because they explain surp
 
 ## Threading and cost
 
-- Everything runs on the **game thread**. There is no async trace path.
+- Everything runs on the **game thread** by default. `b Async Vision Traces` issues visibility traces asynchronously and reads them one evaluation later; it falls back to synchronous whenever surface transmission or more than one occlusion channel is configured.
 - The dominant cost is **line traces**: `sample points × occlusion channels`, per target, per evaluation.
 - Sound emission is O(agents) with a squared-distance cull first, so distant agents cost almost nothing.
+- Candidate gathering is a grid lookup, not a world walk.
 - Idle AI with no targets in range cost a distance check and an early out.
+- `Max Perception Updates Per Frame` on the subsystem caps how many agents run a full pass per frame. The rest defer to the next frame with their accumulated time intact.
 
 Full budget guidance is in [Performance](performance.md).
 
@@ -173,6 +197,11 @@ Full budget guidance is in [Performance](performance.md).
 | Change confidence directly | `Set Target Confidence` (raises only) |
 | Replace perception wholesale for a state | `Set Profile` at runtime |
 | Read everything about a target | `Get Belief Data` |
+| Change how senses fuse, how threat is scored, or which target gets attention | A [policy](policies.md) class on the profile |
+| Tell APS where health or posture lives | An [adapter](adapters.md) interface |
+| Lower, cap or clear belief from script | `Add Target Evidence` |
+| Scale cost without resetting belief | A quality profile via `Set Quality Profile` |
+| Decide which agents deserve CPU | An [APS Significance Policy](scale-and-crowds.md) on the subsystem |
 
 ---
 

@@ -25,7 +25,7 @@ Push APS state into the Blackboard from events, and let the BT read the Blackboa
 | `ThreatLevel` | Enum (`EThreatLevel`) | `On AI Detect` / `On AI Think Threat` |
 | `CombatRole` | Enum (`ECombatRole`) | `On Combat Role Assigned` |
 | `bHasTarget` | Bool | `On AI Detect` (true) / `On AI Forget` (false) |
-| `InvestigateLocation` | Vector | `On AI Hear`, `On AI Suspect`, `On AI Squad Alert` |
+| `InvestigateLocation` | Vector | `On AI Hear`, `On AI Suspect`, `On AI Squad Alert`, `On Location Belief Changed` |
 
 ---
 
@@ -64,6 +64,14 @@ Event On AI Hear (Location, Loudness, Sound Type Name)
 ```
 
 Guard it on `bHasTarget` so a footstep does not interrupt an active chase.
+
+For sounds with no source actor, such as a thrown rock or an explosion, the AI holds a place belief instead of a target. Read it the same way:
+
+```
+Event On Location Belief Changed (Location, Tag, State, Confidence)
+  └─► Branch: State == Suspected AND bHasTarget == false
+        True → Set Vector ("InvestigateLocation", Location)
+```
 
 ### Squad alerts
 
@@ -131,6 +139,8 @@ Task: Search Step
 ```
 
 Loop it three or four times and the AI naturally spirals outward.
+
+**With the Knowledge module:** an **APS Search Component** replaces the radius with a probability field that spreads at the target's speed, skips anything off the navmesh, and empties cells the AI has already walked through. See [Evidence & Search](evidence-and-search.md).
 
 ---
 

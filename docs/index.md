@@ -57,7 +57,7 @@ When the AI loses you, it does not simply forget. It records *why* it lost you (
 
     ---
 
-    25 task recipes — stop AI seeing through doors, track by scent, add a detection meter, blind a guard.
+    Over 30 task recipes — stop AI seeing through doors, track by scent, disguise the player, blind a guard.
 
     [:octicons-arrow-right-24: Browse recipes](how-to-guides.md)
 
@@ -119,6 +119,16 @@ That is a working AI. Everything else in these docs is tuning and depth.
 
 **Replication** — an opt-in compact per-target summary replicated to clients, so detection meters and spectator HUDs work without hand-rolled plumbing.
 
+**Scripted evidence** — a disguise, an alibi or a cutscene can floor, cap, lower or zero what the AI believes about a target, with its own lifetime and a provenance tag.
+
+**Beliefs about places** — a gunshot with no known shooter, a body, a forced lock. The AI can believe something happened *over there* without pinning it on whoever happened to be nearby.
+
+**Policies** — take over sense fusion, threat scoring or target attention with a Blueprint class of your own. Leave the slot empty and the built-in rule runs.
+
+**Profile composition** — inherit from a parent profile, override one number on one agent, stamp on a built-in archetype, or tune every running agent from the console.
+
+**Explain and record** — ask an AI, in words, why it cannot see you. Read back what it believed ten seconds ago.
+
 **7-mode debug suite** — on-screen overlays for Sense, Memory, Brain, Squad, Delegates, Player Model and Environment, plus a one-node print function for every single event.
 
 ---
@@ -128,7 +138,7 @@ That is a working AI. Everything else in these docs is tuning and depth.
 | | Epic `AIPerception` | APS |
 |---|---|---|
 | Detection result | Boolean — seen / not seen | Continuous 0–1 confidence per target |
-| Line of sight | One trace to capsule centre | Up to 5 weighted sample points → % exposed |
+| Line of sight | One trace to capsule centre | Weighted socket sample points → % exposed |
 | Cover behaviour | Head fully exposed above a crate still reports "not seen" | Partial exposure produces partial confidence |
 | Stance | Ignored | Crouched / prone can require more visible points |
 | Vision cone | One symmetric 3D cone | Focal + peripheral + rear-motion + keyhole, separate vertical FOV |
@@ -143,9 +153,10 @@ That is a working AI. Everything else in these docs is tuning and depth.
 | Threat / emotion | None | Weighted threat scoring, 5 emotion channels |
 | Squad | None | Intel sharing, alerts, exclusive combat roles |
 | Fairness tooling | None | Reaction delay, telegraph, off-screen penalty, safe rooms |
-| Debug | Gameplay Debugger category | 7-mode overlay + per-event print nodes |
+| Debug | Gameplay Debugger category | 7-mode overlay, per-event print nodes, an explain trace and a belief recorder |
 
-> **You can run both.** APS does not disable or interfere with `AIPerception`. If you already have systems bound to Epic's perception, they keep working while you migrate.
+!!! tip "You can run both"
+    APS does not disable or interfere with `AIPerception`. If you already have systems bound to Epic's perception, they keep working while you migrate.
 
 ---
 
@@ -178,9 +189,9 @@ Being clear about scope saves you time:
 
 ---
 
-# Documentation
+## Documentation map
 
-## I want to…
+### I want to…
 
 | | Go to |
 |---|---|
@@ -188,7 +199,7 @@ Being clear about scope saves you time:
 | …get something working right now | [Install & Your First AI](getting-started.md) |
 | …build a real guard end to end | [Tutorial: A Complete Guard](tutorial-complete-guard.md) |
 | …look up a node or a number, fast | [Cheat Sheet](cheat-sheet.md) |
-| …do one specific thing | [How-To Guides](how-to-guides.md) — 25 recipes |
+| …do one specific thing | [How-To Guides](how-to-guides.md) — over 30 recipes |
 | …move off Epic's `AIPerception` | [Migrating from AIPerception](migrating-from-aiperception.md) |
 | …understand why it behaves like that | [Core Concepts](core-concepts.md) · [How It Works](how-it-works.md) |
 | …fix something that's wrong | [Troubleshooting & FAQ](troubleshooting.md) |
@@ -197,21 +208,21 @@ Being clear about scope saves you time:
 
 ---
 
-## How-to
+### How-to
 
 | Page | What it covers |
 |---|---|
-| **[How-To Guides](how-to-guides.md)** | 25 task recipes — hearing, occlusion, search, squads, HUD meters, creatures, difficulty |
+| **[How-To Guides](how-to-guides.md)** | Over 30 task recipes — hearing, occlusion, search, squads, HUD meters, creatures, disguises, difficulty |
 | **[Migrating from AIPerception](migrating-from-aiperception.md)** | Concept mapping, step-by-step port, an Epic-parity profile |
 
-## Understand
+### Understand
 
 | Page | What it covers |
 |---|---|
 | **[Core Concepts](core-concepts.md)** | Confidence, fusion, the lifecycle, awareness, attention, loss reasons, memory |
 | **[How It Works](how-it-works.md)** | Architecture, the tick pipeline, LOD, where state lives, extension points |
 
-## Senses & configuration
+### Senses & configuration
 
 | Page | What it covers |
 |---|---|
@@ -220,7 +231,7 @@ Being clear about scope saves you time:
 | **[Sound System](sound-system.md)** | Sound data assets, filters, the per-agent pipeline |
 | **[Pain & Damage](pain-and-damage.md)** | Damage reactions, pain types, sense degradation |
 
-## Systems
+### Systems
 
 | Page | What it covers |
 |---|---|
@@ -232,7 +243,7 @@ Being clear about scope saves you time:
 | **[Environment & Fairness](environment-and-fairness.md)** | Light, weather, wind, safe rooms, reaction time, telegraphing |
 | **[Multiplayer](multiplayer.md)** | Server authority, replicated detection meters, the relay component |
 
-## Scripting
+### Scripting
 
 | Page | What it covers |
 |---|---|
@@ -242,7 +253,7 @@ Being clear about scope saves you time:
 | **[Policies](policies.md)** | Take over fusion, threat scoring or attention with your own rule |
 | **[Adapters](adapters.md)** | Tell APS how your project stores health and posture |
 
-## Build & ship
+### Build & ship
 
 | Page | What it covers |
 |---|---|

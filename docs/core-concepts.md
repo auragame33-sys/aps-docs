@@ -96,7 +96,8 @@ with curve: Smoothed = Lerp(Smoothed, LastActiveConfidence × DecayCurve(TimeSin
 
 `SenseDecayMultiplier` is the `Confidence Decay Multiplier` from the **Loss** config of the sense that was last dominant.
 
-> ⚠ **Two profile settings in the Fusion section do nothing in v3.0:** `Confidence Decay Smoothing` and `Confidence Reduce Delay` are not read by any code path. Ignore them; use `Confidence Rise Rate` and the per-sense `Confidence Decay Multiplier` instead.
+!!! warning "Two Fusion settings do nothing in v3.0"
+    `Confidence Decay Smoothing` and `Confidence Reduce Delay` are not read by any code path. Ignore them; use `Confidence Rise Rate` and the per-sense `Confidence Decay Multiplier` instead.
 
 ---
 
@@ -344,14 +345,14 @@ Set every emotion cap to 0 on a robot archetype and it becomes emotionless witho
 
 ## 10. The tick
 
-APS does **not** run every frame. The component ticks, but the perception pipeline only runs every `Base Update Interval` seconds (default 0.1 s), scaled by distance-based LOD.
+APS does **not** run every frame. The component ticks, but the perception pipeline only runs every `Base Update Interval` seconds (default 0.1 s), multiplied by the agent's LOD tier and by any quality profile. The tier comes from a significance score rather than raw distance; see [How It Works](how-it-works.md#significance-and-lod).
 
 Order of operations per perception tick:
 
 1. Gather candidate targets (every Pawn in max sense range, plus registered non-Pawn actors) — refreshed on its own slower cadence
 2. `PreTick` every sense — accumulators, persistent contacts, health sampling
 3. Owner-internal senses fire their events (Pain)
-4. For each target: evaluate every sense → apply pain degradation → fuse → apply fairness rules
+4. For each target: evaluate every sense → apply pain degradation → fuse → apply fairness rules → apply scripted evidence
 5. Memory engine: smoothing, decay, lifecycle transitions
 6. Spatial belief update
 7. Threat assessment, relationship resolution
@@ -361,6 +362,19 @@ Order of operations per perception tick:
 11. Ledger maintenance (on its own interval)
 
 Perception runs **server-side only** and is skipped entirely on clients.
+
+---
+
+## 11. Beliefs about places
+
+A belief does not have to be about an actor. A gunshot with no known shooter, a body, a forced lock: these are beliefs about a **place**, and they live in the same ledger with the same lifecycle and their own confidence.
+
+- `Emit Sound At Location` and discovered [evidence](evidence-and-search.md) create them automatically.
+- **Report Location Belief** (`Location`, `Tag`, `Confidence`, `Accuracy`) creates one from your own logic. Reports close together with the same tag merge into one belief rather than piling up.
+- **On Location Belief Changed** fires on every lifecycle transition with the location, tag, new state and confidence.
+- **Get Strongest Location Belief** and **Get Location Beliefs** read them back.
+
+Place beliefs are deliberately kept out of attention, awareness and `On AI All Clear`, so a noise cannot steal focus from a person or stop the AI standing down. Before this existed, an anonymous sound was scored against whichever actor was under evaluation, and one explosion made every bystander in earshot a suspect.
 
 ---
 

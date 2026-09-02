@@ -1,8 +1,10 @@
 # Tutorial: A Complete Guard
 
-**Time:** ~45 minutes
-**You'll need:** [Install & Your First AI](getting-started.md) done, a level with some cover, and a player character you can walk around with.
-**No C++.**
+<div class="aps-meta" markdown>
+
+**Time:** about 45 minutes · **You'll need:** [Install & Your First AI](getting-started.md) done, a level with some cover, and a player character you can walk around with · **No C++**
+
+</div>
 
 > **▶ Video walkthrough** — *Build a complete guard (20 min).* Coming soon.
 > When it is live, delete this block and uncomment the embed below.
@@ -36,7 +38,7 @@ The interesting part is `SEARCH`. A guard that always runs the same search looks
 
 ---
 
-# Part 1 — The profile (5 min)
+## Part 1 — The profile (5 min)
 
 Content Browser → right-click → **Miscellaneous → Data Asset** → **PerceptionProfile** → name it `DA_Profile_Guard`.
 
@@ -61,7 +63,7 @@ Open it and set these. Everything not listed stays at its default.
 
 ---
 
-# Part 2 — The guard actor (5 min)
+## Part 2 — The guard actor (5 min)
 
 Open your AI character Blueprint (`BP_Guard`).
 
@@ -69,18 +71,16 @@ Open your AI character Blueprint (`BP_Guard`).
 - **APS Core** → Details → `Profile` = `DA_Profile_Guard`
 - **APS Perception Listener**
 
-On the APS Core, also set:
-- `Debug Settings → b Enabled` ✅
-- `Debug Settings → b Nearest AI Only` ✅
+On the APS Core, also tick `Debug Settings → b Enabled`. Leave `Agent Scope` on its default; the overlay stays readable once you add a second guard.
 
 **On your player character:** Add Component → **APS Target Component**. Leave everything default.
 
-> ### ✅ Checkpoint 1
-> Press Play and walk into the guard's view. You should see a vision cone drawn on the ground and a text block above the guard reading something like `[DETECTED] 62% 1.4s` with a per-sense breakdown. If you don't, the profile isn't assigned — that's the cause 90% of the time.
+!!! success "Checkpoint 1"
+    Press Play and walk into the guard's view. You should see a vision cone drawn from the guard's eyes and a status panel in the top-left corner reading something like `DETECTED 62%`, with a bar per sense underneath. If you see nothing, the profile is not assigned. That is the cause nine times out of ten.
 
 ---
 
-# Part 3 — Make your footsteps audible (5 min)
+## Part 3 — Make your footsteps audible (5 min)
 
 Hearing does nothing until you emit sound. This is deliberate: the guard hears exactly what you decide is audible.
 
@@ -107,16 +107,16 @@ Event AnimNotify_Footstep
         Sound Type    : DA_Sound_Footstep
 ```
 
-> ### ✅ Checkpoint 2
-> Stand behind a wall, out of sight, and walk on the spot. The guard's debug text should show `Hearing` climbing above 0%, and the state should reach `SUSPECTED`. Stop moving and watch it decay. If Hearing stays at 0%, your notify isn't firing — test it with a Print String first.
+!!! success "Checkpoint 2"
+    Stand behind a wall, out of sight, and walk on the spot. The `HEARING` row in the panel should climb above 0% and the state chip should reach `SUSPECTED`. Stop moving and watch it decay. If Hearing stays at 0%, your notify is not firing. Test it with a Print String first.
 
 ---
 
-# Part 4 — Push perception into the Blackboard (10 min)
+## Part 4 — Push perception into the Blackboard (10 min)
 
 The pattern: **events write to the Blackboard, the Behavior Tree reads it.** Never poll APS from a BT service every tick when an event already tells you.
 
-## 4a. Create the Blackboard
+### 4a. Create the Blackboard
 
 New **Blackboard** asset → `BB_Guard`. Add these keys:
 
@@ -132,7 +132,7 @@ New **Blackboard** asset → `BB_Guard`. Add these keys:
 | `InvestigateLocation` | Vector |
 | `PatrolPoint` | Vector |
 
-## 4b. Wire the events
+### 4b. Wire the events
 
 In `BP_Guard`'s Event Graph. Get the Blackboard once and promote it to a variable to keep the graph readable:
 
@@ -142,7 +142,7 @@ Event Begin Play
         └─► Promote to variable "BB"
 ```
 
-### Attention changed → set the target
+#### Attention changed → set the target
 
 ```
 Event On Attention Changed (Old Target, New Target)
@@ -152,7 +152,7 @@ Event On Attention Changed (Old Target, New Target)
 
 **Use this, not `On AI Detect`, for the target key.** Attention is sticky — it won't thrash between two equally-scored targets and force the tree to re-plan every tick.
 
-### Telegraph → the "huh?" moment
+#### Telegraph → the "huh?" moment
 
 ```
 Event On AI Telegraph (Target, Confidence)
@@ -160,7 +160,7 @@ Event On AI Telegraph (Target, Confidence)
   └─► Get Controller → Cast to AIController → Set Focus (Target)
 ```
 
-### Heard something → investigate, but don't interrupt a chase
+#### Heard something → investigate, but don't interrupt a chase
 
 ```
 Event On AI Hear (Location, Loudness, Sound Type Name)
@@ -168,7 +168,7 @@ Event On AI Hear (Location, Loudness, Sound Type Name)
         True → BB → Set Value as Vector ("InvestigateLocation", Location)
 ```
 
-### Lost the target → set up the search
+#### Lost the target → set up the search
 
 This is the important one.
 
@@ -185,7 +185,7 @@ Event On AI Lost (Target, Last Known, Predicted, Last Cover Actor)
                                       APS Core → Get Loss Direction (Target))
 ```
 
-### Gave up → clear everything
+#### Gave up → clear everything
 
 ```
 Event On AI Forget (Target)
@@ -195,19 +195,19 @@ Event On AI Forget (Target)
   └─► Get Controller → Cast to AIController → Clear Focus (Gameplay)
 ```
 
-> ### ✅ Checkpoint 3
-> Add a temporary `Print String` to each of the five events. Play, get spotted, then break line of sight and hide. You should see the sequence:
-> `Telegraph → Detect → Track → Lost → (8+ seconds) → Remember → Forget`.
->
-> If `Lost` fires the instant you step behind cover, your `Vision Loss → Grace Time` didn't save. If `Forget` fires immediately after `Lost`, check `Min Time In Lost`.
+!!! success "Checkpoint 3"
+    Add a temporary `Print String` to each of the five events. Play, get spotted, then break line of sight and hide. You should see the sequence
+    `Telegraph → Detect → Track → Lost → (8+ seconds) → Remember → Forget`.
+
+    If `Lost` fires the instant you step behind cover, your `Vision Loss → Grace Time` did not save. If `Forget` fires immediately after `Lost`, check `Min Time In Lost`.
 
 ---
 
-# Part 5 — The Behavior Tree (15 min)
+## Part 5 — The Behavior Tree (15 min)
 
 New **Behavior Tree** → `BT_Guard`, set its Blackboard to `BB_Guard`.
 
-## The shape
+### The shape
 
 ```
 Root
@@ -220,7 +220,7 @@ Root
 
 A Selector runs its children left to right and stops at the first that succeeds. Because the decorators get progressively less specific, the guard naturally prioritises: chase beats search, search beats investigate, investigate beats patrol.
 
-## CHASE branch
+### CHASE branch
 
 ```
 Sequence
@@ -230,7 +230,7 @@ Sequence
 
 Add a **Blackboard** decorator on the Sequence: Key `bHasTarget`, Key Query `Is Set`, and set **Observer Aborts → Both**. That last part matters — it lets the tree bail out of a chase the moment the target is lost.
 
-## SEARCH branch — the part that makes it look smart
+### SEARCH branch — the part that makes it look smart
 
 ```
 Selector  [decorator: LastKnownPosition Is Set, Observer Aborts: Lower Priority]
@@ -258,7 +258,7 @@ Selector  [decorator: LastKnownPosition Is Set, Observer Aborts: Lower Priority]
 
 For the `LossReason` decorators use **Blackboard → Key: LossReason, Key Query: Is Equal To**, and pick the enum value.
 
-### Task: Search Step
+#### Task: Search Step
 
 New **BTTask Blueprint** → `BTT_SearchStep`:
 
@@ -274,7 +274,7 @@ Event Receive Execute AI
 
 `SearchRadius` grows the longer you stay hidden, so repeating this task naturally spirals the search outward. No timer logic of your own.
 
-### Task: Move Along Loss Direction
+#### Task: Move Along Loss Direction
 
 ```
 Event Receive Execute AI
@@ -284,7 +284,7 @@ Event Receive Execute AI
                   → Finish Execute (Success)
 ```
 
-### Task: Give Up
+#### Task: Give Up
 
 ```
 Event Receive Execute AI
@@ -293,7 +293,7 @@ Event Receive Execute AI
   └─► Finish Execute (Success)
 ```
 
-## INVESTIGATE branch
+### INVESTIGATE branch
 
 ```
 Sequence  [decorator: InvestigateLocation Is Set, Observer Aborts: Lower Priority]
@@ -302,7 +302,7 @@ Sequence  [decorator: InvestigateLocation Is Set, Observer Aborts: Lower Priorit
 └── Task: Give Up
 ```
 
-## PATROL branch
+### PATROL branch
 
 Whatever you already have. If you have nothing:
 
@@ -313,7 +313,7 @@ Sequence
 └── Wait (2.0)
 ```
 
-## Run the tree
+### Run the tree
 
 In `BP_Guard`'s AI Controller:
 
@@ -322,14 +322,14 @@ Event On Possess
   └─► Run Behavior Tree (BT_Guard)
 ```
 
-> ### ✅ Checkpoint 4
-> Play. The guard should patrol. Walk into view — it turns and says "huh?", then commits and chases. Break line of sight behind a crate. It should go to the crate, look around, then spiral outward. After about 8 seconds it gives up and returns to patrol.
->
-> Now hide *and stay still* somewhere it never had sight of you, and just make a noise. It should walk to the noise, look around for 3 seconds, and go back to patrol **without** chasing. That difference — chasing when it saw you, investigating when it only heard you — is the whole point.
+!!! success "Checkpoint 4"
+    Play. The guard should patrol. Walk into view: it turns and says "huh?", then commits and chases. Break line of sight behind a crate. It should go to the crate, look around, then spiral outward. After about 8 seconds it gives up and returns to patrol.
+
+    Now hide *and stay still* somewhere it never had sight of you, and just make a noise. It should walk to the noise, look around for 3 seconds, and go back to patrol **without** chasing. That difference, chasing when it saw you and investigating when it only heard you, is the whole point.
 
 ---
 
-# Part 6 — Watch what it's thinking (5 min)
+## Part 6 — Watch what it's thinking (5 min)
 
 Bind these to keys in your player controller for live inspection:
 
@@ -349,6 +349,8 @@ Then cycle through the modes while playing:
 | **Delegates** | Which event fired last and when — settles "is my BP not bound, or did it never fire?" |
 
 Freezing the snapshot mid-chase and reading the Sense panel is the fastest way to understand why the guard did what it did.
+
+For a written answer instead of a panel, print **Explain Perception** (Player). It lists every sense and says why each one is or is not contributing. See [Explaining & Recording](explaining-and-recording.md).
 
 ---
 

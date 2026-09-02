@@ -97,14 +97,18 @@ The bridge that connects an agent's own perception to the fabric. Add it beside 
 | Setting | Default | Meaning |
 |---|---|---|
 | `Faction` | `Police` | Which faction's store this reports to |
+| `Report Channel` | `Radio` | How reports travel. `Direct` is instant and complete; anything else costs time and detail and can be cut off before it lands |
 | `Min Confidence To Report` | 0.45 | Below this, not worth telling anyone |
 | `Report Interval` | 2.0 s | How often it may file |
 | `Ideal Observation Range` | 600 cm | Closer than this is a perfect look |
 | `Max Observation Range` | 4000 cm | Beyond this, nothing useful is made out |
 | `Alert Per Report` | 0.15 | How much each report raises faction alert |
 | `b Discover Evidence` | true | Also find [evidence](evidence-and-search.md) in range |
+| `b Report Evidence To Faction` | true | Also file discovered evidence with the faction. Off keeps the discovery private to the AI that found it |
 
 **Get Observation Quality** (`Target`) returns how good a look this observer currently has — which is exactly the value **Get Observed Subset** wants. **Report Now** files immediately, ignoring the interval.
+
+A report only *names* the subject when observation quality reaches 0.75. Below that the faction receives a description and no actor, which is what a manhunt actually starts from. The position reported is the AI's believed position, not the actor's real one, so an AI that only heard someone cannot cheat on the faction's behalf.
 
 ---
 

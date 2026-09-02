@@ -77,7 +77,7 @@ At runtime:
 Set Profile Number ("VisionMaxRange", 7777.0)
 ```
 
-`Property` is the exact name from the Details panel with the spaces removed. A name that does not resolve is **refused and logged**, not silently ignored.
+`Property` is the C++ property name: the Details panel name with the spaces removed, keeping any leading `b` and any underscore, as in `VisionMaxRange`, `bEnablePeripheralCone` or `MinVisiblePoints_Crouched`. A name that does not resolve is **refused and logged**, not silently ignored.
 
 Three things worth knowing:
 
@@ -94,6 +94,8 @@ aps.Tune VisionMaxRange 5000
 ```
 
 Writes to every running agent's private copy. The asset on disk is untouched and the change is gone at the next launch — which is exactly what makes it safe to try anything mid-session, rather than stopping, editing and playing again by which point the situation that looked wrong has gone.
+
+Checkboxes take 0 or 1: `aps.Tune bKeyholeVision 1`.
 
 ---
 

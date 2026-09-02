@@ -1,14 +1,18 @@
 # Environment & Fairness
 
-**For:** wiring your world into perception — light, weather, wind — and making detection feel fair to the player.
+<div class="aps-meta" markdown>
+
+**For:** wiring your world into perception, light, weather and wind, and making detection feel fair to the player
+
+</div>
 
 ---
 
-# Environment
+## Environment
 
 The **APS Subsystem** holds world-wide state that every AI reads. Get it once with **Get APS Subsystem** (static node, works from any Blueprint).
 
-## Light
+### Light
 
 | Node | Purpose |
 |---|---|
@@ -21,9 +25,10 @@ The resulting vision multiplier is `Lerp(Darkness Min Detection, 1.0, lightLevel
 
 **Best accuracy** comes from your own light-gem system: set `Light Level Override` on the target's APS Target Component and it wins over both the shadow trace and global ambient. `-1` (the default) means "let the AI work it out".
 
-> ⚠ `Light Level Override` is only consulted when the observing AI's profile has **`b Use Per Target Light` on**. With it off, the whole per-target path is skipped and global ambient is used — your override is silently ignored.
+!!! warning
+    `Light Level Override` is only consulted when the observing AI's profile has **`b Use Per Target Light` on**. With it off, the whole per-target path is skipped and global ambient is used, so your override is silently ignored.
 
-## Weather & wind
+### Weather & wind
 
 | Node | Purpose |
 |---|---|
@@ -38,12 +43,12 @@ Built-in environmental effects:
 
 | Condition | Effect |
 |---|---|
-| Darkness | Vision down to 0.35× |
-| Rain | Hearing down to 0.55× at full intensity |
-| Wind | Smell down to 0.25× at 800 cm/s and above |
-| Indoors | Smell up to 1.2× |
+| Darkness | Vision down to `Darkness Min Detection` (0.1 by default) at light level 0 |
+| Rain | Vision, Hearing and Smell all multiplied by `1 − Rain Intensity`, so full rain silences every sense that reads it |
+| Wind | Smell down to 0.25× at 800 cm/s and above, outdoors only |
+| Indoors | Smell up to 1.2×, and wind is ignored |
 
-### Wiring a weather system
+#### Wiring a weather system
 
 ```
 Weather actor, on state change:
@@ -56,7 +61,11 @@ Weather actor, on state change:
 
 A storm now genuinely makes AI harder to sneak past by sight but easier to sneak past by sound — with no AI-specific code at all.
 
-## The perceivable registry
+### Local conditions
+
+One global state models day and night and nothing else. For a smoke-filled room, a noisy market or a sealed cellar, attach an **APS Environment** component to any actor. It becomes a sphere where light, rain, wind, the indoors flag and each sense's range are overridden, and overlapping spheres resolve by priority. **Get Environment At** and **Get Sense Range Scale At** on the subsystem read the result for any point. Settings and behaviour are in [Scale & Crowds](scale-and-crowds.md#environment-volumes).
+
+### The perceivable registry
 
 **Pawns are found automatically.** Every `Pawn` in the world within maximum sense range is a candidate target, with no registration needed. Targets sharing the observer's controller are skipped.
 
@@ -71,13 +80,13 @@ Or just add an **APS Target Component** with `b Auto Register As Perceivable` ti
 
 ---
 
-# Fairness
+## Fairness
 
 Every shipped stealth game has these rules. None of them exist in the engine. They are what separates an AI that feels *sharp* from one that feels *cheap*.
 
-**All of them are opt-in and default to off**, so they never change behaviour until you ask for them.
+**Two of them are opt-in and default to off.** The telegraph always fires at its threshold, and never-search zones are honoured by default but only matter once you register one.
 
-## First-spot reaction time
+### First-spot reaction time
 
 `Fairness → First Spot Reaction Time` (default `0.0`)
 
@@ -92,7 +101,7 @@ On **first acquisition only**, the AI must hold the target for this long before 
 
 While the window is counting, a contact gap longer than `max(0.5 s, BaseUpdateInterval × 4)` resets it — so genuinely breaking away before the AI reacts costs it the whole timer, while a sense running on a slower interval missing a tick does not.
 
-## Telegraphing
+### Telegraphing
 
 `Fairness → Telegraph Threshold` (default `0.25`)
 
@@ -109,7 +118,7 @@ Event On AI Telegraph (Target, Confidence)
   └─► Show detection pip on HUD
 ```
 
-## Off-screen hearing penalty
+### Off-screen hearing penalty
 
 `Fairness → b Offscreen Hearing Penalty` + `Offscreen Hearing Multiplier` (0.75)
 
@@ -121,7 +130,7 @@ The problem this solves: an AI the player has never seen reacting to a noise the
 
 That is the right trade for a fairness softening rather than a visibility guarantee — but do not use it as a general "is this AI visible" signal.
 
-## Never-search zones — guaranteed safe rooms
+### Never-search zones — guaranteed safe rooms
 
 | Node | Purpose |
 |---|---|
@@ -131,7 +140,8 @@ That is the right trade for a fairness softening rather than a visibility guaran
 | **Is In Never Search Zone** (`Location`) *(subsystem)* | Test a location against all zones |
 | **Is Location In Never Search Zone** (`Location`) *(component)* | Same test, but returns false when this AI's profile has `b Respect Never Search Zones` off |
 
-> ⚠ **Zones are advisory — APS does not enforce them for you.** Registering a zone does not suppress perception, and nothing in the perception pipeline stops an AI walking into one. The plugin gives you the **query**; your Behavior Tree does the honouring. `b Respect Never Search Zones` only decides whether the per-AI query reports anything, so a profile with it switched off makes that AI ignore every zone.
+!!! warning "Zones are advisory. APS does not enforce them for you"
+    Registering a zone does not suppress perception, and nothing in the perception pipeline stops an AI walking into one. The plugin gives you the **query**; your Behavior Tree does the honouring. `b Respect Never Search Zones` only decides whether the per-AI query reports anything, so a profile with it switched off makes that AI ignore every zone.
 
 This is the guarantee *Alien: Isolation* was built on: the player needs somewhere they are **certainly** safe, or the tension never releases and the game becomes exhausting instead of frightening.
 
@@ -158,7 +168,7 @@ Add the same check to any BT task that picks a search point, so an expanding swe
 
 Use it for: save rooms, lockers, vents, shops, hub areas, tutorial spaces, and anywhere a cutscene plays.
 
-## Putting it together
+### Putting it together
 
 A well-tuned stealth guard:
 

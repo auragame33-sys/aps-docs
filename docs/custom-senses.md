@@ -6,17 +6,18 @@ Custom senses plug into the same pipeline as the built-in ones. Fusion, memory, 
 
 ---
 
-# The Blueprint path
+## The Blueprint path
 
-## Step 1 — Create the class
+### Step 1 — Create the class
 
 Content Browser → right-click → **Blueprint Class** → expand **All Classes** → search `SenseUnit` → pick it as the parent.
 
 Name it `BP_Sense_Thermal`.
 
-> You can also parent to an existing sense — `SenseUnit_Vision`, `SenseUnit_Smell` — to inherit its behaviour and change only its default values or add extra logic on top.
+!!! tip
+    You can also parent to an existing sense such as `SenseUnit_Vision` or `SenseUnit_Smell` to inherit its behaviour and change only its default values, or add extra logic on top.
 
-## Step 2 — Override Get Sense ID
+### Step 2 — Override Get Sense ID
 
 In the Class Defaults / Functions panel, **Override → Get Sense ID**. Return a unique name:
 
@@ -26,7 +27,7 @@ Get Sense ID → Return Value = "Thermal"
 
 This name appears in `Get Sense Contributions` and in the debug overlay, so make it readable.
 
-## Step 3 — Override Evaluate
+### Step 3 — Override Evaluate
 
 **Override → Evaluate.** You receive:
 
@@ -48,7 +49,7 @@ Fill in `Out Result`:
 | `Location Accuracy` | 0–1 — how precise that position is |
 | `Sense ID` | Your sense name |
 
-### A working thermal sense
+#### A working thermal sense
 
 ```
 Event Evaluate (Context, Profile, Target, Out Result)
@@ -73,7 +74,7 @@ Event Evaluate (Context, Profile, Target, Out Result)
      Sense ID          = "Thermal"
 ```
 
-## Step 4 — Add it to a profile
+### Step 4 — Add it to a profile
 
 Open your Perception Profile → `Sense Classes` → add `BP_Sense_Thermal`.
 
@@ -83,32 +84,45 @@ Optionally set its weight in `Sense Weights` and its tick rate in `Sense Interva
 
 ---
 
-## What Blueprint can and cannot override
+### What Blueprint can and cannot override
 
 | Feature | Blueprint | C++ |
 |---|---|---|
 | `Evaluate` — the detection logic | ✅ | ✅ |
 | `Get Sense ID` | ✅ | ✅ |
 | Custom `EditAnywhere` properties on the sense | ✅ | ✅ |
-| Tick rate | ✅ *via the profile's `Sense Intervals` map* | ✅ |
+| Tick rate | ✅ `Default Interval` in class defaults, or the profile's `Sense Intervals` map | ✅ |
 | Confidence weight | ✅ *via the profile's `Sense Weights` map* | ✅ |
-| Loss grace time / direct cut / loss reason | ❌ | ✅ |
-| Max sensing range (extends target gathering) | ❌ | ✅ |
+| Loss grace time / direct cut / loss reason | ✅ `Sense Contract` class defaults | ✅ |
+| Max sensing range (extends target gathering) | ✅ `Max Sensing Range` class default | ✅ |
+| Listing the stimulus tags to receive | ✅ `Subscribed Stimulus Tags` | ✅ |
+| Reacting when a stimulus arrives | ❌ | ✅ `OnStimulusReceived` |
 | Event-driven mode (`Report X` style APIs) | ❌ | ✅ |
 | Owner-internal senses (no target loop) | ❌ | ✅ |
-| Stimulus bus subscription | ❌ | ✅ |
 | Firing a built-in sense event (`On AI See` etc.) | ❌ | ✅ |
+| Reporting beliefs about places from a sense | ❌ | ✅ `CollectLocationObservations` |
 
-**Two practical consequences for Blueprint senses:**
+#### The Sense Contract
 
-1. **Loss behaviour falls back to the base defaults** — 0.3 s grace, no direct cut, loss reason `SensorDropout`. That is reasonable for most custom senses.
-2. **Target gathering is bounded by the other senses' ranges.** APS gathers candidates within the largest of `Vision Max Range`, `Hearing Max Range` and every sense's declared max range. A Blueprint sense cannot declare one, so if your thermal sense should reach 8000 cm but the profile's vision range is 2000, targets beyond 2000 cm never reach `Evaluate`. **Fix:** raise `Vision Max Range` (or `Hearing Max Range`) to cover it, or write the sense in C++ and override `GetMaxSensingRange()`.
+Every Blueprint sense derived from `Sense Unit` has a **Sense Contract** section in its Class Defaults. Those values are what the base class reports to the core, so a Blueprint sense declares how it behaves without a line of C++:
 
-For most gameplay senses neither limitation matters. When they do, the C++ path is short.
+| Property | Default | Meaning |
+|---|---|---|
+| `Default Interval` | 0.1 s | Seconds between evaluations, unless the profile's `Sense Intervals` overrides it |
+| `Max Sensing Range` | 0 | Furthest reach in cm. Feeds the candidate-gathering radius, so a sense that reaches further than vision must say so or its targets are never handed to `Evaluate`. 0 adds nothing |
+| `Loss Grace Time` | 0.3 s | Seconds of silence before the target may be considered lost |
+| `b Allows Direct Lost Cut` | false | Jump straight to `Lost` when grace expires, the way vision does, instead of fading down through the states |
+| `Sense Loss Reason` | `SensorDropout` | Written to the belief record when this sense is the one that lost the target |
+| `Subscribed Stimulus Tags` | empty | Prefixes this sense receives from the stimulus bus |
+
+!!! warning "The built-in senses ignore these fields"
+    Vision, Hearing, Smell, Touch, Vibration, Damage, Pain and Echolocation answer these questions in C++. Setting `Sense Contract` values on a Blueprint child of `Vision Sense` does nothing; they apply to senses derived directly from `Sense Unit`.
+
+So a thermal sense that should reach 8000 cm sets `Max Sensing Range` to 8000, and targets that far out reach `Evaluate` whatever the profile's vision range says. The remaining gaps, reacting to a stimulus and firing a built-in sense event, need the short C++ path below.
 
 ---
 
-# The C++ path
+## The C++ path
 
 Subclass `USenseUnit` and override what you need:
 
@@ -145,7 +159,7 @@ The pipeline contract, called in this order every tick:
 
 `PerceptionCore` **never casts to a specific sense type**. Everything sense-specific lives in the sense class, which is why adding one requires no changes anywhere else.
 
-### Optional overrides
+#### Optional overrides
 
 | Override | Purpose |
 |---|---|
@@ -155,8 +169,9 @@ The pipeline contract, called in this order every tick:
 | `GetStimulusTags()` / `OnStimulusReceived()` | Subscribe to the stimulus bus |
 | `TickFatigue()` / `GetFatigueMultiplier()` | Senses that tire with use |
 | `CountWallsBetween()` *(inherited helper)* | Wall counting for occlusion-aware senses |
+| `CollectLocationObservations()` | Report authorless observations that the core turns into beliefs about places |
 
-### Firing a built-in event
+#### Firing a built-in event
 
 ```cpp
 virtual FSenseDelegatePayload GetSenseDelegatePayload(
@@ -172,15 +187,16 @@ virtual FSenseDelegatePayload GetSenseDelegatePayload(
 
 Return a payload with `DelegateType = None` to fire nothing — that is what the Damage sense does.
 
-> **The Smell sense is the reference implementation.** `SenseUnit_Smell.h/.cpp` is deliberately over-commented as a worked example of the full custom-sense workflow. Read it before writing your own.
+!!! tip "The Smell sense is the reference implementation"
+    `SenseUnit_Smell.h` and its `.cpp` are deliberately over-commented as a worked example of the full custom-sense workflow. Read them before writing your own.
 
 ---
 
-# The stimulus bus
+## The stimulus bus
 
 A general-purpose broadcast channel. Emit a tagged stimulus from anywhere and every sense that registered a matching tag prefix receives it — without touching `PerceptionCore`.
 
-## Emitting (Blueprint or C++)
+### Emitting (Blueprint or C++)
 
 ```
 Make FAPS Stimulus Event
@@ -208,7 +224,7 @@ Make FAPS Stimulus Event
 
 The delivery pipeline runs cheapest-first: radius cull → LOD tier → team filter → wall trace → deliver.
 
-## Built-in tag namespaces
+### Built-in tag namespaces
 
 | Tag | Received by |
 |---|---|
@@ -219,7 +235,7 @@ The delivery pipeline runs cheapest-first: radius cull → LOD tier → team fil
 
 Your game can invent any tag it likes. There is no registration step.
 
-## Subscribing (C++ only)
+### Subscribing
 
 ```cpp
 virtual TArray<FName> GetStimulusTags() const override
@@ -233,7 +249,7 @@ virtual void OnStimulusReceived(const FAPSStimulusEvent& Event) override
 }
 ```
 
-Blueprint senses cannot subscribe. If you need a Blueprint-driven reaction to a custom stimulus, emit it *and* separately call `Set Target Confidence` on the AI you want to affect.
+A Blueprint sense can list the tags it wants in `Subscribed Stimulus Tags`, but the delivery callback is C++ only, so nothing happens when one arrives. If you need a Blueprint-driven reaction to a custom stimulus, emit it *and* separately call `Set Target Confidence` or `Report Location Belief` on the AI you want to affect.
 
 ---
 

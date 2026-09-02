@@ -7,9 +7,9 @@ Two independent systems:
 
 ---
 
-# Squad
+## Squad
 
-## Setup
+### Setup
 
 Squad membership is just a matching `Name`. Call **Set Squad ID** from Begin Play:
 
@@ -21,7 +21,7 @@ Event Begin Play
 
 Every AI with `Patrol_A` is now a squadmate. Change it at runtime to move an AI between squads. `None` means no squad, and disables all squad features for that AI.
 
-## Automatic intel sharing
+### Automatic intel sharing
 
 **Profile → Brain | Squad:**
 
@@ -36,14 +36,14 @@ Every AI with `Patrol_A` is now a squadmate. Change it at runtime to move an AI 
 
 **Both false = tactical behaviour.** Nothing is shared unless you explicitly call `Share Target With Squad` — from a radio animation, after a "contact!" bark, or only when the AI has actually finished a call-out. This is what makes military AI feel disciplined instead of telepathic.
 
-## Manual sharing
+### Manual sharing
 
 | Node | What it sends | Use for |
 |---|---|---|
 | **Share Target With Squad** (`Target`) | The **full belief record** — position, confidence, threat, velocity, loss data | "I have confirmed contact, here is everything I know" |
 | **Broadcast Alert To Squad** (`Target`, `Alert Location`, `Threat Level`) | A **position and threat level only** | "I heard something over there" — no confirmed target yet |
 
-### What the receiver actually gets
+#### What the receiver actually gets
 
 `Share Target With Squad` writes into the receiver's belief record:
 
@@ -65,7 +65,7 @@ Event On AI Detect (Target, Threat Level, Stimulus)
 
 That single branch is the difference between a squad that converges intelligently and one where everybody instantly headshots you through a wall.
 
-## Combat roles
+### Combat roles
 
 Roles are **exclusive per squad** — only one AI holds each role at a time.
 
@@ -80,7 +80,7 @@ Roles are **exclusive per squad** — only one AI holds each role at a time.
 
 `Eligible Roles` on the profile restricts what an archetype may claim — a heavy gunner can be `Suppressor` or `Approacher` but never `Flanker`. An empty array means any role.
 
-### A working pattern
+#### A working pattern
 
 ```
 Event On AI Detect
@@ -100,9 +100,9 @@ Four guards spotting you now naturally produce one flanker, one suppressor and t
 
 ---
 
-# Relationships
+## Relationships
 
-## The component
+### The component
 
 Add **APS Relationship** to the AI alongside the APS Core. It is entirely optional — without it every relationship resolves to `Unknown`.
 
@@ -117,7 +117,7 @@ Add **APS Relationship** to the AI alongside the APS Core. It is entirely option
 | **Get Relationship** (`Target`) | Resolve the relationship for an actor |
 | **Set Relationship Override** (`Target`, `Relationship`) | Runtime override for one specific actor |
 
-## The values
+### The values
 
 `ETargetRelationship`: `Unknown`, `Neutral`, `Friendly`, `Teammate`, `Enemy`, `HighValue`, `Feared`.
 
@@ -130,14 +130,14 @@ Add **APS Relationship** to the AI alongside the APS Core. It is entirely option
 | `HighValue` | Priority target — a VIP, an objective carrier. Use it to bias sorting and behaviour. |
 | `Feared` | Something this AI runs *from*. Drives the Fear emotion instead of Aggression. |
 
-## Resolution order
+### Resolution order
 
 1. **Runtime override** (`Set Relationship Override`)
 2. **Class relationship** (`Class Relationships` map)
 3. **Team relationship** (`Team Relationships` map, via `IGenericTeamAgentInterface`)
 4. **Default relationship**
 
-## How it feeds threat
+### How it feeds threat
 
 Relationship contributes to the threat score at `Threat Weight Relationship` (default 0.10). `Enemy` and `HighValue` push threat up; `Friendly` and `Teammate` push it down.
 
@@ -153,7 +153,7 @@ Event On AI Detect (Target, Threat Level, Stimulus)
         └─ Teammate  → ignore
 ```
 
-## Runtime changes
+### Runtime changes
 
 `Set Relationship Override` handles the cases a static map cannot:
 

@@ -60,7 +60,7 @@ Answer the prompts:
 If you're doing it yourself, they are:
 
 ```bash
-cd "C:/Users/ojhah/Downloads/Advanced Perception System/Docs"
+cd "C:/Users/ojhah/Downloads/Docs"
 git init -b main
 git add .
 git commit -m "APS documentation"
@@ -187,21 +187,23 @@ You'll now see files starting with a dot, like `.gitignore`.
 **B.** In another Explorer window, open:
 
 ```
-C:\Users\ojhah\Downloads\Advanced Perception System\Docs
+C:\Users\ojhah\Downloads\Docs
 ```
 
 **C.** Press **Ctrl+A** to select everything, then **Ctrl+C**.
 
-You should have **7 items** selected:
+You should have **9 items** selected:
 
 ```
 .github            ← hidden folder — must be included
 .gitignore         ← hidden file — must be included
 docs
+tools
 APS-Documentation-ALL-IN-ONE.md
 mkdocs.yml
 PUBLISHING.md
 README.md
+requirements.txt
 ```
 
 **D.** Switch to the `aps-docs` window and press **Ctrl+V**.
@@ -427,15 +429,11 @@ Valid values are listed at [squidfunk.github.io/mkdocs-material/setup/changing-t
 Replace these two files, keeping the same names:
 
 ```
-docs/assets/logo.svg      ← header logo (shown at 24×24 on a dark bar)
-docs/assets/favicon.svg   ← browser tab icon
+docs/assets/logo.png      ← header logo (shown at 24×24 on a dark bar)
+docs/assets/favicon.png   ← browser tab icon
 ```
 
-If your logo is a PNG, drop it in and update `mkdocs.yml`:
-
-```yaml
-  logo: assets/logo.png
-```
+Both are the plugin's own `Resources/Icon128.png`. If you switch to an SVG, update the two paths under `theme:` in `mkdocs.yml`.
 
 **Make it a simplified single-colour mark, not your full wordmark** — at 24 pixels on a dark header, fine detail turns to mud.
 

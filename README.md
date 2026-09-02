@@ -52,7 +52,7 @@ Your AI does not flip between "sees you" and "does not see you". It builds confi
 
 ## Documentation
 
-Full documentation — install, tutorials, 25 task recipes, complete API and settings reference — lives at:
+Full documentation — install, tutorials, over 30 task recipes, complete API and settings reference — lives at:
 
 ### 👉 **[auragame33-sys.github.io/aps-docs](https://auragame33-sys.github.io/aps-docs/)**
 

@@ -1,7 +1,10 @@
 # How-To Guides
 
-**For:** developers who know roughly what they want and need the specific steps.
-**Assumes:** you've done [Install & Your First AI](getting-started.md).
+<div class="aps-meta" markdown>
+
+**For:** developers who know roughly what they want and need the specific steps · **Assumes:** you have done [Install & Your First AI](getting-started.md)
+
+</div>
 
 Each recipe is self-contained. Skim the headings, take what you need.
 
@@ -97,7 +100,8 @@ Profile → **Detection | Eyes**:
 
 **Why:** global ambient only models day and night. The per-target path traces from the target toward the sun and applies the shadow level when that trace is blocked.
 
-⚠ `Light Level Override` is only read when `b Use Per Target Light` is on.
+!!! warning
+    `Light Level Override` is only read while `b Use Per Target Light` is on.
 
 ---
 
@@ -141,7 +145,8 @@ Profile → **Fairness → `First Spot Reaction Time`** = `0.4`.
    ```
 3. Add the same check to any BT task that picks a search point.
 
-⚠ **Zones are advisory.** Registering one does not stop anything by itself — the plugin gives you the query, your BT does the honouring.
+!!! warning "Zones are advisory"
+    Registering one does not stop anything by itself. The plugin gives you the query; your BT does the honouring.
 
 ---
 
@@ -315,7 +320,8 @@ Event On AI Forget
 
 **Wind:** create a Blueprint subclass of `SenseUnit_Smell`, set `Wind Direction` and `Downwind Bonus` 2.5 in its Class Defaults, and put *that* class in `Sense Classes`.
 
-⚠ `Set Wind State` on the subsystem controls wind *speed* only — the directional bonus reads the sense's own `Wind Direction` property.
+!!! warning
+    `Set Wind State` on the subsystem controls wind *speed* only. The directional bonus reads the sense's own `Wind Direction` property.
 
 **Why:** standing upwind drops the scent signal to **0.1×**, a 10× penalty. That asymmetry is what makes wind a real mechanic rather than a modifier.
 
@@ -330,7 +336,8 @@ Event On AI Forget
 
 **Why:** `Vibration Min Speed` at 150 *is* the stealth mechanic — walk and it feels you, crouch-walk and it does not. Vibration passes through walls and ignores light entirely.
 
-⚠ Vibration declares a fixed 800 cm gather range, so another sense on the profile must reach far enough to pull distant targets into evaluation.
+!!! warning
+    Vibration declares a fixed 800 cm gather range, so another sense on the profile must reach far enough to pull distant targets into evaluation.
 
 ---
 
@@ -372,7 +379,8 @@ Alarm triggered
 
 `DA_Profile_Guard_Alerted` = a copy with longer ranges, lower thresholds, wider cones.
 
-⚠ `Set Profile` rebuilds senses and **resets the ledger, emotions and attention**. Don't call it every tick, and avoid swapping mid-engagement — gate it on `Has Any Detection == false` if that matters.
+!!! note "What a swap keeps"
+    When the new profile runs the same senses in the same order and has the same `Max Tracked Targets`, the swap keeps everything the AI believes: ledger, emotions, attention. Only a structurally different profile rebuilds the senses and resets that state. Build alert-state variants as children of the base profile and they stay compatible by construction. See [Profile Composition](profile-composition.md).
 
 ---
 
@@ -423,6 +431,39 @@ Event End Play
 Or just add an **APS Target Component** with `b Auto Register As Perceivable` ticked — it does both for you.
 
 **Why:** all Pawns are candidates automatically. Non-Pawn actors need registering.
+
+---
+
+### Let the player wear a disguise
+
+```
+Player puts the uniform on
+  └─► ForEach guard → APS Core → Add Target Evidence
+        Target        : Player
+        Evidence Tag  : "Disguise"
+        Operation     : Clamp
+        Value         : 0.15
+        Lifetime      : 0            // holds until removed
+
+Player is seen taking it off, or attacks
+  └─► ForEach guard → APS Core → Remove Target Evidence (Player, "Disguise")
+```
+
+**Why:** `Set Target Confidence` can only raise belief. Evidence is the two-way version. A `Clamp` holds belief at or below the value even while vision is actively reporting the player, so every guard stays at most `Suspected`. Re-adding the same tag refreshes it rather than stacking. `Invalidate` with a short `Lifetime` is the "you did not see anything" cutscene beat, and **Get Target Evidence** returns what is applied, with its `Source`, so you can see why belief is where it is.
+
+---
+
+### Tune one enemy without a new asset
+
+```
+Event Begin Play
+  ├─► APS Core → Set Profile Number ("VisionMaxRange", 3200)
+  └─► APS Core → Set Profile Flag   ("bEnablePeripheralCone", true)
+```
+
+Or fill in `Profile Overrides` on the component in the Details panel.
+
+**Why:** the change lands on a private copy of the profile, so the shared asset and every other agent are untouched, and nothing the agent believes is reset. Use the property's C++ name: the Details panel name with the spaces removed, keeping any leading `b` and any underscore, as in `bEnablePeripheralCone` or `MinVisiblePoints_Crouched`. A name that does not resolve is refused and logged. For a level-wide experiment while playing, type `aps.Tune VisionMaxRange 3200` in the console.
 
 ---
 

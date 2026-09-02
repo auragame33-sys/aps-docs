@@ -4,9 +4,10 @@ The **Perception Profile** is a Data Asset that defines everything about how one
 
 Create one: Content Browser → right-click → **Miscellaneous → Data Asset** → `PerceptionProfile`.
 
-> **Every setting below ships with a working default.** Create a profile, assign it, press Play — you get a functional AI. Only open the sections you actually need.
+!!! tip "Every setting below ships with a working default"
+    Create a profile, assign it, press Play, and you get a functional AI. Only open the sections you actually need.
 
-**Section map:** Senses|Setup · Ranges · Detection · Loss · Fusion · Memory · Awareness · Attention · Spatial · Performance · Brain|Emotions · Brain|Threat · Brain|Squad · Brain|PlayerModel · Senses|Pain · Senses|Touch · Fairness · Replication
+**Section map:** [Senses | Setup](#senses-setup) · [Ranges](#ranges) · [Detection](#detection-vision) · [Loss](#loss) · [Fusion](#fusion) · [Memory](#memory) · [Awareness](#awareness) · [Attention](#attention) · [Spatial](#spatial) · [Performance](#performance) · [Emotions](#brain-emotions) · [Threat](#brain-threat) · [Squad](#brain-squad) · [Player Model](#brain-player-model) · [Pain](#senses-pain) · [Touch](#senses-touch) · [Fairness](#fairness) · [Replication](#replication) · [Composition](#composition) · [Policies](#policies) · [Workbench](#workbench)
 
 ---
 
@@ -67,7 +68,8 @@ Create one: Content Browser → right-click → **Miscellaneous → Data Asset**
 | `Min Visible Points Crouched` | 1 | …when crouched. Raise to 2 for stance-aware stealth. |
 | `Min Visible Points Prone` | 1 | …when prone. Raise to 3. |
 
-> All three default to 1 on purpose: adding an APS Target Component must never silently make a character harder to see.
+!!! note
+    All three default to 1 on purpose: adding an APS Target Component must never silently make a character harder to see.
 
 ## Detection | Occlusion
 
@@ -241,6 +243,7 @@ These govern how *belief* decays. The settings below bound the separate, develop
 | `Base Update Interval` | 0.1 s | Perception tick rate. **The single biggest performance lever.** |
 | `Maintenance Interval` | 0.5 s | How often the ledger expires and compacts records |
 | `Max Tracked Targets` | 16 | Simultaneous tracked targets (1–32). Pre-allocated — lower is cheaper. |
+| `b Distance Tick Throttling` | true | Stop dispatching a component tick every frame for agents at LOD tier 3 and 4. Perception timing is unchanged, because the accumulator still receives the real elapsed time. |
 | `Sort Weight Confidence` | 0.5 | Target scoring: confidence weight |
 | `Sort Weight Recency` | 0.3 | …recency weight |
 | `Sort Weight Proximity` | 0.2 | …proximity weight |
@@ -346,7 +349,7 @@ Set both auto-share flags to false for tactical AI that only shares when *you* c
 
 ## Fairness
 
-Deliberate player-favouring rules. All opt-in, all default to off, so they never change behaviour until you ask for them.
+Deliberate player-favouring rules. The reaction window and the off-screen penalty are off by default. The telegraph event always fires at its threshold, and never-search zones are honoured by default but only matter once you register one.
 
 | Setting | Default | Meaning |
 |---|---|---|
