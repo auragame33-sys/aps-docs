@@ -1,0 +1,17 @@
+{
+ "_about": "Settings verified by hand to have no effect in this plugin version (find_inert.py lists candidates; each was checked in the code). The reference pages mark them, so nobody tunes a setting that does nothing. Key: Owner.MemberName.",
+ "UPerceptionProfile.HearingBaseThreshold": "No code reads it: there is no noise floor. Use Suspect Threshold, and a Sound Filter Profile's Min Alert Level.",
+ "UPerceptionProfile.bSoundEventOnlyMode": "No code reads it: hearing is always event-only (it hears only the sounds you emit).",
+ "UPerceptionProfile.TouchConfidence": "No code reads it: touch strength comes from the contact report and the contact type's multiplier.",
+ "UPerceptionProfile.ConfidenceDecaySmoothing": "No code reads it. Use Confidence Rise Rate, and each sense's Confidence Decay Multiplier in the Loss settings.",
+ "UPerceptionProfile.ConfidenceReduceDelay": "No code reads it. Use Confidence Rise Rate, and each sense's Confidence Decay Multiplier in the Loss settings.",
+ "USoundTypeDefinition.bIsDirectional": "No code reads it: how precisely a sound is placed comes from Location Accuracy Override (or the distance-based default).",
+ "USoundTypeDefinition.Priority": "No code reads it: when more than Max Pending per Tick sounds of one type arrive in a tick, the quietest is replaced by a louder one.",
+ "USenseUnit_Touch.MaxPersistentBonus": "Not used: the profile's Touch Max Persistent Bonus always sets the cap.",
+ "USenseUnit_Touch.MaxImpulseForFullStrength": "Overwritten every tick by the profile's Touch Max Impulse for Full Strength, unless that is 0.",
+ "USenseUnit_Touch.PersistentAccumulationRate": "Overwritten every tick by the profile's Touch Persistent Accumulation Rate, unless that is 0.",
+ "UPerceptionCore.SmoothedConfidence": "Not updated by APS 3.0: always 0.",
+ "UPerceptionCore.CurrentState": "Not updated by APS 3.0: always UNAWARE.",
+ "FPlayerBehaviorModel.CustomBehaviorRatios": "Stays empty in APS 3.0: no node or APS code records into it.",
+ "FBeliefRecord.DamageDealtToTarget": "Never written by APS 3.0: always 0 (only Debug Reset Damage Tracking touches it, to set it to 0). Track damage the AI deals in your own code."
+}

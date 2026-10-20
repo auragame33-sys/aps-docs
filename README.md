@@ -36,29 +36,35 @@ Your AI does not flip between "sees you" and "does not see you". It builds confi
 - **Spatial belief** — last known position, velocity estimation, an uncertainty radius that grows while you hide, and predictive extrapolation.
 - **Threat & emotion** — weighted threat scoring and five emotion channels driven by perception.
 - **Squad coordination** — range-gated intel sharing, positional alerts, exclusive combat roles.
-- **Player behaviour model** — observes how you play using only what the AI could legitimately perceive, and can persist it across sessions.
+- **Player behaviour model** — observes how you play using only what the AI could legitimately perceive.
 - **Fairness tooling** — reaction delay, telegraph events, off-screen hearing penalty, designer-defined safe rooms.
-- **7-mode debug suite** — on-screen overlays plus a one-node print function for every event.
+- **The APS Visualizer** — see what each AI sees, hears and believes, live; plus a written "why can't it see me?" and a recording you can read back.
 
 ## Requirements
 
 | | |
 |---|---|
-| Engine | Unreal Engine 5.2 |
-| Project type | Blueprint or C++ (Blueprint-only works — the plugin ships its own compiled module) |
+| Engine | Unreal Engine 5.2 and later |
+| Project type | Blueprint or C++ (Blueprint-only projects work) |
 | Platforms | Win64 Editor + Game |
 | Dependencies | None beyond engine modules |
 | Network | Server-authoritative, with an opt-in replicated summary for client UI |
 
 ## Documentation
 
-Full documentation — install, tutorials, over 30 task recipes, complete API and settings reference — lives at:
+Full documentation — install, a feature page per system with clips from the demo, guides, recipes, and a complete node, event and settings reference — lives at:
 
 ### 👉 **[auragame33-sys.github.io/aps-docs](https://auragame33-sys.github.io/aps-docs/)**
 
-Start with [Install & Your First AI](https://auragame33-sys.github.io/aps-docs/getting-started/), then [Tutorial: A Complete Guard](https://auragame33-sys.github.io/aps-docs/tutorial-complete-guard/).
+Start with [Get Started](https://auragame33-sys.github.io/aps-docs/getting-started.html), then [Tutorial: a complete guard](https://auragame33-sys.github.io/aps-docs/tutorial.html).
 
-Already using Epic's `AIPerception`? There's a [migration guide](https://auragame33-sys.github.io/aps-docs/migrating-from-aiperception/).
+Already using Unreal's AI Perception? There's a [guide for moving across](https://auragame33-sys.github.io/aps-docs/guides/from-ai-perception.html).
+
+### How the site is built
+
+The site's source is in [`v2/`](v2): pages in `v2/content`, the look in `v2/theme`, pictures and clips in `v2/media`. `v2/build.py` builds it with Python's standard library alone (`python v2/build.py`, output in `v2/_site`), and `v2/tools/check_docs.py` checks every node, setting, event and default named on a page against the APS source model, and every link. GitHub Actions runs both on every push to `main` and publishes the result to GitHub Pages; a failed check stops the deploy.
+
+The `docs/` folder is the previous MkDocs site, kept for reference. It is no longer published; its addresses redirect to the matching new pages.
 
 ## Support
 

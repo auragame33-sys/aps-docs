@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{page_title}}</title>
+<meta name="description" content="{{description}}">
+<meta property="og:title" content="{{title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="APS Docs">
+<meta property="og:image" content="https://auragame33-sys.github.io/aps-docs/assets/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="{{root}}assets/favicon.png">
+<link rel="stylesheet" href="{{root}}assets/style.css">
+<script>try{var t=localStorage.getItem("aps-theme");if(t)document.documentElement.dataset.theme=t;else if(matchMedia("(prefers-color-scheme: light)").matches)document.documentElement.dataset.theme="light"}catch(e){}</script>
+</head>
+<body class="layout-{{layout}}">
+<div class="bg" aria-hidden="true"><div class="bg-aurora"></div><div class="bg-grid"></div><canvas class="bg-field"></canvas></div>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="progress" aria-hidden="true"></div>
+  <button class="icon-btn menu-btn" aria-label="Open the menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a class="brand" href="{{root}}index.html">
+    <img src="{{root}}assets/emblem.png" alt="">
+    <span class="brand-name"><b>APS</b><span>Docs</span></span>
+  </a>
+  <div class="search" role="search">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+    <input type="search" id="search" placeholder="Search the docs" autocomplete="off" aria-label="Search the docs">
+    <kbd class="search-key">/</kbd>
+    <div class="results" role="listbox" hidden></div>
+  </div>
+  <nav class="top-links" aria-label="Site">
+    <a href="{{root}}getting-started.html">Get Started</a>
+    <a href="{{fab}}" target="_blank" rel="noopener">Fab</a>
+    <a href="{{support}}" target="_blank" rel="noopener">Support</a>
+  </nav>
+  <button class="icon-btn theme-btn" aria-label="Switch light and dark" title="Light / dark">
+    <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+    <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+  </button>
+</header>
+<div class="shell">
+  <aside class="sidebar" aria-label="Pages">{{nav}}</aside>
+  <main id="main" class="content">
+    <article>{{content}}</article>
+    {{prevnext}}
+    <footer class="foot">
+      <div><b>APS</b> Advanced Perception System, by AuraGame. Unreal Engine 5.2 and later. These docs are for APS 3.0.</div>
+      <div><a href="{{support}}" target="_blank" rel="noopener">Questions and bug reports</a></div>
+    </footer>
+  </main>
+  {{toc}}
+</div>
+<div class="scrim" hidden></div>
+<div class="lightbox" hidden><button class="lightbox-close" aria-label="Close">&times;</button><div class="lightbox-stage"></div></div>
+<script src="{{root}}assets/search.js"></script>
+<script src="{{root}}assets/app.js"></script>
+</body>
+</html>

@@ -1,5 +1,11 @@
 site/
+v2/_site/
 .cache/
 __pycache__/
 *.pyc
 .venv/
+
+# Claude Code worktrees and session files. A worktree lives inside the repo
+# folder, so without this a stray `git add .` commits a full second copy.
+.claude/
+v2/tools/used_old_descriptions.txt
