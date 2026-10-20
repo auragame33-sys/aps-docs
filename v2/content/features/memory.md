@@ -63,19 +63,21 @@ With `Enable Prediction` on (it's off by default: a slow patrolling guard that p
 ## Short-term and long-term memory
 
 - **Short term:** after a loss, confidence fades (Lost → Remembered → Expired). `Min Time in Lost` makes it search at least that long before giving up; `Decay Curve` (or `Default Decay Exponent`) shapes the fade.
-- **Long term:** `Long Term Memory Strength` builds while it senses you and fades far more slowly (`Long Term Decay Curve`). It is what keeps a guard twitchy for a minute after an encounter.
-- **Coming back:** finding you again gets a head start, `Memory Refresh Bonus`, so it locks on faster the second time.
+- **Long term:** `Long Term Memory Strength` is a second number on the belief, 0 to 1 (read it with **Get Belief Data**). It builds by 0.02 a second while the AI senses you, so it takes long contact to fill, and fades by about 1% a second after (or as `Long Term Decay Curve` says). APS itself doesn't act on it: read it to keep a guard twitchy for a minute after an encounter.
+- **Coming back:** while you are Lost or Remembered, each update a sense picks you up again adds `Memory Refresh Bonus` to confidence, so it locks on faster the second time.
 
 | Setting | Default | What it does |
 |---|---|---|
 | `Min Time in Lost` | 0 | The least time in Lost before it may give up (8 makes it really search) |
-| `Memory Refresh Bonus` | 0.1 | Confidence head start when it finds you again |
+| `Memory Refresh Bonus` | 0.1 | Extra confidence per update when it senses a Lost or Remembered target again |
 | `Memory Expire Threshold` | 0.05 | Below this, a remembered target is forgotten (Expired) |
 | `Default Decay Exponent` | 0.3 | How fast confidence fades with no curve set |
 
 ## A diary of every encounter
 
 APS keeps the last **5** encounters with each target. Read them with **Get Recent Episodes** or **Get Last Episode**; clear them with **Clear Episodes**.
+
+An encounter is written when the AI loses you **straight from Detected or Tracked**. With the default Loss settings only Vision and Echolocation do that (they have **direct cut**). A loss that fades down through Suspected first, such as a sound or a scent going quiet, writes no encounter.
 
 | Field | What it holds |
 |---|---|
@@ -85,7 +87,7 @@ APS keeps the last **5** encounters with each target. Read them with **Get Recen
 | `AICamera Direction` | Which way the AI was looking: its own blind spot |
 | `Target Flee Direciton` | Which way you ran (the source spells it this way) |
 | `Engagement Duration` | **All** the time this target has spent Tracked so far, not just this encounter: it only grows |
-| `Peak Threat Level` | How bad it got |
+| `Peak Threat Level` | The threat level at the moment it lost you (despite the name, not the highest of the encounter) |
 | `World Time Stamp` | When: for "was this recent?" |
 
 The payoff: *the last three times I lost this player, they were Occluded within 2 m of the same pillar*, so search there first.

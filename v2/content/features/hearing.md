@@ -99,6 +99,8 @@ heard = Base Loudness × filter's Loudness Multiplier × (1 − (distance / Max 
       × exp(−Wall Absorption Coeff × walls) × weather
 ```
 
+`Max Range` here is the sound's, times the `Hearing Range Scale` of the environment the listener stands in (a crowded market below 1: see [World](world.md)).
+
 Loudness above 1 mostly makes a sound **carry further**, not louder up close: confidence tops out at 1, so a gunshot at 3 stays at full confidence out to a much greater distance.
 
 ## 4. Noises add up
@@ -117,6 +119,10 @@ One distant footstep is a blip; a series in the same place builds toward Suspect
 The build-up is the same at every level of detail: a far, cheaper AI isn't quicker or slower to add up the same footsteps.
 
 **The design lever:** a player who moves in short bursts, pausing longer than the hold time, keeps the build-up draining and stays under Suspected. One who runs without stopping builds past it. That is the core stealth loop: tune it with these numbers and the profile's thresholds.
+
+::: warning While the build-up lasts, hearing follows you
+Between sounds, the build-up keeps hearing **active** on that target. On those updates hearing places the target where it **really is now**, not where the last sound was, and **On AI Hear** fires again (about 10 times a second) with `Sound Type Name` None. It lasts for the hold time (1 s) and then until the build-up has faded (0.2 a second: up to 5 s from full). So a player who makes noise and then sneaks off is followed for those seconds, through walls. To shrink that window, lower `Sound Accumulation Hold Time` or raise `Sound Accumulation Decay Rate`.
+:::
 
 ::: warning Hearing Base Threshold and Sound Event Only Mode do nothing in APS 3.0
 There is no noise floor, and hearing is always event-only. To make an AI less jumpy, raise `Suspect Threshold` or give it a filter with a higher `Min Alert Level`.
@@ -177,11 +183,15 @@ On AI Hear (Location, Loudness, Sound Type Name)
   └─► Switch on Name (Sound Type Name)
         ├─ Gunshot  → Broadcast Alert to Squad, sprint to Location
         ├─ Footstep → walk to Location, look around
+        ├─ None     → (build-up only, no new sound) keep doing what you were
         └─ Default  → turn to face Location
 ```
 
-- **Location** is where the sound came from: the position of whoever made it. How *precisely* the AI places it shows in its uncertainty radius (**Get Uncertainty Radius**), from `Location Accuracy Override` or the distance.
-- **Sound Type Name** is the name of the first sound the AI heard that tick. With several sounds arriving at once, branch on what matters most rather than trusting one name.
+**On AI Hear** fires on **every** hearing update that hears someone, not once per sound: when a sound arrives, and again on each update after it while the build-up lasts (see [Noises add up](#4-noises-add-up)). It has no Target pin.
+
+- **Location** is the position of whoever made the sound, as it is **at that update**: on a build-up update, where they are now. How *precisely* the AI places it shows in its uncertainty radius (**Get Uncertainty Radius**), from `Location Accuracy Override` or the distance.
+- **Sound Type Name** is the name of the first sound the AI heard that update, and **None** on an update with no new sound (build-up only). With several sounds arriving at once, branch on what matters most rather than trusting one name.
+- **For one event per sound**, with who made it, use **On Sound Heard** instead (below).
 - **On Sound Heard** (on APS Core) gives every sound the AI hears, with how loud it arrived, how many walls it came through and whether the path was clear. **Get Recent Sounds** returns those heard in the last however many seconds you ask for: it needs **Record Heard Sounds**, which is on by itself while a Visualizer is shown or **On Sound Heard** is bound.
 
 ::: deep Explosions shake the ground

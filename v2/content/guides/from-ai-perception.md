@@ -48,7 +48,7 @@ AI Perception usually lives on the AI Controller. The **APS Core** must be on th
 | Max Age | How belief fades: `Default Decay Exponent`, `Memory Expire Threshold`, `Min Time in Lost` |
 | On Perception Updated | **On Target State Changed**, or the separate state events |
 | On Target Perception Updated | **On AI Detect**, **On AI Lost** |
-| Get Currently Perceived Actors | **Get Targets Sorted by Score** |
+| Get Currently Perceived Actors | **Get Targets Sorted by Score**, keeping the states you count as perceived (Detected and Tracked, say): it lists everyone it holds a slot for, including targets not noticed yet, Lost or Remembered |
 | Get Actors Perception | **Get Belief Data** |
 | Request Stimuli Listener Update | Not needed: APS updates on its own interval |
 | Report Noise Event | **Emit Sound**, **Emit Sound at Location** |

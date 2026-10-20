@@ -139,8 +139,18 @@ def md_inline(t):
     return t
 
 
+# Plain-language descriptions that replace a doc comment written for whoever maintains the plugin (tools/plain.json).
+PLAIN = {k: v for k, v in json.load(open(os.path.join(HERE, "plain.json"), encoding="utf-8")).items() if not k.startswith("_")}
+# Types no Blueprint node, event or setting uses: internal plumbing, left out of the reference.
+INTERNAL_TYPES = {"FFloatArray", "FAPSLocationObservation", "FSenseDelegatePayload", "FHearingSoundEvent",
+                  "FPendingContactEvent", "ESenseDelegateType"}
+
+
 def described(owner, name, display_name, doc):
-    """(html, plain) for a member: its doc comment, or a fallback."""
+    """(html, plain) for a member: the plain override, its doc comment, or a fallback."""
+    key = "%s.%s" % (owner, name)
+    if key in PLAIN:
+        return ("<p>%s</p>" % esc(PLAIN[key]), PLAIN[key]) if PLAIN[key] else ("", "")
     if (doc or "").strip():
         return doc_html(doc), one_line(doc)
     note = NOTES.get("%s.%s" % (owner, name))
@@ -155,6 +165,8 @@ def doc_html(text):
     if not text:
         return ""
     paras = [re.sub(r"\s*\n\s*", " ", p).strip() for p in re.split(r"\n\s*\n", text)]
+    # source comments write ranges as [0..1]; readers read "0 to 1"
+    paras = [re.sub(r"\s*\[\s*0\s*(?:\.\.|-)\s*1\s*\]", " (0 to 1)", p).replace("e.g.", "for example") for p in paras]
     out = []
     for p in paras:
         p = esc(p)
@@ -264,7 +276,7 @@ def setting_row(p, anchor):
     dhtml, dplain = described(p["owner"], p["name"], p["display"], p["doc"])
     why = INERT.get("%s.%s" % (p["owner"], p["name"]))
     if why:
-        dhtml = ('<p class="inert-why"><b>Does nothing in APS %s.</b> %s</p>' % (esc(VERSION), esc(why))) + dhtml
+        dhtml = '<p class="inert-why"><b>Does nothing in APS %s.</b> %s</p>' % (esc(VERSION), esc(why))
     tname, cls = pin(p["type"])
     d = DEFAULT_SHOWN.get("%s.%s" % (p["owner"], p["name"])) or default_text(p["default"], p["type"])
     if p["type"] == "bool" and not d:
@@ -594,28 +606,30 @@ def types_page():
             "## Enums"]
     ne = 0
     for e in sorted(ENUMS.values(), key=lambda e: e["display"]):
-        if not e["blueprint"]:
+        if not e["blueprint"] or e["name"] in INTERNAL_TYPES:
             continue
         ne += 1
         vals = [v for v in e["values"] if not v["hidden"]]
         body.append("### %s" % e["display"])
-        if e["doc"]:
-            body.append('<div class="comp-doc">%s</div>' % doc_html(e["doc"]))
+        edoc = PLAIN.get(e["name"])
+        if edoc or e["doc"]:
+            body.append('<div class="comp-doc">%s</div>' % ("<p>%s</p>" % esc(edoc) if edoc else doc_html(e["doc"])))
         rows = "".join('<tr id="%s" data-search="%s" data-text="%s"><td><b>%s</b></td><td>%s</td></tr>'
                        % ("v-" + slug(e["display"] + "-" + v["display"]), esc(v["display"]), esc(e["display"]),
-                          esc(v["display"]), doc_html(v["doc"]) or "") for v in vals)
+                          esc(v["display"]), esc(PLAIN.get(e["name"] + "." + v["name"], "")) or doc_html(v["doc"]) or "") for v in vals)
         body.append('<div class="table"><table class="enum"><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody>%s</tbody></table></div>' % rows)
         body.append("")
     body.append("## Structs")
     ns = 0
     for t in sorted(TYPES.values(), key=lambda t: t["display"]):
-        if t["kind"] != "struct" or "BlueprintType" not in t["flags"]:
+        if t["kind"] != "struct" or "BlueprintType" not in t["flags"] or t["name"] in INTERNAL_TYPES:
             continue
         fields = [p for p in M["properties"] if p["owner"] == t["name"] and (p["blueprint"] or p["editable"])]
         ns += 1
         body.append("### %s" % t["display"])
-        if t["doc"]:
-            body.append('<div class="comp-doc">%s</div>' % doc_html(t["doc"]))
+        tdoc = PLAIN.get(t["name"])
+        if tdoc or t["doc"]:
+            body.append('<div class="comp-doc">%s</div>' % ("<p>%s</p>" % esc(tdoc) if tdoc else doc_html(t["doc"])))
         if fields:
             body.append('<div class="set-list">' + "".join(setting_row(p, "f-" + slug(t["display"] + "-" + p["display"])) for p in fields) + "</div>")
         body.append("")

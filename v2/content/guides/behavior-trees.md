@@ -11,7 +11,7 @@ APS says **what the AI believes**; your Behavior Tree decides **what to do**. Th
 
 ::: fast
 - **Events write, the tree reads.** Set Blackboard keys from APS events; don't poll APS from a service every tick.
-- Take the target from **On Attention Changed** (sticky), not **On AI Detect**.
+- Take the target from **On AI Detect** and let it go on **On AI Lost**. Not from **On Attention Changed**: attention can name someone the AI hasn't noticed yet.
 - On **On AI Lost**, store the last known position, the cover and the **loss reason**, and let the tree **branch on why** it lost you.
 :::
 
@@ -21,8 +21,8 @@ APS says **what the AI believes**; your Behavior Tree decides **what to do**. Th
 
 | Key | Type | Written by |
 |---|---|---|
-| TargetActor | Object (Actor) | **On Attention Changed** |
-| HasTarget | Bool | **On Attention Changed** (New Target is valid) |
+| TargetActor | Object (Actor) | **On AI Detect** |
+| HasTarget | Bool | **On AI Detect** (true), **On AI Lost** (false) |
 | LastKnownPosition | Vector | **On AI Lost** |
 | PredictedPosition | Vector | **On AI Lost** |
 | LastCoverActor | Object (Actor) | **On AI Lost** |
@@ -42,18 +42,21 @@ Bind these on the **APS Core** (or implement them in an **APS Perception Listene
 
 ![The demo guard's whole event graph](media/cards/guard_apsevents.webp "The demo guard's perception events, all in one graph (BP_DemoGuard): Suspect, Telegraph, Detect, Track, Lost, Remember, Forget, a place belief, a squad alert, evidence and roles. Open it to zoom in.")
 
-**The target: attention.** Attention is sticky, so two equally good targets don't make the tree re-plan every tick:
+**The target: when it is sure.** **On AI Detect** fires when the AI is sure enough to act:
 
 ```
-On Attention Changed (Old Target, New Target)
-  ├─► Set Value as Object (TargetActor, New Target)
-  └─► Set Value as Bool   (HasTarget, Is Valid (New Target))
+On AI Detect (Target, Threat Level, Stimulus)
+  ├─► Set Value as Object (TargetActor, Target)
+  └─► Set Value as Bool   (HasTarget, true)
 ```
 
-**Losing the target: set up the search.**
+It also fires again when a chase slips back from Tracked to Detected; that only sets the same keys. Don't use **On Attention Changed** for this: the AI keeps a slot for everyone in range and picks attention from them, so it can name someone it hasn't noticed yet, or a teammate ([why](../how-it-works.md#6-attention-the-target-it-commits-to)).
+
+**Losing the target: drop the chase, set up the search.**
 
 ```
 On AI Lost (Target, Last Known, Predicted, Last Cover Actor)
+  ├─► Set Value as Bool   (HasTarget, false)
   ├─► Set Value as Vector (LastKnownPosition, Last Known)
   ├─► Set Value as Vector (PredictedPosition, Predicted)
   ├─► Set Value as Object (LastCoverActor,    Last Cover Actor)
@@ -68,9 +71,11 @@ On AI Lost (Target, Last Known, Predicted, Last Cover Actor)
 
 ```
 On AI Hear (Location, Loudness, Sound Type Name)
-  └─► Branch: HasTarget is false
+  └─► Branch: HasTarget is false AND Sound Type Name is not None
         True → Set Value as Vector (InvestigateLocation, Location)
 ```
+
+**On AI Hear** also fires between sounds while the noise build-up lasts, with `Sound Type Name` None and the player's position *now*. The None check keeps the guard going to where the sound was, instead of following the player through walls. Give every Sound Type a `Sound Name`. [Hearing](../features/hearing.md#7-reading-what-it-heard)
 
 A sound **nobody made** (a thrown can, a blast) is a belief about a **place**, not a target:
 
@@ -165,7 +170,7 @@ It turns, says something, and **then** the tree walks it over. The player sees t
 
 ## Several targets
 
-Most AI need only **Get Attention Target**. For more, **Get Targets Sorted by Score** gives every actor it holds a belief about, best first: even ones still Undetected, never things, places or Expired ones; break each **Belief Record** for its Threat Level, Smoothed Confidence, Last Known Position and Relationship. Use it to pick the most threatening target for a suppressor, count who is in sight, or retreat when three are Tracked.
+With one player, **On AI Detect** and **On AI Lost** are all you need. With several, a second **On AI Detect** moves TargetActor to the newcomer, and **On AI Lost** about one target drops the chase of another: compare Target with TargetActor first. To pick between targets it has detected, use **Get Attention Target** (sticky, so it doesn't flick between two), and check **Get Awareness Level for Target** is Suspicious or more before you chase it. **Get Targets Sorted by Score** gives every actor it holds a belief about, best first: even ones still Undetected, never things, places or Expired ones; break each **Belief Record** for its Threat Level, Smoothed Confidence, Last Known Position and Relationship. Use it to pick the most threatening target for a suppressor, count who is in sight, or retreat when three are Tracked.
 
 ## Shared intel
 

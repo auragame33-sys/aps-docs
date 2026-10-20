@@ -453,7 +453,10 @@ def read_page(page):
         head, _, text = text[4:].partition("\n---\n")
         for line in head.splitlines():
             k, _, v = line.partition(":")
-            meta[k.strip()] = v.strip()
+            v = v.strip()
+            if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
+                v = v[1:-1]     # a quoted value, as in YAML: title: "Tutorial: a complete guard"
+            meta[k.strip()] = v
     return meta, text
 
 

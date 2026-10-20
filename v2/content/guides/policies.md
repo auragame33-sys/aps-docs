@@ -65,7 +65,7 @@ The built-in score weighs confidence, damage taken, how many senses agree, the r
 
 ### Attention: which target
 
-**Candidates** are the actors it holds beliefs about, best first (**Get Targets Sorted by Score**: never things or places). **Current** is the present target (may be none), **Time on Current** how long it has held it. Return the target, Current to keep it, or none for "nothing worth attention".
+**Candidates** are the actors it holds beliefs about, best first (**Get Targets Sorted by Score**: never things or places), including ones still Undetected: check each one's **Lifecycle State** if your rule should only pick targets it has noticed. **Current** is the present target (may be none), **Time on Current** how long it has held it. Return the target, Current to keep it, or none for "nothing worth attention".
 
 The built-in rule keeps the best-scoring target and won't switch until `Attention Stickiness Time` has passed **and** a rival beats it by `Attention Switch Threshold`: that stops flicker. A policy replaces **all** of it, stickiness included; the two settings are passed in so you can still honour them. **Replace it** for a boss that always turns to whoever hit it last, or a dog that always chases the nearest thing. **On Attention Changed** still fires when your choice changes.
 

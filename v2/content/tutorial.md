@@ -117,13 +117,15 @@ New **Blackboard** asset, `BB_Guard`, with these keys:
 
 In `BP_Guard`'s Event Graph, get the Blackboard once at Begin Play (**Get Controller** → cast to **AIController** → **Get Blackboard**) and promote it to a variable, `BB`.
 
-**Attention changed: set the target.** Use **On Attention Changed**, not **On AI Detect**, for the target key: attention is sticky, so two equally-scored targets won't make the tree re-plan every tick.
+**Sure of you: set the target.** **On AI Detect** fires when the guard is sure enough to act.
 
 ```
-On Attention Changed (Old Target, New Target)
-  ├─► BB → Set Value as Object ("TargetActor", New Target)
-  └─► BB → Set Value as Bool   ("bHasTarget",  New Target → Is Valid)
+On AI Detect (Target, Threat Level, Stimulus)
+  ├─► BB → Set Value as Object ("TargetActor", Target)
+  └─► BB → Set Value as Bool   ("bHasTarget",  true)
 ```
+
+It fires again if a chase slips back from Tracked to Detected; that just sets the same keys. Don't take the target from **On Attention Changed**: the guard keeps a belief slot for everyone in range, noticed or not, and attention can point at someone it hasn't seen yet.
 
 **Telegraph: the "huh?" moment.** **On AI Telegraph** fires a moment before the guard commits.
 
@@ -138,13 +140,17 @@ On AI Telegraph (Target, Confidence)
 ```
 On AI Hear (Location, Loudness, Sound Type Name)
   └─► Branch: BB → Get Value as Bool ("bHasTarget") is false
+              AND Sound Type Name is not None
         True → BB → Set Value as Vector ("InvestigateLocation", Location)
 ```
 
-**Lost the target: set up the search.** This is the important one.
+On AI Hear also fires between sounds while the noise builds up, with Sound Type Name None and the player's current position; the None check keeps the guard going to where the sound was.
+
+**Lost the target: stop chasing, set up the search.** This is the important one.
 
 ```
 On AI Lost (Target, Last Known, Predicted, Last Cover Actor)
+  ├─ BB → Set Value as Bool   ("bHasTarget",        false)
   ├─ BB → Set Value as Vector ("LastKnownPosition", Last Known)
   ├─ BB → Set Value as Object ("LastCoverActor",    Last Cover Actor)
   ├─ BB → Set Value as Float  ("SearchRadius",      APS Core → Get Uncertainty Radius (Target))
@@ -163,7 +169,7 @@ On AI Forget (Target)
 ```
 
 ::: check Checkpoint 3
-Add a temporary **Print String** to each of the five events. Play, get spotted, then break line of sight and hide. You should see **Telegraph → Detect → Track → Lost → (8 seconds or more) → Remember → Forget**.
+Add a temporary **Print String** to **On AI Telegraph**, **On AI Detect**, **On AI Lost** and **On AI Forget**, and bind **On AI Track** and **On AI Remember** just to print. Play, get spotted, then break line of sight and stand still. You should see **Telegraph → Detect → Track → Lost → (8 seconds or more) → Remember → Forget**. If you walked behind cover, **Lost** comes a second or two late: the guard still hears your last footsteps fading.
 
 **Lost** fires the moment you step behind cover? Your Vision Loss grace time didn't save. **Forget** fires right after **Lost**? Check `Min Time in Lost`.
 :::
@@ -257,7 +263,7 @@ Event Receive Execute AI
 Run it from the guard's AI Controller: **Event On Possess** → **Run Behavior Tree** (`BT_Guard`).
 
 ::: check Checkpoint 4
-Play. The guard patrols. Walk into view: it turns ("huh?"), then commits and chases. Break line of sight behind a crate: it goes to the crate, looks around, then spirals outward. After about 8 seconds it gives up and patrols again.
+Play. The guard patrols. Walk into view: it turns ("huh?"), then commits and chases. Break line of sight behind a crate: it goes to where it lost you and searches. The branch depends on the last sense that had you: lost from sight, it checks behind the crate and spirals outward (Occluded); if it could still hear your footsteps as you stopped, it goes to where they stopped, waits and gives up (SoundFaded). Open the Visualizer's **Memory** page to see which. Within about 10 seconds it gives up and patrols again.
 
 Now hide *and keep still* somewhere it never saw you, and just make a noise. It walks to the noise, looks around for 3 seconds and goes back to patrol **without** chasing. Chasing when it saw you, investigating when it only heard you: that difference is the whole point.
 :::

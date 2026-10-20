@@ -228,7 +228,7 @@ On Emotional State Changed (Old Dominant, New Dominant)
 
 ![Room D4: it watches only one](media/emotions/attention.mp4 "Room D4. Two intruders: you and a thief. The warden's eyes follow the one it pays attention to. While that is the thief, it can see you and still let you go: GO.")
 
-An AI that perceives several targets still commits to **one**: **Get Attention Target**. Attention is sticky (`Attention Stickiness Time`, `Attention Switch Threshold`), so it doesn't flick between two equal targets. The demo's D4 warden looks only at its attention target, and it catches you only when that is you: walk while its eyes are on the thief. How attention picks and switches is on [How APS thinks](../how-it-works.md#6-attention-the-target-it-commits-to).
+An AI that perceives several targets still commits to **one**: **Get Attention Target**. Attention is sticky (`Attention Stickiness Time`, `Attention Switch Threshold`), so it doesn't flick between two equal targets. The demo's D4 warden looks only at its attention target, and it catches you only when that is you **and** it has you (Detected or Tracked): walk while its eyes are on the thief. Check the state like this whenever you use attention, because attention is picked from everyone in range, even someone the AI hasn't noticed yet. How attention picks and switches is on [How APS thinks](../how-it-works.md#6-attention-the-target-it-commits-to).
 
 ![The demo's D4 Blueprint](media/cards/pain_attention.webp "How the demo does it (BP_D4_Attention): Get Attention Target is the one intruder it watches. Its eyes go where it believes that one is, and it catches you only when that is you and it has you (Detected or Tracked).")
 

@@ -80,6 +80,8 @@ That is Unreal's perception's behaviour; APS softens it three ways: `First Spot 
 
 **A thrown can never fires On AI Hear.** Correct: a noise nobody made is a belief about the **place**. Bind **On Location Belief Changed** or read **Get Strongest Location Belief**. [Hearing](../features/hearing.md#5-sounds-nobody-made)
 
+**After a noise it follows me through walls.** While the noise build-up lasts (`Sound Accumulation Hold Time`, 1 s, then it fades at `Sound Accumulation Decay Rate`, 0.2 a second), hearing places you where you **really are**, and **On AI Hear** keeps firing with `Sound Type Name` None. Shorten the hold, raise the decay, and in your Blueprint ignore On AI Hear when the name is None. [Hearing](../features/hearing.md#4-noises-add-up)
+
 **Explosions don't shake my vibration AI.** The sound type's `Sound Name` must be exactly Explosion, and the AI within its `Max Range`. **Emit Sound** and **Emit Sound at Location** both shake the ground.
 
 **It reacts to every footstep at once.** Lower `Sound Accumulation Rate`, raise `Suspect Threshold`, give it a `Sound Filter` with a higher `Min Alert Level`, or lower the sound's `Base Loudness` or `Max Range`. (`Hearing Base Threshold` looks like the setting for this and does nothing: see below.)
@@ -97,7 +99,9 @@ That is Unreal's perception's behaviour; APS softens it three ways: `First Spot 
 | Uncertainty Radius stays 0 | `Enable Spatial Model` is off, or the target hasn't been lost yet: it grows only while lost |
 | AI walk into my safe room | Zones are advice: your search must ask **Is Location in Never Search Zone** |
 | On AI Lost right after On AI Detect | Confidence hovers at a line: widen the gap between thresholds, raise the vision grace time, or lower `Vision Loss` Confidence Decay Multiplier |
-| On AI Detect repeats for one target | It's crossing a line back and forth (each crossing is a real change): widen the gaps and raise the grace time |
+| On AI Detect repeats for one target | It's crossing a line back and forth (each crossing is a real change), or a chase stepped back from Tracked to Detected, which fires On AI Detect again: widen the gaps and raise the grace time |
+| The loss reason is SoundFaded, though I hid behind a wall | It could still hear your footsteps fading after you left its sight, so hearing was the last sense to have you |
+| It chases someone it never saw | The target came from **On Attention Changed** or **Get Attention Target**: attention is picked from everyone in range, noticed or not. Take the target from **On AI Detect** ([Behavior Trees](../guides/behavior-trees.md#wiring-the-events)) |
 
 ## Events
 

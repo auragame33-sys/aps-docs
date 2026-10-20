@@ -138,6 +138,8 @@ Each target sits in exactly one of seven states, and each change fires a Bluepri
 | **Remembered** | Fading in memory | Patrol near where you were, stay alert |
 | **Expired** | Below `Memory Expire Threshold` (0.05) | Forgotten: back to normal |
 
+The event fires on **every** entry into a state, going up or down. When a Tracked target steps back to Detected, **On AI Detect** fires again; dropping back to Undetected fires **On AI Forget**. Keep a "first time" flag in your Blueprint if you only want the first one.
+
 ### Grace time and direct cut
 
 When every sense goes quiet, the AI doesn't drop you at once. Each sense has a **grace time**, and says whether losing it may **cut straight to Lost**:
@@ -154,6 +156,8 @@ When every sense goes quiet, the AI doesn't drop you at once. Each sense has a *
 
 **Direct Cut** jumps straight to Lost. Without it, confidence steps down through Tracked, Detected and Suspected first, which reads as the AI slowly losing certainty. All of these are on the profile's **Loss** settings (`Vision Loss`, `Hearing Loss` and so on).
 
+**Which sense's row applies** is the one that led last, with one catch: a belief slot only ever switches *to* a direct-cut sense, never back. Once Vision (or Echolocation) has led for a target, that target's losses use its grace and direct cut from then on, even when hearing had it last. Hearing's 3 s and its slow fade apply to targets the AI has only heard. (It is kept on the belief slot, so it can carry over to the next target that slot holds.)
+
 ::: deep The exact transition rules
 | From | To | When |
 |---|---|---|
@@ -161,7 +165,7 @@ When every sense goes quiet, the AI doesn't drop you at once. Each sense has a *
 | Suspected | Detected | `C ≥ Detect Threshold` |
 | Suspected | Lost | No sense active and the grace time ran out, with or without direct cut |
 | Suspected | Undetected | A sense is active but `C < Suspect Threshold × 0.5` |
-| Detected | Tracked | `C ≥ Track Threshold` and at least `Min Track Duration` in Detected |
+| Detected | Tracked | A sense is active, `C ≥ Track Threshold`, and at least `Min Track Duration` in Detected |
 | Detected | Lost | No sense active, grace ran out, and the sense allows a direct cut |
 | Detected | Suspected | `C < Suspect Threshold − 0.04` |
 | Tracked | Lost | No sense active, grace ran out, and the sense allows a direct cut |
@@ -170,13 +174,14 @@ When every sense goes quiet, the AI doesn't drop you at once. Each sense has a *
 | Lost | Remembered | `C < Suspect Threshold` and at least `Min Time in Lost` in Lost |
 | Remembered | Detected | A sense is active and `C ≥ Detect Threshold` |
 | Remembered | Expired | `C < Memory Expire Threshold` |
+| Expired | Undetected | The target is perceived again: the belief starts over from nothing |
 
 Two things follow:
 
 - **A sense without direct cut never jumps from Detected or Tracked straight to Lost.** It always steps down first: that is the gradual fade.
 - **Finding you again needs the Detect threshold, not Suspect.** A faint re-contact won't pull a target out of Lost.
 
-Every step down has a **0.04 margin**: confidence must fall that far below a threshold before the state drops (with Detect at 0.35, at 0.31). That stops the state flickering on a boundary.
+Steps down from Detected and Tracked have a **0.04 margin**: confidence must fall that far below the threshold before the state drops (Tracked to Detected with Detect at 0.35 happens at 0.31). That stops the state flickering on a boundary. Suspected falls back to Undetected only below half the Suspect threshold.
 :::
 
 ## 4. Why it lost you
@@ -193,7 +198,7 @@ When a target goes Lost, APS records **why**. Read it with **Get Loss Reason** a
 | **TargetDestroyed** | The actor is gone | Drop the target |
 | **Unknown** | No better answer | A general area search |
 
-Vision answers from what blocked its last look: a wall, too few visible points or too little exposure is Occluded; distance or the edge of the cone is OutOfRange; a target in view but too faint, cloaked or blotted out by pain is SensorDropout.
+The reason comes from the **last sense that had the target**. If a guard could still hear your footsteps fading after you slipped out of sight, the loss is **SoundFaded**, not Occluded. Vision answers from what blocked its last look: a wall, too few visible points or too little exposure is Occluded; distance or the edge of the cone is OutOfRange; a target in view but too faint, cloaked or blotted out by pain is SensorDropout.
 
 This one branch is the difference between an AI that runs to the corner you hid behind and one that wanders in a circle. The [Memory](features/memory.md) page shows it in the demo.
 
@@ -217,12 +222,16 @@ Awareness reuses the state thresholds, so tune those and awareness follows. Use 
 
 An AI can hold beliefs about many targets at once (up to `Max Tracked Targets`, 16 by default). It can only chase one.
 
-- **Get Top Target** is whoever scores highest *this tick*. It can flicker when two are close.
-- **Get Attention Target** is the one the AI **commits to**. Use this one in your Behavior Tree. It is sticky on purpose:
+- **Get Top Target** is whoever scores highest *this update*. It can flicker when two are close.
+- **Get Attention Target** is the one the AI **commits to**. It is sticky on purpose:
   - `Attention Stickiness Time` (2 s): the least time before it will even consider switching.
   - `Attention Switch Threshold` (0.2): how much better a rival must score to take its attention.
 
-Attention also moves at once when its target goes Lost, Remembered or Expired, and you can force it with **Force Attention Target** (when the player shoots this AI, say). **On Attention Changed** gives the old and new target so you can re-plan.
+Once the stickiness time has passed, attention also moves to the top target when its own target is Lost, Remembered or Expired, however small the gap. You can force it at any time with **Force Attention Target** (when the player shoots this AI, say). **On Attention Changed** gives the old and new target so you can re-plan.
+
+::: warning Attention is not detection
+The AI keeps a belief slot for **everyone in range**, including people it hasn't noticed yet (Undetected) and its own teammates, and the top target and attention are picked from all of them. In the demo's Sight wing, every guard's attention starts on the guard in the next room, through walls. So don't chase **Get Attention Target** as it is: take the target from **On AI Detect**, or check it first (**Get Awareness Level for Target** is Suspicious or more). Attention is for choosing **between** targets you know about.
+:::
 
 ::: deep Which target is "top": the sort score
 ```
@@ -243,7 +252,7 @@ Even with every sense silent, APS keeps a model of where you are, and it grows l
 | **Estimated Velocity** | Your velocity as the AI measured it, smoothed (`Velocity EMAWeight`). Measured between the AI's own samples over the real time between them; samples more than 1.5 s apart start it afresh. |
 | **Estimated Acceleration** | How that velocity has been changing. |
 | **Predicted Position** | While sensed: the same as last known. While lost, with `Enable Prediction` on: where your last run would have taken you, looking `Prediction Horizon` ahead. The acceleration part is capped so a noisy reading can't fling the guess past where a run could reach. Only when you were moving faster than about 10 cm/s. |
-| **Uncertainty Radius** | While sensed: shrinks toward 0 as the position gets more precise. While lost: grows at `Uncertainty Growth Rate` (50 cm/s) up to `Max Uncertainty Radius` (500 cm). With `Velocity Scaled Uncertainty`, a fleeing sprinter makes it grow up to 3 times faster. |
+| **Uncertainty Radius** | While sensed: shrinks toward 0 as the position gets more precise. While lost: grows at `Uncertainty Growth Rate` (50 cm/s) up to `Max Uncertainty Radius` (500 cm). With `Velocity Scaled Uncertainty`, a target that was moving faster than 6 m/s makes it grow faster: twice as fast at 12 m/s, three times at 18 m/s and above. A normal run (Unreal's default top speed is 6 m/s) doesn't change it. |
 
 The uncertainty radius is a ready-made **search radius**: feed it to an EQS query or **Get Random Reachable Point in Radius** and the search widens the longer you stay hidden.
 
@@ -261,8 +270,8 @@ The acceleration term is capped so that over that time it can change the speed b
 Two layers, plus a diary:
 
 - **Short term:** the smoothed confidence fading after a loss (the slide from Lost to Remembered), shaped by `Decay Curve`, or `Default Decay Exponent` without one.
-- **Long term:** `Long Term Memory Strength`, fading far more slowly. It is what keeps an AI twitchy for a minute after an encounter.
-- **Episodes:** the last **5** encounters with each target, read with **Get Recent Episodes** or **Get Last Episode**: how it was lost, where, which way it was looking, which way you ran.
+- **Long term:** `Long Term Memory Strength`, a second number on the belief (read it with **Get Belief Data**). It builds slowly while the AI senses you and fades far more slowly than confidence. APS itself doesn't act on it: read it to keep an AI twitchy for a minute after an encounter.
+- **Episodes:** the last **5** encounters with each target, read with **Get Recent Episodes** or **Get Last Episode**: how it was lost, where, which way it was looking, which way you ran. One is written each time it loses you straight from Detected or Tracked (by default a Vision or Echolocation loss).
 
 `Memory Refresh Bonus` gives a head start when it finds you again, and `Min Time in Lost` makes it search for at least that long before giving up. The [Memory](features/memory.md) page covers all of it, with the demo's Memory wing.
 

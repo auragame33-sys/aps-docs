@@ -117,7 +117,7 @@ A report **names** the person only when the look is good (quality 0.75 or more).
 2. **Get Observed Subset** at that quality keeps only the loud traits: the coat makes it, the watch doesn't.
 3. The guard has no radio, so your logic sends it with **Report Via Channel**, Shout: a quarter of the traits lost, the position up to 3 m out, confidence × 0.85.
 4. The faction now believes *someone in a red coat, roughly there*.
-5. The player takes off the coat (**Remove Trait**). **Match Descriptor** now contradicts on the one key that mattered: the score halves, and they walk past the dragnet.
+5. The player takes off the coat (**Remove Trait**). The faction's description has nothing left to compare it with, so **Match Descriptor** finds no match and they walk past the dragnet. Swapping it for a blue coat (**Set Trait** Coat, Blue) works too: that key now contradicts, and with nothing else agreeing the match is 0.
 
 Nothing there is a disguise system: it's look quality, channel loss and trait matching doing their ordinary jobs.
 

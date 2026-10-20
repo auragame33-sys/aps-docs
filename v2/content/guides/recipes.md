@@ -100,11 +100,11 @@ APS doesn't enforce zones by itself. [Search & evidence](../features/search.md#p
 
 ```
 On AI Hear (Location, Loudness, Sound Type Name)
-  └─► Branch: Blackboard HasTarget is false
+  └─► Branch: Blackboard HasTarget is false AND Sound Type Name is not None
         True → Blackboard InvestigateLocation = Location
 ```
 
-Without the branch, every distant footstep interrupts a pursuit.
+Without HasTarget, every distant footstep interrupts a pursuit. Without the None check, the updates between sounds (the build-up) move the spot to where the player is now. [Hearing](../features/hearing.md#7-reading-what-it-heard)
 
 ### Search the corner it lost you behind
 

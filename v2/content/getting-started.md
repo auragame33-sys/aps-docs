@@ -34,7 +34,7 @@ Why step 3 matters: without it, a Blueprint-only project looks content-only to t
 :::
 
 ### Create a Perception Profile
-In the Content Browser: right-click → **Miscellaneous → Data Asset** → pick **PerceptionProfile** → name it `DA_Profile_Guard`.
+In the Content Browser: right-click → **Miscellaneous → Data Asset** → pick **Perception Profile** → name it `DA_Profile_Guard`.
 
 ![The new Perception Profile, with Vision and Hearing already in its senses](media/start/profile.webp "A new profile already sees and hears. You don't have to change anything yet.")
 
@@ -85,13 +85,13 @@ Step behind a wall and watch it go **Detected → Lost**, then fade to **Remembe
 ::: card Every feature, one page each | features/confidence.md
 Start with Confidence: light, cover, stance and the vision cones.
 :::
-::: card Let it hear you
+::: card Let it hear you | features/hearing.md
 APS hears only what your game says is audible: add **Emit Sound** to your footsteps.
 :::
-::: card Make the player perceivable
+::: card Make the player perceivable | features/senses.md#vision
 Add **APS Target Component** to your player: five points on your skeleton, stance and camouflage.
 :::
-::: card Share reactions between AI
+::: card Share reactions between AI | reference/events.md
 Put your reactions in an **APS Perception Listener** and add it to every AI that should share them.
 :::
 :::
@@ -116,5 +116,5 @@ Put your reactions in an **APS Perception Listener** and add it to every AI that
 :::
 
 ::: tip Can't find something?
-Every component starts with **APS**: type `aps` in **Add** to see them all. Every Blueprint node too: right-click in a graph and type `APS`.
+Every component starts with **APS**: type `aps` in **Add** to see them all. Most Blueprint nodes are under **APS** too: right-click in a graph and type `APS`, or drag from an APS Core and search.
 :::

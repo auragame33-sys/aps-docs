@@ -79,8 +79,8 @@ That is also how two kinds of AI can share one profile but differ in one sense. 
 
 | Cone | Settings (defaults) | What it does |
 |---|---|---|
-| **Focal** | `Vision Half Angle Deg` (60) | The main cone, full strength. With `Use Separate Vertical FOV` off, it allows 10% extra: 60° admits targets out to 66°. |
-| **Peripheral** | `Enable Peripheral Cone` (off), `Peripheral Half Angle Deg` (110), `Peripheral Confidence Scale` (0.45), `Peripheral Range Scale` (0.6) | Wider, weaker, shorter: catches movement at the edge of sight. |
+| **Focal** | `Vision Half Angle Deg` (60) | The main cone: full strength at its centre, fading to zero at its edge. |
+| **Peripheral** | `Enable Peripheral Cone` (off), `Peripheral Half Angle Deg` (110), `Peripheral Confidence Scale` (0.45), `Peripheral Range Scale` (0.6) | Wider, weaker, shorter: catches movement at the edge of sight. It takes over 10% past the focal edge (66° with the default 60°); a target between the two is seen by neither. |
 | **Rear Motion** | `Enable Rear Motion Cone` (off), `Rear Motion Half Angle Deg` (60, from directly behind), `Rear Motion Min Speed` (300), `Rear Motion Confidence Scale` (0.25), `Rear Motion Range Scale` (0.35) | Only targets moving faster than the min speed. Stops a player strolling up behind a guard, without making it see everything. |
 
 `Use Separate Vertical FOV` gives the cone its own pitch angle (`Vision Vertical Half Angle Deg`, 40): elliptical instead of round, for games with a lot of verticality.
@@ -126,11 +126,11 @@ Only things that **block** count: a trigger volume that only overlaps never hide
 | `Shadow Light Level` | Light level in shadow (0.25) |
 | `Sun Trace Distance` | How far that trace reaches (5000) |
 
-With `Use Per Target Light` on, the light is the first of: the target's **APS Target Component** `Light Level Override` (when it is 0 or more); the sun-shadow trace (shadow can only darken, never brighten); the global light.
+The light on a target is the first of:
 
-::: warning Light Level Override does nothing while Use Per Target Light is off
-The whole per-target light path is skipped and the global light is used. If you drive light from your own light-gem system, still tick it.
-:::
+1. its **APS Target Component** `Light Level Override`, when it is 0 or more. This wins **whatever the profile says**, so a light gem works even with `Use Per Target Light` off;
+2. with `Use Per Target Light` on, the sun-shadow trace (shadow can only darken, never brighten);
+3. the global light.
 
 ::: deep Points on the target, and exposure
 Where the points come from, first match wins:
@@ -158,7 +158,7 @@ Exposure is smoothed so standing on the edge of cover doesn't flicker, but it **
 
 ![A drone that smells, downwind of the player](media/senses/smell.mp4 "Room B1. A drone that smells: the wind carries your scent to it when you're upwind of it. Keep the wind in your face and you can walk right up to it.")
 
-**Automatic while in range**, and indifferent to light: it works in total darkness. It places you only roughly, never exactly.
+**Automatic while in range**, and indifferent to light: it works in total darkness. It reports where you are, but marked as imprecise (0.15 to 0.4), so any more precise sense wins the last known position.
 
 **The wind is the mechanic.** When the wind carries your scent to the AI (it is downwind of you) it smells you up to **twice** as strongly (`Downwind Bonus`, 2). When the wind blows from it toward you, its signal drops to a tenth: keep the wind in your face and you can walk right up to it.
 
@@ -168,7 +168,7 @@ Exposure is smoothed so standing on the edge of cover doesn't flicker, but it **
 
 ![The demo's wind zone](media/cards/beyond_wind.webp "How the demo does it (BP_WindZone): an APS Environment that overrides the wind inside its radius, blowing the way the actor faces. A Smell sense reads it: an AI downwind of you smells you far more strongly.")
 
-Range and build-up come from the profile when set: `Smell Max Range` (400), `Smell Accumulation Rate` (0.1), `Smell Decay Rate` (0.05).
+Range and build-up come from the profile when set: `Smell Max Range` (400), `Smell Accumulation Rate` (0.1), `Smell Decay Rate` (0.05). The build-up only grows while you are in range, and fades only once you are out of it.
 
 ::: deep The smell formula, and its own settings
 ```
@@ -222,7 +222,7 @@ Anything moving faster than `Vibration Min Speed` (10 cm/s) within `Vibration De
 
 ![A blind drone that feels contact](media/senses/touch.mp4 "Room B4. A blind drone: it knows nothing until you touch it, and then it knows exactly where you are.")
 
-**Contact: instant, and exact.** Touch is the only sense that knows precisely where you are.
+**Contact: instant, and exact.** Touch always places you with full precision (vision does only while all of you shows).
 
 **It wires itself:** with **Touch Sense** in the profile and `Auto Wire Touch Events` on (the default), APS listens to the AI's own hits and overlaps.
 

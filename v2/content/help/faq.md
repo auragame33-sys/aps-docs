@@ -46,7 +46,7 @@ Yes: **Register Perceivable Actor**, or an **APS Target Component**. Pawns are f
 The actors it is Suspected, Detected, Tracked or Lost about: not places, not things, not Remembered ones. When it falls to 0, **On AI All Clear** fires.
 
 **Why does my guard notice its own squadmates?**
-Every Pawn in range is a candidate. Allies take target slots only after everyone else, are never a threat, and your logic can ignore them by relationship ([Squads & teams](../features/squads.md#teams-and-relationships)). They do count toward fear's "more than 2 targets" ([Emotions & pain](../features/emotions.md#the-rules)).
+Every Pawn in range is a candidate. Allies take target slots only after everyone else, are never a threat, and your logic can ignore them by relationship ([Squads & teams](../features/squads.md#teams-and-relationships)). They can even be its top or attention target before it has noticed anyone else, so check the state (or the relationship) before acting on attention. They do count toward fear's "more than 2 targets" ([Emotions & pain](../features/emotions.md#the-rules)).
 
 **Is the source included?**
 Yes, the full C++ source ships with the plugin.

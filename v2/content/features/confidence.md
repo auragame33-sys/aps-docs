@@ -19,7 +19,7 @@ How sure your AI is that you're there, from 0 to 100%. Never just "seen" or "not
 
 ## Seven states, one event each
 
-As confidence rises and falls, the AI moves through seven states. Each step fires a Blueprint event, so your AI reacts in stages instead of all at once.
+As confidence rises and falls, the AI moves through seven states. Each step fires a Blueprint event, so your AI reacts in stages instead of all at once. Steps down fire too: a Tracked target that slips back to Detected fires **On AI Detect** again.
 
 <div class="states">
 <div class="states-row"><div class="states-label">Confidence rises</div>
@@ -42,7 +42,7 @@ As confidence rises and falls, the AI moves through seven states. Each step fire
 | Tracked | **On AI Track** | Chase, shoot, flank |
 | Lost | **On AI Lost** | Search: read **Get Loss Reason** to choose how |
 | Remembered | **On AI Remember** | Patrol near the last known spot |
-| Expired | **On AI Forget** | Back to normal |
+| Expired, or back to Undetected | **On AI Forget** | Back to normal |
 
 The 15, 35 and 60% lines are the profile's `Suspect Threshold`, `Detect Threshold` and `Track Threshold`. A jumpy civilian and a calm soldier can run the same Blueprint with different numbers.
 
@@ -54,7 +54,7 @@ Everything vision checks is multiplied together. If any one thing is zero (too f
 
 ![Room S1: the same guard, three distances](media/confidence/distance.mp4 "Room S1. Far away the guard is only suspicious (25%); at mid range it detects you; close up it is sure fast.")
 
-Far away is a guess; close up is certain. Confidence holds up well until about two thirds of the range, then drops away.
+Far away is a guess; close up is certain. The drop is gentle at first and steep near the end: at half the range 75% is left, at full range nothing.
 
 Setting: `Vision Max Range`, shaped by `Vision Distance Curve` if you assign one.
 
@@ -62,12 +62,12 @@ Setting: `Vision Max Range`, shaped by `Vision Distance Curve` if you assign one
 
 ![Room S2: sun, shade and a lamp](media/confidence/light.mp4 "Room S2. In full sun it tracks you (68%); in the shade under the roof it only suspects you (24%); a lamp lights you up again (70%).")
 
-APS knows how lit you are where you stand: in shade a guard sees you about four times worse than in the sun.
+APS knows how lit you are where you stand: in shade a guard sees you about three times worse than in the sun.
 
 Settings: tick `Use Per Target Light` (`Trace Sun Shadow` under it is on already), and call **Set Sun Direction** once from your level. More on [World & fairness](world.md#light). `Darkness Min Detection` is how much it still sees in total darkness.
 
 ::: info Your own light system
-If your game already measures light (a light gem), set **Light Level Override** on the player's APS Target Component. It wins over everything, as long as `Use Per Target Light` is ticked.
+If your game already measures light (a light gem), set **Light Level Override** on the player's APS Target Component. It wins over everything, even with `Use Per Target Light` off.
 :::
 
 ### Cover
@@ -92,7 +92,7 @@ Three cones, checked in order:
 |---|---|---|---|
 | Focal | 60° each side | full | full |
 | Peripheral | 110° each side | 45% | 60% |
-| Rear | 60°, from behind | 25% | 35%, moving targets only |
+| Rear | 60°, from behind | 25% | 35%, only targets moving faster than 3 m/s |
 
 The focal cone is always on. The peripheral and rear cones are optional: tick `Enable Peripheral Cone` and `Enable Rear Motion Cone` on the profile. The focal angle is `Vision Half Angle Deg`.
 
@@ -144,7 +144,7 @@ Confidence = DistanceFalloff × AngleFalloff × ExposureRatio × LightFactor
 
 | Factor | By default |
 |---|---|
-| Distance falloff | `1 − (distance / range)²`: holds up until about two thirds of the range |
+| Distance falloff | `1 − (distance / range)²`: 75% at half range, 0 at full range |
 | Angle falloff | `cos(angle × 90°)`: full at the centre, zero at the cone's edge |
 | Exposure | The weighted share of your sample points with a clear line |
 | Light factor | `Lerp(Darkness Min Detection, 1.0, light level)` |
