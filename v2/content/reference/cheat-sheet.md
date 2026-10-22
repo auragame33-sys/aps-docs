@@ -27,7 +27,7 @@ Everything you use daily, on one page.
 | **Fused**, **Smoothed** | Fused is this update's combination of the senses. Smoothed drives everything: it rises while a sense reports, holds, and fades only once every sense is silent. |
 | **States** | Undetected, Suspected, Detected, Tracked, Lost, Remembered, Expired: per target, with an event for each |
 | **Awareness** | The AI's overall alert level, from its top target: Unaware, Peripheral, Suspicious, Alerted, Fully Aware |
-| **Attention target** | The one target it focuses on. Sticky, so it doesn't flick between two. Picked from everyone in range, noticed or not: check the target's state before acting on it |
+| **Attention target** | The one target it focuses on, among those it has noticed. Sticky, so it doesn't flick between two. It may only be suspected: check the state before acting on it |
 | **Loss Reason** | Why it lost you: OutOfRange, Occluded, SoundFaded, ScentLost, SensorDropout, TargetDestroyed. It decides how to search. |
 | **Belief Record** | Everything it holds about one target; **Get Belief Data** returns it |
 | **Profile** | The data asset with every perception setting for one kind of AI |
@@ -38,7 +38,7 @@ Everything you use daily, on one page.
 
 | Node (APS Core) | Gives | For |
 |---|---|---|
-| **Get Attention Target** | Actor | Its focus among its targets. Can be someone it hasn't noticed: chase it only at Suspicious or more (**Get Awareness Level for Target**) |
+| **Get Attention Target** | Actor | Its focus among the targets it has noticed. Chase it only at Suspicious or more (**Get Awareness Level for Target**) |
 | **Get Last Known Position** | Vector | Where to search |
 | **Get Loss Reason** | ELossReason | **How** to search: branch on it |
 | **Get Uncertainty Radius** | Float | The search radius; grows while you hide |
@@ -59,7 +59,7 @@ Everything you use daily, on one page.
 | **On AI Track** | Locked on | Chase, shoot |
 | **On AI Lost** | Contact broken | Read **Get Loss Reason**, then search |
 | **On AI Forget** | It gave up (Expired), or a target fell back to Undetected | Back to patrol |
-| **On Attention Changed** | A new focus (maybe someone not yet noticed) | Re-plan between targets you know are Detected |
+| **On Attention Changed** | A new focus (maybe one it only suspects) | Re-plan between targets you know are Detected |
 | **On AI Damaged** | It was hit | React to an unseen attacker |
 
 Also: **On AI See**, **On AI Hear**, **On AI Smell**, **On AI Feel** (touch) and **On AI Sense Vibration** each time a sense reports; **On AI Remember**; **On AI All Clear** when it believes in nobody any more; **On AI Awareness Changed**; **On AI Think Threat** when a target's threat level changes, and **On Threat Identified** when one rises to High or Critical; **On Target State Changed** for every state change. All events: [Events](events.md).
@@ -68,7 +68,7 @@ Also: **On AI See**, **On AI Hear**, **On AI Smell**, **On AI Feel** (touch) and
 
 | Node (APS Core) | Gives |
 |---|---|
-| **Get Top Target**, **Get Top Target Belief** | The best-scoring target this update, noticed or not (it can change often) |
+| **Get Top Target**, **Get Top Target Belief** | The best-scoring target it has noticed, this update (it can change often) |
 | **Get Targets Sorted by Score** | Every actor it holds a belief about, best first |
 | **Get Threat Level** (Target), **Get Highest Threat Level**, **Has Threat at or Above** (Level) | Threat, per target or overall |
 | **Get Stimulus Source** (Target) | The sense that **first** made the belief (the current one is the events' Stimulus) |

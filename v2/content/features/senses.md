@@ -80,7 +80,7 @@ That is also how two kinds of AI can share one profile but differ in one sense. 
 | Cone | Settings (defaults) | What it does |
 |---|---|---|
 | **Focal** | `Vision Half Angle Deg` (60) | The main cone: full strength at its centre, fading to zero at its edge. |
-| **Peripheral** | `Enable Peripheral Cone` (off), `Peripheral Half Angle Deg` (110), `Peripheral Confidence Scale` (0.45), `Peripheral Range Scale` (0.6) | Wider, weaker, shorter: catches movement at the edge of sight. It takes over 10% past the focal edge (66° with the default 60°); a target between the two is seen by neither. |
+| **Peripheral** | `Enable Peripheral Cone` (off), `Peripheral Half Angle Deg` (110), `Peripheral Confidence Scale` (0.45), `Peripheral Range Scale` (0.6) | Wider, weaker, shorter: catches movement at the edge of sight. It takes over where the focal cone ends. |
 | **Rear Motion** | `Enable Rear Motion Cone` (off), `Rear Motion Half Angle Deg` (60, from directly behind), `Rear Motion Min Speed` (300), `Rear Motion Confidence Scale` (0.25), `Rear Motion Range Scale` (0.35) | Only targets moving faster than the min speed. Stops a player strolling up behind a guard, without making it see everything. |
 
 `Use Separate Vertical FOV` gives the cone its own pitch angle (`Vision Vertical Half Angle Deg`, 40): elliptical instead of round, for games with a lot of verticality.

@@ -48,7 +48,7 @@ In a Perception Profile's Details, **Archetype**: choose one in `Archetype`, the
 Applying one never changes `Sense Classes`. The Stalker and Wildlife set a smell range: add **Smell Sense** to `Sense Classes` yourself, or that range does nothing.
 :::
 
-![Room W6: one Blueprint, different AI](media/cards/why_archetypes.webp "How the demo does it (BP_W6_Archetypes): Set Profile on the guard's APS Core swaps in a whole new set of senses and settings while playing.")
+![One Blueprint, different AI](media/cards/why_archetypes.webp "An example Blueprint: Set Profile on the guard's APS Core swaps in a whole new set of senses and settings while playing.")
 
 ## Recipes
 

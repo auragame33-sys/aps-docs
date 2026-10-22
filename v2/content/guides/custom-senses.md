@@ -31,7 +31,7 @@ You can also parent to a built-in sense (**Smell Sense**, **Vision Sense**...) t
 | Profile | The AI's profile: read any setting |
 | Target | The actor being evaluated |
 
-Fill in **Out Result** (a **Perception Sense Result**):
+Fill in **Out Result** (a **Perception Sense Result**): drag from the Return Node's Out Result pin and pick **Make Perception Sense Result**.
 
 | Field | Meaning |
 |---|---|

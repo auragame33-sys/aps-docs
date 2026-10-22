@@ -30,11 +30,11 @@ In the Epic Games Launcher, open **Library → Fab Library**, find **APS - Advan
 4. Reopen the project. On a Blueprint-only project, accept when the editor offers to build the module.
 5. **Edit → Plugins → APS → Enabled**, and restart.
 
-Why step 3 matters: without it, a Blueprint-only project looks content-only to the packager, which ships Unreal's prebuilt game, one without APS in it. The packaged game then logs *"Plugin 'APS' failed to load"*. Installs from Fab already behave the right way.
+Why step 3 matters: without it, the packager can't tell that a Blueprint-only project needs APS built into its game. Packaging then stops with *"does not look like uproject file but no targets have been found!"*, or ships Unreal's prebuilt game, without APS, which logs *"Plugin 'APS' failed to load"*. Installs from Fab already behave the right way.
 :::
 
 ### Create a Perception Profile
-In the Content Browser: right-click → **Miscellaneous → Data Asset** → pick **Perception Profile** → name it `DA_Profile_Guard`.
+In the Content Browser: right-click → **Miscellaneous → Data Asset** → type `Perception` and pick **PerceptionProfile** → **Select** → name it `DA_Profile_Guard`.
 
 ![The new Perception Profile, with Vision and Hearing already in its senses](media/start/profile.webp "A new profile already sees and hears. You don't have to change anything yet.")
 
@@ -45,11 +45,11 @@ A new profile already has **Vision Sense** and **Hearing Sense** in its `Sense C
 :::
 
 ### Add APS Core to your AI
-Open your AI character Blueprint (a `Character` or `Pawn`, for example `BP_Guard`). In the Components panel, click **Add** and type `aps`: every APS component is listed. Pick **APS Core**.
+Open your AI character Blueprint (a `Character` or `Pawn`, for example `BP_Guard`). No AI yet? In the Content Browser: right-click → **Blueprint Class** → **Character** → name it `BP_Guard`. In the Components panel, click **Add** and type `aps`: every APS component is listed. Pick **APS Core**.
 
 ![The Add menu with aps typed in: APS Core, Environment, Evidence, Observer, Perception Listener, Relationship, Search, Signature, Target Component](media/start/add.webp "Add, then type aps: every APS component starts with APS.")
 
-Select **APS Core** and, in its Details, set **Profile** to `DA_Profile_Guard`. Tick **Show Visualizer** to see what it sees while you play.
+It appears in the Components list as **PerceptionCore**. Select it and, in its Details, set **APS › Config › Profile** to `DA_Profile_Guard`. Tick **APS › View › Show Visualizer** to see what it sees while you play.
 
 ![APS Core's Details: Profile set to DA_Profile_Guard and Show Visualizer ticked](media/start/core.webp "APS Core's Details: the Profile says what it perceives; Show Visualizer draws it in the game.")
 
@@ -58,7 +58,7 @@ APS perceives from the body it is on: its eyes, its mesh, the hits it takes. An 
 :::
 
 ### React when it spots you
-Select **APS Core**, and at the bottom of its Details, under **Events**, click **+** next to **On AI Detect**. The event appears in the graph, already connected. Add a **Print String** to it, or an **AI MoveTo** to send the guard after you. Do the same for **On AI Lost**.
+Select **PerceptionCore** (the APS Core), and at the bottom of its Details, under **Events**, click **+** next to **On AI Detect**. The event appears in the graph, already connected. Add a **Print String** to it, or an **AI MoveTo** to send the guard after you. Do the same for **On AI Lost**.
 
 ![APS Core's events in the Details panel, each with a + button](media/start/events.webp "Every APS event is here. Once an event is in your graph, its + turns into a button that jumps to it.")
 
@@ -77,6 +77,18 @@ You will see:
 - your **Print String** once it is sure enough to detect you.
 
 Step behind a wall and watch it go **Detected → Lost**, then fade to **Remembered** and **Expired**.
+:::
+
+## Play the demo
+
+The demo comes inside APS: a hub with one wing per feature, holding the rooms the feature pages point to.
+
+1. In the Content Browser, click **Settings** and tick **Show Plugin Content**. Installed from Fab? Tick **Show Engine Content** too: APS is then an engine plugin.
+2. Open **Plugins › APS - Advanced Perception System › Demo › Maps**. From Fab it is under **Engine › Plugins**; older engines add **Content** to the folder's name.
+3. Double-click **L_MainMenu** and press **Play**.
+
+::: deep Package the demo
+Your own game doesn't carry the demo: Unreal packages a plugin's levels only when your levels use them. To package the demo by itself, set **Project Settings → Maps & Modes → Game Default Map** to `L_MainMenu` and add all 11 levels in **Demo › Maps** to **Project Settings → Packaging → List of maps to include in a packaged build**. Without that list only the menu is packaged, and its doors lead nowhere.
 :::
 
 ## Next steps

@@ -101,7 +101,8 @@ That is Unreal's perception's behaviour; APS softens it three ways: `First Spot 
 | On AI Lost right after On AI Detect | Confidence hovers at a line: widen the gap between thresholds, raise the vision grace time, or lower `Vision Loss` Confidence Decay Multiplier |
 | On AI Detect repeats for one target | It's crossing a line back and forth (each crossing is a real change), or a chase stepped back from Tracked to Detected, which fires On AI Detect again: widen the gaps and raise the grace time |
 | The loss reason is SoundFaded, though I hid behind a wall | It could still hear your footsteps fading after you left its sight, so hearing was the last sense to have you |
-| It chases someone it never saw | The target came from **On Attention Changed** or **Get Attention Target**: attention is picked from everyone in range, noticed or not. Take the target from **On AI Detect** ([Behavior Trees](../guides/behavior-trees.md#wiring-the-events)) |
+| It chases a teammate, or someone it only suspects | The target came from **On Attention Changed** or **Get Attention Target**: attention can be on a target it only suspects, or on a teammate. Take the target from **On AI Detect** ([Behavior Trees](../guides/behavior-trees.md#wiring-the-events)) |
+| It has me, or lost me, but doesn't move (newer engines) | Not APS: the move failed. In UE 5.8 (unlike 5.2 and 5.3) a move gives up when there is no navmesh within 50 cm of where it is going: you stand on a prop or in a Nav Area Null strip, or the last known position is against tall cover. Move to **Project Point to Navigation** (Query Extent 300, 300, 500) instead; on a Behavior Tree **Move To**, untick **Require Navigable End Location**. For a strip only some AI should avoid, mark it with a Nav Area of your own and exclude that area in the AI controller's **Default Navigation Filter Class**, instead of Nav Area Null |
 
 ## Events
 
@@ -147,7 +148,7 @@ That is Unreal's perception's behaviour; APS softens it three ways: `First Spot 
 | Symptom | Fix |
 |---|---|
 | The plugin doesn't appear | Installed from Fab: **Edit › Plugins**, search Advanced Perception, tick, restart. By hand: the folder must be YourProject/Plugins/APS with APS.uplugin directly inside |
-| The packaged game says *Plugin 'APS' failed to load* | A by-hand install without `"EnabledByDefault": false` in APS.uplugin: add it and package again ([Getting started](../getting-started.md)) |
+| Packaging stops with *"does not look like uproject file but no targets have been found!"*, or the packaged game says *Plugin 'APS' failed to load* | A by-hand install without `"EnabledByDefault": false` in APS.uplugin: add it and package again ([Getting started](../getting-started.md)) |
 | Compile errors after copying the plugin | Delete Binaries and Intermediate in the project and the plugin, regenerate project files, rebuild |
 | The Visualizer shows in a packaged game | APS doesn't strip it from any build: turn `Show Visualizer` off (or `aps.Visualizer 0`) before you ship |
 

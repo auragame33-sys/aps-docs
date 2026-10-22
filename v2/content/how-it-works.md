@@ -156,7 +156,7 @@ When every sense goes quiet, the AI doesn't drop you at once. Each sense has a *
 
 **Direct Cut** jumps straight to Lost. Without it, confidence steps down through Tracked, Detected and Suspected first, which reads as the AI slowly losing certainty. All of these are on the profile's **Loss** settings (`Vision Loss`, `Hearing Loss` and so on).
 
-**Which sense's row applies** is the one that led last, with one catch: a belief slot only ever switches *to* a direct-cut sense, never back. Once Vision (or Echolocation) has led for a target, that target's losses use its grace and direct cut from then on, even when hearing had it last. Hearing's 3 s and its slow fade apply to targets the AI has only heard. (It is kept on the belief slot, so it can carry over to the next target that slot holds.)
+**Which sense's row applies:** the sense that had the target last, with one overlap. While Vision (or Echolocation) still perceives the target, its row applies even if another sense leads. When it loses the target but hearing still has it, vision's row is kept for vision's own grace time, so a moment's overlap doesn't turn ducking behind cover into a slow fade. After that, hearing's row applies: its 3 s grace and its gradual fade.
 
 ::: deep The exact transition rules
 | From | To | When |
@@ -229,8 +229,10 @@ An AI can hold beliefs about many targets at once (up to `Max Tracked Targets`, 
 
 Once the stickiness time has passed, attention also moves to the top target when its own target is Lost, Remembered or Expired, however small the gap. You can force it at any time with **Force Attention Target** (when the player shoots this AI, say). **On Attention Changed** gives the old and new target so you can re-plan.
 
-::: warning Attention is not detection
-The AI keeps a belief slot for **everyone in range**, including people it hasn't noticed yet (Undetected) and its own teammates, and the top target and attention are picked from all of them. In the demo's Sight wing, every guard's attention starts on the guard in the next room, through walls. So don't chase **Get Attention Target** as it is: take the target from **On AI Detect**, or check it first (**Get Awareness Level for Target** is Suspicious or more). Attention is for choosing **between** targets you know about.
+Only targets the AI has **noticed** (Suspected or more) take attention or count as the top target; one that falls back to Undetected lets attention go. A focus set with **Force Attention Target** on someone not noticed yet holds for the stickiness time.
+
+::: warning Attention is not "sure"
+The attention target can be someone the AI only **suspects**, or one of its own teammates once it has noticed them. So don't chase **Get Attention Target** as it is: take the target from **On AI Detect**, or check it first (**Get Awareness Level for Target** is Suspicious or more, and **Get Relationship** isn't Teammate or Friendly). Attention is for choosing **between** targets you know about.
 :::
 
 ::: deep Which target is "top": the sort score

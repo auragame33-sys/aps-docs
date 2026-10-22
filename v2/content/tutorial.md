@@ -50,7 +50,7 @@ Create the profile as in [Get Started](getting-started.md#create-a-perception-pr
 
 Open your AI character Blueprint (`BP_Guard`) and add **APS Core** with **Profile** set to `DA_Profile_Guard`, as in [Get Started](getting-started.md#add-aps-core-to-your-ai). Tick **Show Visualizer** too.
 
-Every event in this tutorial is an APS Core event: select **APS Core**, and in **Details › Events** click **+** next to it.
+Every event in this tutorial is an APS Core event: select **PerceptionCore** (the APS Core) in the Components list, and in **Details › Events** click **+** next to it.
 
 On your **player** character, add an **APS Target Component** and leave it as it is: it gives the guard five points on your skeleton to look for.
 
@@ -125,7 +125,7 @@ On AI Detect (Target, Threat Level, Stimulus)
   └─► BB → Set Value as Bool   ("bHasTarget",  true)
 ```
 
-It fires again if a chase slips back from Tracked to Detected; that just sets the same keys. Don't take the target from **On Attention Changed**: the guard keeps a belief slot for everyone in range, noticed or not, and attention can point at someone it hasn't seen yet.
+It fires again if a chase slips back from Tracked to Detected; that just sets the same keys. Don't take the target from **On Attention Changed**: attention can go to someone the guard only suspects, or to a teammate.
 
 **Telegraph: the "huh?" moment.** **On AI Telegraph** fires a moment before the guard commits.
 
@@ -169,7 +169,7 @@ On AI Forget (Target)
 ```
 
 ::: check Checkpoint 3
-Add a temporary **Print String** to **On AI Telegraph**, **On AI Detect**, **On AI Lost** and **On AI Forget**, and bind **On AI Track** and **On AI Remember** just to print. Play, get spotted, then break line of sight and stand still. You should see **Telegraph → Detect → Track → Lost → (8 seconds or more) → Remember → Forget**. If you walked behind cover, **Lost** comes a second or two late: the guard still hears your last footsteps fading.
+Add a temporary **Print String** to **On AI Telegraph**, **On AI Detect**, **On AI Lost** and **On AI Forget**, and bind **On AI Track** and **On AI Remember** just to print. Play, get spotted, then break line of sight and stand still. You should see **Telegraph → Detect → Track → Lost → (8 seconds or more) → Remember → Forget**. If you walked up to the cover, the guard still hears your last footsteps fading, so it loses you by ear instead: **Detect** again, then **Lost** a few seconds later.
 
 **Lost** fires the moment you step behind cover? Your Vision Loss grace time didn't save. **Forget** fires right after **Lost**? Check `Min Time in Lost`.
 :::

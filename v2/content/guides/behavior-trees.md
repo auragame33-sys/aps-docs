@@ -11,7 +11,7 @@ APS says **what the AI believes**; your Behavior Tree decides **what to do**. Th
 
 ::: fast
 - **Events write, the tree reads.** Set Blackboard keys from APS events; don't poll APS from a service every tick.
-- Take the target from **On AI Detect** and let it go on **On AI Lost**. Not from **On Attention Changed**: attention can name someone the AI hasn't noticed yet.
+- Take the target from **On AI Detect** and let it go on **On AI Lost**. Not from **On Attention Changed**: attention can name someone the AI only suspects, or a teammate.
 - On **On AI Lost**, store the last known position, the cover and the **loss reason**, and let the tree **branch on why** it lost you.
 :::
 
@@ -50,7 +50,7 @@ On AI Detect (Target, Threat Level, Stimulus)
   └─► Set Value as Bool   (HasTarget, true)
 ```
 
-It also fires again when a chase slips back from Tracked to Detected; that only sets the same keys. Don't use **On Attention Changed** for this: the AI keeps a slot for everyone in range and picks attention from them, so it can name someone it hasn't noticed yet, or a teammate ([why](../how-it-works.md#6-attention-the-target-it-commits-to)).
+It also fires again when a chase slips back from Tracked to Detected; that only sets the same keys. Don't use **On Attention Changed** for this: attention can name someone the AI only suspects, or a teammate it has noticed ([why](../how-it-works.md#6-attention-the-target-it-commits-to)).
 
 **Losing the target: drop the chase, set up the search.**
 

@@ -116,6 +116,8 @@ One distant footstep is a blip; a series in the same place builds toward Suspect
 | `Sound Accumulation Decay Rate` | 0.2 | How fast it fades after that |
 | `Wall Absorption Coeff` | 0.4 | How much each wall muffles: at 0.4 a wall takes a third off. 1.5 or more makes walls really count. |
 
+**How fast:** each sound adds what it was heard at × `Sound Accumulation Rate` × 0.1. At the default 0.5, a footstep every half second takes about 10 seconds to add up past a single step, then keeps climbing for as long as it goes on. For an AI that adds noises up quickly, raise the rate: at 2 it is four times as fast.
+
 The build-up is the same at every level of detail: a far, cheaper AI isn't quicker or slower to add up the same footsteps.
 
 **The design lever:** a player who moves in short bursts, pausing longer than the hold time, keeps the build-up draining and stays under Suspected. One who runs without stopping builds past it. That is the core stealth loop: tune it with these numbers and the profile's thresholds.
@@ -192,7 +194,7 @@ On AI Hear (Location, Loudness, Sound Type Name)
 - **Location** is the position of whoever made the sound, as it is **at that update**: on a build-up update, where they are now. How *precisely* the AI places it shows in its uncertainty radius (**Get Uncertainty Radius**), from `Location Accuracy Override` or the distance.
 - **Sound Type Name** is the name of the first sound the AI heard that update, and **None** on an update with no new sound (build-up only). With several sounds arriving at once, branch on what matters most rather than trusting one name.
 - **For one event per sound**, with who made it, use **On Sound Heard** instead (below).
-- **On Sound Heard** (on APS Core) gives every sound the AI hears, with how loud it arrived, how many walls it came through and whether the path was clear. **Get Recent Sounds** returns those heard in the last however many seconds you ask for: it needs **Record Heard Sounds**, which is on by itself while a Visualizer is shown or **On Sound Heard** is bound.
+- **On Sound Heard** (on APS Core) gives every sound the AI hears, with how loud it arrived, how many walls it came through and whether the path was clear. **Get Recent Sounds** returns those heard in the last however many seconds you ask for, up to the last 6 seconds (32 sounds at most): it needs **Record Heard Sounds**, which is on by itself while a Visualizer is shown or **On Sound Heard** is bound.
 
 ::: deep Explosions shake the ground
 **Emit Sound** and **Emit Sound at Location** also send a stimulus tagged `Stimulus.Sound.<Sound Name>`, with a strength of the loudness ÷ 3. The **Vibration Sense** listens for `Stimulus.Sound.Explosion`, so an explosion shakes the ground for AI that hunt by vibration, **only if that asset's `Sound Name` is exactly Explosion**. Name it carefully: it is not just a label. Your own C++ senses can listen for other sounds the same way ([Custom senses](../guides/custom-senses.md)).

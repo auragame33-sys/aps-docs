@@ -108,7 +108,7 @@ The state is a number: 0 Undetected, 1 Suspected, 2 Detected, 3 Tracked, 4 Lost,
 
 Only **Vision** says why it failed; the other senses report **None** when silent (pain and the reaction hold apply to any sense). **Not Evaluated This Tick** is in the list but APS 3.0 never reports it: a sense keeps its last answer between its updates.
 
-![The demo's W3 room explains itself](media/cards/why_explain.webp "How the demo does it (BP_W3_Explain): Get Sense Blocker's answer goes on a sign where its cause is. Unreal AI Perception, beside it, can only say NOTHING.")
+![A sign that says why the guard can't see you](media/cards/why_explain.webp "An example Blueprint: Get Sense Blocker's answer goes on a sign where its cause is. Unreal AI Perception, beside it, can only say NOTHING.")
 
 ## What did it believe then?
 
@@ -149,7 +149,7 @@ Each perception update, a frame is kept for every **actor** it believes in (not 
 
 Recording is off until you start it. While on it costs one small frame per believed actor per update, and frames older than the window are dropped, so a long session doesn't grow. Make the window cover the time between a problem and you noticing it: 30 s is usually plenty.
 
-![The demo's W4 rewind](media/cards/why_rewind.webp "How the demo does it (BP_W4_Rewind): Get Recorded Frame At, the run's start plus the replay's time, gives what the guard believed then: its state, its confidence, where it thought you were. A gold ghost stands there.")
+![Rewinding what the guard believed](media/cards/why_rewind.webp "An example Blueprint: Get Recorded Frame At, the run's start plus the replay's time, gives what the guard believed then: its state, its confidence, where it thought you were. A gold ghost stands there.")
 
 ## Pause, print and tune live
 
@@ -164,7 +164,7 @@ The console command `aps.Tune` sets a profile value on **every** running AI at o
 
 The debug nodes write to the Output Log (`LogAdvancedPerception`), never to the screen.
 
-![The demo's live tuning](media/cards/why_tune.webp "How the demo does it (BP_W5_Tune): a slider moved a step calls Set Profile Number on that guard. The setting changes now; nothing it believes is reset.")
+![Live tuning from a slider](media/cards/why_tune.webp "An example Blueprint: a slider moved a step calls Set Profile Number on that guard. The setting changes now; nothing it believes is reset.")
 
 ## Build your own view
 
@@ -178,7 +178,7 @@ Everything the Visualizer draws comes from these nodes. They only read: calling 
 | **Is Looking At** (Target) | Vision looks the target's way (inside a cone, in range); Why Not: Outside Cone, Out Of Range, or No Context (no Vision sense) |
 | **Get Sample Points** (Target) | Vision's points on the target and how much sight reaches each (Seen, Partly, Blocked): the same points and traces the sense uses |
 | **On Sound Heard** (event) | Every sound it hears, after its filter: where it was made, how loud it was made and arrived, the distance, the walls, whether it had a maker |
-| **Get Recent Sounds** (Max Age Seconds) | The sounds it heard in that many seconds, oldest first |
+| **Get Recent Sounds** (Max Age Seconds) | The sounds it heard in that many seconds (up to the last 6), oldest first |
 | **Has Sense** (Sense ID), **Get Sense IDs** | Which senses it runs |
 | **Get Sense Ranges** | How far each sense reaches now, with the environment where it stands applied |
 | **Get Sound Reach** (Sound Type) | How far a sound type carries to this AI now |
