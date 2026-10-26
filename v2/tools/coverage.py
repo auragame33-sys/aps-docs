@@ -6,11 +6,17 @@
 # documented but not explained anywhere; a name in neither is a gap.
 #
 #   python -I tools/coverage.py [old docs folder]
+#
+# The old pages were removed from the repo on 2026-10-26, after this check last said 0 missing. To run it again,
+# take them from the history first:  git archive -o old_docs.tar 47bfbe3 docs  then  tar -x -f old_docs.tar -C <folder>
+# (then pass <folder>/docs).
 import io, json, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 OLD = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(ROOT), "docs")
+if not os.path.isdir(OLD):
+    sys.exit("No old docs at %s: take them from the history first (see the top of this file)." % OLD)
 M = json.load(open(os.path.join(HERE, "model.json"), encoding="utf-8"))
 
 names = {}

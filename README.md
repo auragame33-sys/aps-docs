@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/logo.png" alt="APS" width="112" height="112">
+  <img src="v2/theme/emblem.png" alt="APS" width="112" height="112">
 </p>
 
 <h1 align="center">APS — Advanced Perception System</h1>
@@ -64,7 +64,7 @@ Already using Unreal's AI Perception? There's a [guide for moving across](https:
 
 The site's source is in [`v2/`](v2): pages in `v2/content`, the look in `v2/theme`, pictures and clips in `v2/media`. `v2/build.py` builds it with Python's standard library alone (`python v2/build.py`, output in `v2/_site`), and `v2/tools/check_docs.py` checks every node, setting, event and default named on a page against the APS source model, and every link. GitHub Actions runs both on every push to `main` and publishes the result to GitHub Pages; a failed check stops the deploy.
 
-The `docs/` folder is the previous MkDocs site, kept for reference. It is no longer published; its addresses redirect to the matching new pages.
+The previous MkDocs site was removed on 2026-10-26. It is still in this repository's history, and its old addresses redirect to the matching new pages.
 
 ## Support
 
