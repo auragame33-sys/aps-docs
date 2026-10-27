@@ -270,7 +270,8 @@ def render(lines, doc):
             hid = doc.anchor(text)
             if 2 <= level <= doc.toc_depth:
                 doc.toc.append((level, hid, re.sub(r"<[^>]+>", "", inline(text, doc.page))))
-            doc.search.append([re.sub(r"<[^>]+>", "", inline(text, doc.page)), hid, ""])
+            # plain text: the search box escapes it when it shows it ("Search & evidence", not "Search &amp; evidence")
+            doc.search.append([html.unescape(re.sub(r"<[^>]+>", "", inline(text, doc.page))), hid, ""])
             out.append('<h%d id="%s">%s<a class="anchor" href="#%s" aria-label="Link to this section">#</a></h%d>'
                        % (level, hid, inline(text, doc.page), hid, level))
             i += 1

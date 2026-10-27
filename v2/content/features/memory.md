@@ -64,12 +64,12 @@ With `Enable Prediction` on (it's off by default: a slow patrolling guard that p
 
 - **Short term:** after a loss, confidence fades (Lost → Remembered → Expired). `Min Time in Lost` makes it search at least that long before giving up; `Decay Curve` (or `Default Decay Exponent`) shapes the fade.
 - **Long term:** `Long Term Memory Strength` is a second number on the belief, 0 to 1 (read it with **Get Belief Data**). It builds by 0.02 a second while the AI senses you, so it takes long contact to fill, and fades by about 1% a second after (or as `Long Term Decay Curve` says). APS itself doesn't act on it: read it to keep a guard twitchy for a minute after an encounter.
-- **Coming back:** while you are Lost or Remembered, each update a sense picks you up again adds `Memory Refresh Bonus` to confidence, so it locks on faster the second time.
+- **Coming back:** while you are Lost or Remembered, the first time a sense picks you up again adds `Memory Refresh Bonus` to confidence, once per loss, so it locks on faster the second time. A faint glimpse stays faint: one bonus, however fast the senses run.
 
 | Setting | Default | What it does |
 |---|---|---|
 | `Min Time in Lost` | 0 | The least time in Lost before it may give up (8 makes it really search) |
-| `Memory Refresh Bonus` | 0.1 | Extra confidence per update when it senses a Lost or Remembered target again |
+| `Memory Refresh Bonus` | 0.1 | Extra confidence, once per loss, when it senses a Lost or Remembered target again |
 | `Memory Expire Threshold` | 0.05 | Below this, a remembered target is forgotten (Expired) |
 | `Default Decay Exponent` | 0.3 | How fast confidence fades with no curve set |
 

@@ -49,7 +49,7 @@ Open your AI character Blueprint (a `Character` or `Pawn`, for example `BP_Guard
 
 ![The Add menu with aps typed in: APS Core, Environment, Evidence, Observer, Perception Listener, Relationship, Search, Signature, Target Component](media/start/add.webp "Add, then type aps: every APS component starts with APS.")
 
-It appears in the Components list as **PerceptionCore**. Select it and, in its Details, set **APS › Config › Profile** to `DA_Profile_Guard`. Tick **APS › View › Show Visualizer** to see what it sees while you play.
+It appears in the Components list as **PerceptionCore**. Select it and, in its Details, set **APS › Config › Profile** to `DA_Profile_Guard`. Tick **APS › View › Show Visualizer** to see what it sees while you play. Drawing it costs about 0.3 ms a frame per AI: fine for a few, but leave it off on a crowd ([Performance](guides/performance.md#expensive-on-purpose)).
 
 ![APS Core's Details: Profile set to DA_Profile_Guard and Show Visualizer ticked](media/start/core.webp "APS Core's Details: the Profile says what it perceives; Show Visualizer draws it in the game.")
 
@@ -86,6 +86,8 @@ The demo comes inside APS: a hub with one wing per feature, holding the rooms th
 1. In the Content Browser, click **Settings** and tick **Show Plugin Content**. Installed from Fab? Tick **Show Engine Content** too: APS is then an engine plugin.
 2. Open **Plugins › APS - Advanced Perception System › Demo › Maps**. From Fab it is under **Engine › Plugins**; older engines add **Content** to the folder's name.
 3. Double-click **L_MainMenu** and press **Play**.
+
+The demo is lit with Lumen, the default for a new Unreal 5 project. If its rooms look washed out, or the screen shows a red line about distance fields, open **Project Settings → Rendering** and set **Dynamic Global Illumination Method** and **Reflection Method** to **Lumen** and tick **Generate Mesh Distance Fields** (the editor asks to restart).
 
 ::: deep Package the demo
 Your own game doesn't carry the demo: Unreal packages a plugin's levels only when your levels use them. To package the demo by itself, set **Project Settings → Maps & Modes → Game Default Map** to `L_MainMenu` and add all 11 levels in **Demo › Maps** to **Project Settings → Packaging → List of maps to include in a packaged build**. Without that list only the menu is packaged, and its doors lead nowhere.

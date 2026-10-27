@@ -24,7 +24,7 @@ Each AI is scored for **significance** (distance to the nearest player camera, w
 
 - At tier 4 nothing is perceived (unless the crowd tier is on, below), but beliefs **keep fading**: an AI that comes back into range has forgotten you, as it should.
 - Tiers also filter sounds and stimuli: a Sound Type with `Max LODTier` 1 isn't even considered by an AI at tier 2 or above. Sensible tiers on your sound assets are a free, large saving.
-- `Distance Tick Throttling` (on) lets tier 3 and 4 AI tick their component only every 0.1 and 0.25 s; their perception timing is unchanged. (Its tooltip says those tiers are "beyond 15 km": with the significance rule they start at about 150 m.)
+- `Distance Tick Throttling` (on) lets tier 3 and 4 AI tick their component only every 0.1 and 0.25 s; their perception timing is unchanged.
 
 ## The levers, biggest first
 
@@ -101,6 +101,7 @@ Gathering is cheap: it runs at most 5 times a second and reads a grid of 15 m ce
 | `Pawns Block Sight`, extra channels | More traces | Bodies or doors must block sight |
 | 5 sample points | 5 traces per target per update | Partial cover is core to the game |
 | `Requires Clear Path` on a stimulus | A trace per AI per stimulus | Rarely: the sound system already handles walls |
+| `Show Visualizer` | About 0.3 ms a frame per AI in the editor (100 AI: about 30 ms) | Debugging a few AI. With a crowd, show it on the ones you are looking at, or `aps.Visualizer 2` for status only |
 
 Nearly free: idle AI (a distance check and out), silent senses, sound emission (far AI rejected first), unbound events, unimplemented Listener events, suspended AI.
 
@@ -111,6 +112,8 @@ Nearly free: idle AI (a distance check and out), silent senses, sound emission (
 To decide yourself who deserves the time (a boss that must never slow down, an AI in a cutscene, everything inside the current objective), make a Blueprint child of **APS Significance Policy**, override **Score Significance** (Agent, Nearest Viewer Dist, Is Engaged, Awareness) to return 0 to 1, and set it as the APS Subsystem's `Significance Policy` (**Get APS Subsystem** → set it, at Begin Play). Tiers follow your score; setting a tier directly isn't possible from Blueprint and wouldn't stick, since tiers are recomputed every pass. **Get Agent Significance** reads an AI's latest score.
 
 ### Frame budget
+
+AI that start together don't update together: at Begin Play each one waits its own share of one update interval before its first pass, so a level full of guards spreads its passes over the frames instead of running them all in one.
 
 The APS Subsystem's `Max Perception Updates Per Frame` (0, unlimited) caps how many AI run a full update in one frame. Those over the cap are **deferred, not dropped**: their time still arrives, in one larger step, so fading and timings stay correct. Slots go to the AI that are due, ranked by how overdue they are × (0.25 + significance), so even the least important waits a bounded time and is never starved. Use it when a spawn wave or a level transition spikes the frame.
 
@@ -164,6 +167,7 @@ These are rough, for a mid-range desktop: geometry dominates trace cost, so meas
 
 - **Show Budget** on a profile estimates what it asks for (traces and updates per second for a level of AI) before you fill a level: [Profiles](profiles.md#the-workbench).
 - `stat game` and `stat unit` in the console: perception is in component ticks. Toggle sample counts between 5 and 1 to see the trace cost on your level.
+- Measure with `Show Visualizer` off: drawing what each AI thinks costs more than the thinking.
 - Quick test: tick `Pause Perception` on every AI. If the frame time doesn't improve, APS isn't your bottleneck.
 
 **Memory** is small: belief slots are set up once (no allocation while perceiving), one object per sense per AI, five episodes per target, one small player model per observed target. An AI with 8 senses and 16 slots is a few kilobytes: AI count is a CPU question, not a memory one.

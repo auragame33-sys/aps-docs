@@ -18,7 +18,7 @@ Turn on one tickbox and see what an AI perceives: its cones stopping at walls, t
 - **Start Recording**, and later **Explain Recorded At** tells you what it believed at a moment that has passed.
 :::
 
-APS draws nothing by itself. The **APS Visualizer** is a Blueprint built only from APS's read-only **APS › View** nodes: open it, restyle it, or build your own view from the same nodes. An AI with its Visualizer off spends nothing on it.
+APS draws nothing by itself. The **APS Visualizer** is a Blueprint built only from APS's read-only **APS › View** nodes: open it, restyle it, or build your own view from the same nodes. An AI with its Visualizer off spends nothing on it; one with it on costs about 0.3 ms a frame in the editor, so with many AI show it on the few you are watching.
 
 ## Turning it on
 
@@ -84,12 +84,12 @@ Print String (Explain Perception (Get Player Character))
 ```
 
 ```
-APS: 'BP_Player_C_0'  conf=0.42  state=2
-  Vision         active   conf=0.61
-  Hearing        silent   none
+APS: 'BP_Player_C_0'  Detected, 42% sure
+  Vision         active   61%
+  Hearing        silent   nothing to sense
 ```
 
-The state is a number: 0 Undetected, 1 Suspected, 2 Detected, 3 Tracked, 4 Lost, 5 Remembered, 6 Expired. "No belief record" means the target isn't a candidate at all: out of every sense's range, or not a Pawn and not registered.
+The first line is its state about the target and how sure it is. A silent sense says why: out of range, outside every cone, occluded, or nothing to sense (in reach, but too faint: distance, darkness, quiet). "No belief record" means the target isn't a candidate at all: out of every sense's range, or not a Pawn and not registered.
 
 **Get Sense Blocker** (Target, Sense ID) gives one sense's reason as a value:
 
